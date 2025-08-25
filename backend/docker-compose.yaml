@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: barber_ar
+      POSTGRES_PASSWORD: barber_123
+      POSTGRES_DB: barbearia
+    ports:
+      - '5432:5432' # Mapeia a porta do container para a sua máquina
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
