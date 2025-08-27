@@ -21,13 +21,36 @@ enum Role {
 }
 
 model User {
-  user_id       Int       @id @default(autoincrement())
-  first_name    String
-  last_name     String
-  email         String    @unique
-  password      String
-  phone_number  String
-  birthday      DateTime
-  cpf           String    @unique
-  role          Role      @default(CLIENT)
+  user_id                   Int               @id @default(autoincrement())
+  first_name                String
+  last_name                 String
+  email                     String            @unique
+  password                  String
+  phone_number              String
+  birthday                  DateTime
+  cpf                       String            @unique
+  role                      Role              @default(CLIENT)
+  appointmentsAsBarber      Appointment[]     @relation("BarberAppointments")
+  appointmentsAsClient      Appointment[]     @relation("ClientAppointments")
+}
+model Service {
+  service_id      Int       @id @default(autoincrement())
+  name            String    
+  price           Decimal
+  appointments    Appointment[]
+}
+
+model Appointment {
+  appointment_id    Int         @id @default(autoincrement())
+  appointment_date  DateTime    @db.Date
+  appointment_time  DateTime    @db.Time
+
+  id_barber         Int
+  barber            User        @relation("BarberAppointments", fields: [id_barber], references: [user_id])
+
+  id_client         Int
+  client            User        @relation("ClientAppointments", fields: [id_client], references: [user_id])
+
+  id_service        Int
+  service           Service     @relation(fields: [id_service], references: [service_id])
 }
