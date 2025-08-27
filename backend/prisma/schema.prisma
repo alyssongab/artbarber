@@ -26,8 +26,8 @@ model User {
   email                     String            @unique
   password                  String
   phone_number              String
-  birthday                  DateTime?
-  cpf                       String?            @unique
+  birthday                  DateTime?         @db.Date
+  cpf                       String?           @unique
   role                      Role              @default(CLIENT)
   appointmentsAsBarber      Appointment[]     @relation("BarberAppointments")
   appointmentsAsClient      Appointment[]     @relation("ClientAppointments")
