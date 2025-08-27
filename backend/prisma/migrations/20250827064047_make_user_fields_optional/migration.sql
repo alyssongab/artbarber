@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "public"."User" ALTER COLUMN "last_name" DROP NOT NULL,
+ALTER COLUMN "birthday" DROP NOT NULL,
+ALTER COLUMN "cpf" DROP NOT NULL;
