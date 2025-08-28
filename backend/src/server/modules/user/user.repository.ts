@@ -1,13 +1,13 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export class UserRepository {
 
     /**
-     * Cria um novo usuario no banco
-     * @param data Dados para criar o usuario
+     * Create new user in database
+     * @param data Data input to create new user
      * @returns User
      */
     async create(data: Prisma.UserCreateInput): Promise<User> {
@@ -15,17 +15,17 @@ export class UserRepository {
     }
 
     /**
-     * Lista usuários
+     * List users
      * @returns User[]
      */
     async findAll(): Promise<User[]> {
-        return prisma.user.findMany();
+        return await prisma.user.findMany();
     }
 
     /**
-     * Encontra usuario pelo email
+     * Find user by their email
      * @param email 
-     * @returns User ou null
+     * @returns User or null
      */
     async findByEmail(email: string): Promise<User | null> {
         return prisma.user.findUnique({
