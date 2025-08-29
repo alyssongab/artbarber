@@ -5,12 +5,22 @@ import { UserController } from "./user.controller.ts";
 const userController = new UserController();
 const usersRouter = Router();
 
+// signup for clients
 usersRouter.post(
     '/client', 
-    (req: Request, res: Response) => userController.createClient(req, res));
+    (req: Request, res: Response) => userController.createClient(req, res)
+);
 
+// list all users
 usersRouter.get(
     '/', 
-    (req: Request, res: Response) => userController.getAllUsers(req, res));
+    (req: Request, res: Response) => userController.getAllUsers(req, res)
+);
+
+// login for all users
+usersRouter.post(
+    '/login',
+    (req: Request, res: Response) => userController.login(req, res)
+);
 
 export default usersRouter;

@@ -39,11 +39,41 @@ export class UserController{
         }
     }
 
+    // for all user roles
     async getAllUsers(req: Request, res: Response){
         const users = await this.userService.listUsers();
         res.status(200).json({
             data: users
         });
+    }
+
+    async login(req: Request, res: Response){
+        try{
+            const credentials = req.body;
+            const { accessToken } = await this.userService.login(credentials);
+            res.status(200).json({
+                accessToken: accessToken,
+                message: "logado"
+            });
+        }
+        catch(error){
+            if(error instanceof ZodError){
+                const tree = z.treeifyError(error);
+                return res.status(400).json({
+                    message: "Dados inválidos",
+                    errors: tree
+                });
+            }
+            if(error instanceof Error){
+                // invalid credentials
+                res.status(409).json({
+                    message: error.message
+                });
+            }
+            else{
+                res.status(500).json({ message: "Erro interno do servidor" });
+            }
+        }
     }
     
 }
