@@ -1,8 +1,8 @@
 import type { User } from "@prisma/client";
-import type { CreateClientDTO, LoginInput } from "./user.schema.ts";
+import type { CreateClientDTO, LoginInput, UserResponseDTO } from "./user.schema.ts";
 import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 export class UserService {
 
@@ -13,10 +13,26 @@ export class UserService {
     }
 
     /**
+     * DTO to prevent responses with sensitive data
+     * @param user 
+     * @returns DTO For User responses
+     */
+    private toUserResponseDTO(user: User): UserResponseDTO{
+        return{
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email,
+            phone_number: user.phone_number,
+            birthday: user.birthday,
+            role: user.role
+        }
+    }
+
+    /**
      * Creates new client
      * @param data 
      */
-    async createClient(data: CreateClientDTO): Promise<Omit<User, 'password'>> {
+    async createClient(data: CreateClientDTO): Promise<UserResponseDTO> {
         const existingClient = await this.userRepository.findByEmail(data.email);
         if(existingClient) throw new Error("Usuário com esse email já existe.");
         
@@ -30,8 +46,7 @@ export class UserService {
             role: 'CLIENT'
         });
 
-        const { password, ...userWithoutPassword } = newUser;
-        return userWithoutPassword;
+        return this.toUserResponseDTO(newUser);
     }
 
     /**
@@ -45,7 +60,7 @@ export class UserService {
 
         const validPassword = await bcrypt.compare(data.password, user.password);
         if(!validPassword) throw new Error("Email ou senha inválidos.");
-        
+
         const payload = {
             sub: user.user_id,
             role: user.role
@@ -62,7 +77,8 @@ export class UserService {
      * List all users
      * @returns Users[]
      */
-    async listUsers(): Promise<User[]> {
-        return await this.userRepository.findAll();
+    async listUsers(): Promise<UserResponseDTO[]> {
+        const users = await this.userRepository.findAll();
+        return users.map(user => this.toUserResponseDTO(user));
     }
 }
