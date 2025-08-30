@@ -7,29 +7,32 @@ export const loginSchema = z.object({
     password: z.string().min(6, "Mínimo 6 caracteres")
 }).nonoptional("Campos obrigatórios");
 
-export type LoginInput = z.infer<typeof loginSchema>;
 
-export const createClientSchema = z.object({
+export const createClientSchema = z.strictObject({
     first_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
     last_name: z.string("Sobrenome inválido").nullable().optional().default(null),
     email: z.email("Email inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     phone_number: z.string().length(11, "Número de celular inválido."),
     birthday: z.coerce.date("Formato invalido").nullable().optional().default(null),
-});
+}, "Campo fornecido não existe");
 
-export type CreateClientDTO = z.infer<typeof createClientSchema>;
-
+export const createBarberSchema = z.strictObject({
+    first_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
+    last_name: z.string("Sobrenome inválido").nullable().optional().default(null),
+    email: z.email("Email inválido"),
+    password: z.string().min(6, "Mínimo 6 caracteres"),
+    phone_number: z.string().length(11, "Número de celular inválido."),
+}, "Campo fornecido não existe");
 
 export const updateUserSchema = z.strictObject({
     first_name: z.string().min(1, "Nome obrigatório"),
     last_name: z.string().nullable(),
     password: z.string().min(6, "Senha Mínimo 6 caracteres"),
     phone_number: z.string().length(11, "Número de celular inválido."),
+    pix_key: z.string(),
     birthday: z.coerce.date("Formato invalido").nullable()
-}, "Chave desconhecida").partial();
-
-export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
+}, "Campo fornecido não existe").partial();
 
 
 // =================== RESPONSE DTOs =====================
@@ -44,4 +47,8 @@ export const userResponseSchema = z.strictObject({
     role: z.string()
 }, "Chave desconhecida");
 
+
+export type CreateClientDTO = z.infer<typeof createClientSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
