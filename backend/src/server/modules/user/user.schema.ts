@@ -44,11 +44,13 @@ export const userResponseSchema = z.strictObject({
     email: z.email(),
     phone_number: z.string(),
     birthday: z.date().nullable(),
-    role: z.string()
+    role: z.string(),
+    photo_url: z.string().nullable()
 }, "Chave desconhecida");
 
 
 export type CreateClientDTO = z.infer<typeof createClientSchema>;
+export type CreateBarberDTO = z.infer<typeof createBarberSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
