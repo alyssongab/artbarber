@@ -23,6 +23,32 @@ export class UserRepository {
     }
 
     /**
+     * Update a existing user
+     * @param userId ID of the user to update
+     * @param data Data to be updated
+     * @returns Updated user
+     */
+    async update(userId: number, data: Prisma.UserUpdateInput):  Promise<User>{
+        return await prisma.user.update({
+            data: data,
+            where: {
+                user_id: userId
+            }
+        });
+    }
+
+    /**
+     * Find a specific user
+     * @param userId
+     * @returns User found or null
+     */
+    async findById(userId: number): Promise<User | null> {
+        return await prisma.user.findUnique({
+            where: { user_id: userId }
+        });
+    }
+
+    /**
      * Find user by their email
      * @param email 
      * @returns User or null
