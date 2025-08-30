@@ -1,6 +1,6 @@
 import { UserService } from "./user.service.ts";
 import type { Request, Response } from "express";
-import { createClientSchema } from "./user.schema.ts";
+import { createClientSchema, updateUserSchema } from "./user.schema.ts";
 import { z, ZodError } from "zod";
 
 export class UserController{
@@ -34,7 +34,7 @@ export class UserController{
                 });
             }
             else{
-                return res.status(500).json({ message: "Erro no servidor" });
+                return res.status(500).json({ message: "Erro interno no servidor" });
             }
         }
     }
@@ -72,6 +72,65 @@ export class UserController{
             }
             else{
                 res.status(500).json({ message: "Erro interno do servidor" });
+            }
+        }
+    }
+
+    async updateUser(req: Request, res: Response){
+        try{
+            const { id } = req.params;
+            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
+
+            const userId = parseInt(id);
+            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
+
+            const updatedData = updateUserSchema.parse(req.body);
+            const updatedUser = await this.userService.updateUser(userId, updatedData);
+
+            return res.status(200).json(updatedUser);
+        }
+        catch(error){
+            // zod validation error
+            if(error instanceof ZodError){
+                const tree = z.treeifyError(error);
+                return res.status(400).json({
+                    message: "Dados inválidos",
+                    errors: tree
+                });
+            }
+            // if error comes from service
+            else if(error instanceof Error){
+                return res.status(404).json({
+                    message: error.message
+                });
+            }
+            else{
+                return res.status(500).json({ message: "Erro no servidor" });
+            }
+        }
+    }
+
+    async getUser(req: Request, res: Response){
+        try{
+            const { id } = req.params;
+            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
+
+            const userId = parseInt(id);
+            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
+
+            const user = await this.userService.findUser(userId);
+            console.log(user);
+            return res.status(200).json(user);
+        }
+        catch(error){
+            // if error comes from service
+            if(error instanceof Error){
+                return res.status(404).json({
+                    message: error.message
+                });
+            }
+            else{
+                return res.status(500).json({ message: "Erro no servidor" });
             }
         }
     }
