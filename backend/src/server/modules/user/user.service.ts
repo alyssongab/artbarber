@@ -1,6 +1,10 @@
 import { Prisma } from "@prisma/client";
 import type { User } from "@prisma/client";
-import type { CreateClientDTO, LoginInput, UserResponseDTO, UpdateUserDTO } from "./user.schema.ts";
+import type { CreateClientDTO, 
+    LoginInput, 
+    UserResponseDTO, 
+    UpdateUserDTO,
+    CreateBarberDTO } from "./user.schema.ts";
 import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -27,7 +31,8 @@ export class UserService {
             email: user.email,
             phone_number: user.phone_number,
             birthday: user.birthday,
-            role: user.role
+            role: user.role,
+            photo_url: user.photo_url
         }
     }
 
@@ -43,13 +48,34 @@ export class UserService {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(data.password, saltRounds);
 
-        const newUser = await this.userRepository.create({
+        const newClient = await this.userRepository.create({
             ...data,
             password: hashedPassword,
             role: 'CLIENT'
         });
 
-        return this.toUserResponseDTO(newUser);
+        return this.toUserResponseDTO(newClient);
+    }
+
+    /**
+     * Create new barber
+     * @param data 
+     */
+    async createBarber(data: CreateBarberDTO, photoURl: string): Promise<UserResponseDTO> {
+        const barberExists = await this.userRepository.findByEmail(data.email);
+        if(barberExists) throw new Error("Usuário com esse email já existe.");
+
+        const salt = 10;
+        const hashedPassword = await bcrypt.hash(data.password, salt);
+
+        const newBarber = await this.userRepository.create({
+            ...data,
+            password: hashedPassword,
+            photo_url: photoURl,
+            role: 'BARBER'
+        });
+
+        return this.toUserResponseDTO(newBarber);
     }
 
     /**
@@ -103,6 +129,11 @@ export class UserService {
         return this.toUserResponseDTO(updatedUser);
     }
 
+    /**
+     * Find a unique user
+     * @param userId 
+     * @returns User or null
+     */
     async findUser(userId: number): Promise<UserResponseDTO | null> {
         const user = await this.userRepository.findById(userId);
         if(!user) throw new Error("Usuário não encontrado.");
