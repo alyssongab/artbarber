@@ -11,12 +11,67 @@ export class UserController{
     }
 
     // CLIENT ONLY
+
+    /**
+     * Create client service
+     * @param req 
+     * @param res 
+     * @returns 
+     */
     async createClient(req: Request, res: Response){
         try{
             const clientData = createClientSchema.parse(req.body);
-            const newUser = await this.userService.createClient(clientData);
+            const newClient = await this.userService.createClient(clientData);
 
-            return res.status(201).json(newUser);
+            return res.status(201).json(newClient);
+        }
+        catch(error){
+            // zod validation error
+            if(error instanceof ZodError){
+                const tree = z.treeifyError(error);
+                return res.status(400).json({
+                    message: "Dados inválidos",
+                    errors: tree
+                });
+            }
+            // if error comes from service
+            else if(error instanceof Error){
+                return res.status(409).json({
+                    message: error.message
+                });
+            }
+            else{
+                return res.status(500).json({ message: "Erro interno no servidor" });
+            }
+        }
+    }
+
+    // BARBER ONLY
+
+    /**
+     * Create barber service
+     * @param req 
+     * @param res 
+     * @returns 
+     */
+    async createBarber(req: Request, res: Response){
+        try{
+
+            // validate file (photo)
+            if(!req.file){
+                return res.status(400).json({ message: "A foto do barbeiro é obrigatória" });
+            }
+
+            // validate file format
+            const allowedMimeTypes = ["image/jpg", "image/jpeg", "image/png"];
+            if(!allowedMimeTypes.includes(req.file.mimetype)){
+                return res.status(400).json({ message: "Formato de arquivo inválido. Use JPEG, JPG ou PNG." });
+            }
+
+            const barberData = createClientSchema.parse(req.body);
+            const newBarber = await this.userService.createBarber(barberData, req.file.path);
+
+            return res.status(201).json(newBarber);
         }
         catch(error){
             // zod validation error
@@ -40,6 +95,12 @@ export class UserController{
     }
 
     // for all user roles
+
+    /**
+     * Find all users
+     * @param req 
+     * @param res 
+     */
     async getAllUsers(req: Request, res: Response){
         const users = await this.userService.listUsers();
         res.status(200).json({
@@ -76,6 +137,12 @@ export class UserController{
         }
     }
 
+    /**
+     * Update user
+     * @param req 
+     * @param res 
+     * @returns 
+     */
     async updateUser(req: Request, res: Response){
         try{
             const { id } = req.params;
@@ -110,6 +177,12 @@ export class UserController{
         }
     }
 
+    /**
+     * Find a user
+     * @param req 
+     * @param res 
+     * @returns 
+     */
     async getUser(req: Request, res: Response){
         try{
             const { id } = req.params;

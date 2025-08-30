@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { UserController } from "./user.controller.ts";
+import upload from '../../shared/config/multer.ts';
 
 const userController = new UserController();
 const usersRouter = Router();
@@ -34,6 +35,11 @@ usersRouter.put(
     (req: Request, res: Response) => userController.updateUser(req, res)
 );
 
+usersRouter.post(
+    '/barber',
+    upload.single('photo'),
+    (req: Request, res: Response) => userController.createBarber(req, res)
+)
 
 
 export default usersRouter;
