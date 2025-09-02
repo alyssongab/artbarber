@@ -111,6 +111,12 @@ export class UserService {
         return users.map(user => this.toUserResponseDTO(user));
     }
 
+    /**
+     * Update a user
+     * @param userId 
+     * @param data 
+     * @returns 
+     */
     async updateUser(userId: number, data: UpdateUserDTO): Promise<UserResponseDTO> {
 
         const userExists = await this.userRepository.findById(userId);
@@ -139,5 +145,13 @@ export class UserService {
         if(!user) throw new Error("Usuário não encontrado.");
 
         return this.toUserResponseDTO(user);
+    }
+
+    async deleteUser(userId: number): Promise<Boolean | null> {
+        const user = await this.userRepository.findById(userId);
+        if(!user) throw new Error("Usuário não encontrado.");
+
+        const deletedUser = await this.userRepository.delete(userId);
+        return (deletedUser) ? true : false;
     }
 }

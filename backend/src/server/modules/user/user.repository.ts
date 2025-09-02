@@ -58,4 +58,15 @@ export class UserRepository {
             where: { email }
         });
     }
+
+    /**
+     * Delete a user
+     * @param userId 
+     * @returns User deleted or null
+     */
+    async delete(userId: number): Promise<User | null>{
+        return prisma.user.delete({
+            where: { user_id: userId }
+        });
+    }
 }

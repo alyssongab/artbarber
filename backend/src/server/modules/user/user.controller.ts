@@ -192,12 +192,43 @@ export class UserController{
             if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
 
             const user = await this.userService.findUser(userId);
-            console.log(user);
             return res.status(200).json(user);
         }
         catch(error){
             // if error comes from service
             if(error instanceof Error){
+                return res.status(404).json({
+                    message: error.message
+                });
+            }
+            else{
+                return res.status(500).json({ message: "Erro no servidor" });
+            }
+        }
+    }
+
+    async deleteUser(req: Request, res: Response){
+        try{
+            const { id } = req.params;
+            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
+
+            const userId = parseInt(id);
+            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
+
+            const deletedUser = await this.userService.deleteUser(userId);
+            return res.status(204).send();
+        }
+        catch(error){
+            // zod validation error
+            if(error instanceof ZodError){
+                const tree = z.treeifyError(error);
+                return res.status(400).json({
+                    message: "Dados inválidos",
+                    errors: tree
+                });
+            }
+            // if error comes from service
+            else if(error instanceof Error){
                 return res.status(404).json({
                     message: error.message
                 });

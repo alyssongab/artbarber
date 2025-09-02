@@ -30,16 +30,23 @@ usersRouter.post(
     (req: Request, res: Response) => userController.login(req, res)
 );
 
+// update a user
 usersRouter.put(
     '/:id',
     (req: Request, res: Response) => userController.updateUser(req, res)
 );
 
+// create barber with their photo
 usersRouter.post(
     '/barber',
     upload.single('photo'),
     (req: Request, res: Response) => userController.createBarber(req, res)
-)
+);
+
+usersRouter.delete(
+    '/:id',
+    (req: Request, res: Response) => userController.deleteUser(req, res)
+);
 
 
 export default usersRouter;
