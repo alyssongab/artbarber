@@ -1,5 +1,5 @@
 import { UserService } from "./user.service.ts";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { createClientSchema, updateUserSchema } from "./user.schema.ts";
 import { z, ZodError } from "zod";
 
@@ -18,7 +18,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async createClient(req: Request, res: Response){
+    async createClient(req: Request, res: Response, next: NextFunction){
         try{
             const clientData = createClientSchema.parse(req.body);
             const newClient = await this.userService.createClient(clientData);
@@ -26,23 +26,7 @@ export class UserController{
             return res.status(201).json(newClient);
         }
         catch(error){
-            // zod validation error
-            if(error instanceof ZodError){
-                const tree = z.treeifyError(error);
-                return res.status(400).json({
-                    message: "Dados inválidos",
-                    errors: tree
-                });
-            }
-            // if error comes from service
-            else if(error instanceof Error){
-                return res.status(409).json({
-                    message: error.message
-                });
-            }
-            else{
-                return res.status(500).json({ message: "Erro interno no servidor" });
-            }
+            next(error);
         }
     }
 
@@ -54,7 +38,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async createBarber(req: Request, res: Response){
+    async createBarber(req: Request, res: Response, next: NextFunction){
         try{
 
             // validate file (photo)
@@ -69,28 +53,12 @@ export class UserController{
             }
 
             const barberData = createClientSchema.parse(req.body);
-            const newBarber = await this.userService.createBarber(barberData, req.file.path);
+            const newBarber = await this.userService.createBarber(barberData, req.file.filename);
 
             return res.status(201).json(newBarber);
         }
         catch(error){
-            // zod validation error
-            if(error instanceof ZodError){
-                const tree = z.treeifyError(error);
-                return res.status(400).json({
-                    message: "Dados inválidos",
-                    errors: tree
-                });
-            }
-            // if error comes from service
-            else if(error instanceof Error){
-                return res.status(409).json({
-                    message: error.message
-                });
-            }
-            else{
-                return res.status(500).json({ message: "Erro interno no servidor" });
-            }
+            next(error);
         }
     }
 
@@ -101,14 +69,14 @@ export class UserController{
      * @param req 
      * @param res 
      */
-    async getAllUsers(req: Request, res: Response){
+    async getAllUsers(req: Request, res: Response, next: NextFunction){
         const users = await this.userService.listUsers();
         res.status(200).json({
             data: users
         });
     }
 
-    async login(req: Request, res: Response){
+    async login(req: Request, res: Response, next: NextFunction){
         try{
             const credentials = req.body;
             const { accessToken } = await this.userService.login(credentials);
@@ -118,22 +86,7 @@ export class UserController{
             });
         }
         catch(error){
-            if(error instanceof ZodError){
-                const tree = z.treeifyError(error);
-                return res.status(400).json({
-                    message: "Dados inválidos",
-                    errors: tree
-                });
-            }
-            if(error instanceof Error){
-                // invalid credentials
-                res.status(409).json({
-                    message: error.message
-                });
-            }
-            else{
-                res.status(500).json({ message: "Erro interno do servidor" });
-            }
+            next(error);
         }
     }
 
@@ -143,7 +96,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async updateUser(req: Request, res: Response){
+    async updateUser(req: Request, res: Response, next: NextFunction){
         try{
             const { id } = req.params;
             if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
@@ -157,23 +110,7 @@ export class UserController{
             return res.status(200).json(updatedUser);
         }
         catch(error){
-            // zod validation error
-            if(error instanceof ZodError){
-                const tree = z.treeifyError(error);
-                return res.status(400).json({
-                    message: "Dados inválidos",
-                    errors: tree
-                });
-            }
-            // if error comes from service
-            else if(error instanceof Error){
-                return res.status(404).json({
-                    message: error.message
-                });
-            }
-            else{
-                return res.status(500).json({ message: "Erro no servidor" });
-            }
+            next(error);
         }
     }
 
@@ -183,7 +120,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async getUser(req: Request, res: Response){
+    async getUser(req: Request, res: Response, next: NextFunction){
         try{
             const { id } = req.params;
             if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
@@ -195,19 +132,11 @@ export class UserController{
             return res.status(200).json(user);
         }
         catch(error){
-            // if error comes from service
-            if(error instanceof Error){
-                return res.status(404).json({
-                    message: error.message
-                });
-            }
-            else{
-                return res.status(500).json({ message: "Erro no servidor" });
-            }
+            next(error);
         }
     }
 
-    async deleteUser(req: Request, res: Response){
+    async deleteUser(req: Request, res: Response, next: NextFunction){
         try{
             const { id } = req.params;
             if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
@@ -219,23 +148,7 @@ export class UserController{
             return res.status(204).send();
         }
         catch(error){
-            // zod validation error
-            if(error instanceof ZodError){
-                const tree = z.treeifyError(error);
-                return res.status(400).json({
-                    message: "Dados inválidos",
-                    errors: tree
-                });
-            }
-            // if error comes from service
-            else if(error instanceof Error){
-                return res.status(404).json({
-                    message: error.message
-                });
-            }
-            else{
-                return res.status(500).json({ message: "Erro no servidor" });
-            }
+            next(error);
         }
     }
     

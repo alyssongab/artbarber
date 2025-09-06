@@ -9,6 +9,9 @@ import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { removeUndefined } from "../../shared/utils/object.utils.ts";
+import { NotFoundError, 
+    ConflictError, 
+    BadRequestError } from "../../shared/errors/http.errors.ts";
 
 export class UserService {
 
@@ -42,7 +45,7 @@ export class UserService {
      */
     async createClient(data: CreateClientDTO): Promise<UserResponseDTO> {
         const existingClient = await this.userRepository.findByEmail(data.email);
-        if(existingClient) throw new Error("Usuário com esse email já existe.");
+        if(existingClient) throw new ConflictError("Usuário com esse email já existe.");
         
         // encrypt the password
         const saltRounds = 10;
@@ -61,17 +64,19 @@ export class UserService {
      * Create new barber
      * @param data 
      */
-    async createBarber(data: CreateBarberDTO, photoURl: string): Promise<UserResponseDTO> {
+    async createBarber(data: CreateBarberDTO, filename: string): Promise<UserResponseDTO> {
         const barberExists = await this.userRepository.findByEmail(data.email);
-        if(barberExists) throw new Error("Usuário com esse email já existe.");
+        if(barberExists) throw new ConflictError("Usuário com esse email já existe.");
 
         const salt = 10;
         const hashedPassword = await bcrypt.hash(data.password, salt);
 
+        const photoUrl = `uploads/${filename}`;
+
         const newBarber = await this.userRepository.create({
             ...data,
             password: hashedPassword,
-            photo_url: photoURl,
+            photo_url: photoUrl,
             role: 'BARBER'
         });
 
@@ -88,7 +93,7 @@ export class UserService {
         if(!user) throw new Error("Email ou senha inválidos.");
 
         const validPassword = await bcrypt.compare(data.password, user.password);
-        if(!validPassword) throw new Error("Email ou senha inválidos.");
+        if(!validPassword) throw new BadRequestError("Email ou senha inválidos.");
 
         const payload = {
             sub: user.user_id,
@@ -120,7 +125,7 @@ export class UserService {
     async updateUser(userId: number, data: UpdateUserDTO): Promise<UserResponseDTO> {
 
         const userExists = await this.userRepository.findById(userId);
-        if(!userExists) throw new Error("Usuário não encontrado.");
+        if(!userExists) throw new NotFoundError("Usuário não encontrado.");
 
         // if password is provided
         if(data.password){
@@ -142,14 +147,14 @@ export class UserService {
      */
     async findUser(userId: number): Promise<UserResponseDTO | null> {
         const user = await this.userRepository.findById(userId);
-        if(!user) throw new Error("Usuário não encontrado.");
+        if(!user) throw new NotFoundError("Usuário não encontrado.");
 
         return this.toUserResponseDTO(user);
     }
 
     async deleteUser(userId: number): Promise<Boolean | null> {
         const user = await this.userRepository.findById(userId);
-        if(!user) throw new Error("Usuário não encontrado.");
+        if(!user) throw new NotFoundError("Usuário não encontrado.");
 
         const deletedUser = await this.userRepository.delete(userId);
         return (deletedUser) ? true : false;
