@@ -37,6 +37,7 @@ model Service {
   service_id      Int       @id @default(autoincrement())
   name            String    
   price           Decimal
+  duration        Int
   appointments    Appointment[]
 }
 
@@ -47,9 +48,10 @@ model Appointment {
 
   id_barber         Int
   barber            User        @relation("BarberAppointments", fields: [id_barber], references: [user_id])
-
-  id_client         Int
-  client            User        @relation("ClientAppointments", fields: [id_client], references: [user_id])
+  
+  // client id may be null because they might show up in person without previus signup
+  id_client         Int?
+  client            User?        @relation("ClientAppointments", fields: [id_client], references: [user_id])
 
   id_service        Int
   service           Service     @relation(fields: [id_service], references: [service_id])
