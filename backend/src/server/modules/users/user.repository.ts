@@ -1,7 +1,6 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import prismaClient from '../../shared/config/prisma.ts';
+import { Prisma } from "@prisma/client";
 import type { User } from "@prisma/client";
-
-const prisma = new PrismaClient();
 
 export class UserRepository {
 
@@ -11,7 +10,7 @@ export class UserRepository {
      * @returns User
      */
     async create(data: Prisma.UserCreateInput): Promise<User> {
-        return prisma.user.create({ data });
+        return await prismaClient.user.create({ data });
     }
 
     /**
@@ -19,7 +18,7 @@ export class UserRepository {
      * @returns User[]
      */
     async findAll(): Promise<User[]> {
-        return await prisma.user.findMany();
+        return await prismaClient.user.findMany();
     }
 
     /**
@@ -29,7 +28,7 @@ export class UserRepository {
      * @returns Updated user
      */
     async update(userId: number, data: Prisma.UserUpdateInput):  Promise<User>{
-        return await prisma.user.update({
+        return await prismaClient.user.update({
             data: data,
             where: {
                 user_id: userId
@@ -43,7 +42,7 @@ export class UserRepository {
      * @returns User found or null
      */
     async findById(userId: number): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await prismaClient.user.findUnique({
             where: { user_id: userId }
         });
     }
@@ -54,7 +53,7 @@ export class UserRepository {
      * @returns User or null
      */
     async findByEmail(email: string): Promise<User | null> {
-        return prisma.user.findUnique({
+        return await prismaClient.user.findUnique({
             where: { email }
         });
     }
@@ -65,7 +64,7 @@ export class UserRepository {
      * @returns User deleted or null
      */
     async delete(userId: number): Promise<User | null>{
-        return prisma.user.delete({
+        return prismaClient.user.delete({
             where: { user_id: userId }
         });
     }

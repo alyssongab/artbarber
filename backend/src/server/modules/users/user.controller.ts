@@ -1,7 +1,6 @@
 import { UserService } from "./user.service.ts";
 import type { NextFunction, Request, Response } from "express";
 import { createClientSchema, updateUserSchema } from "./user.schema.ts";
-import { z, ZodError } from "zod";
 
 export class UserController{
 
