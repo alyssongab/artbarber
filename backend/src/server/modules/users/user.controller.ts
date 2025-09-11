@@ -97,12 +97,7 @@ export class UserController{
      */
     async updateUser(req: Request, res: Response, next: NextFunction){
         try{
-            const { id } = req.params;
-            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
-
-            const userId = parseInt(id);
-            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
-
+            const userId = parseInt(req.params.id!);
             const updatedData = updateUserSchema.parse(req.body);
             const updatedUser = await this.userService.updateUser(userId, updatedData);
 
@@ -121,12 +116,7 @@ export class UserController{
      */
     async getUser(req: Request, res: Response, next: NextFunction){
         try{
-            const { id } = req.params;
-            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
-
-            const userId = parseInt(id);
-            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
-
+            const userId = parseInt(req.params.id!);
             const user = await this.userService.findUser(userId);
             return res.status(200).json(user);
         }
@@ -137,13 +127,8 @@ export class UserController{
 
     async deleteUser(req: Request, res: Response, next: NextFunction){
         try{
-            const { id } = req.params;
-            if(!id) return res.status(400).json({ message: "Id de usuário não fornecido" });
-
-            const userId = parseInt(id);
-            if(!userId) return res.status(400).json({ message: "Id de usuário inválido" });
-
-            const deletedUser = await this.userService.deleteUser(userId);
+            const userId = parseInt(req.params.id!);
+            await this.userService.deleteUser(userId);
             return res.status(204).send();
         }
         catch(error){

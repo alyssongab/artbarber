@@ -1,6 +1,7 @@
 import { ServicesService } from "./services.service.ts";
-import { createServiceSchema } from "./services.schema.ts";
+import { createServiceSchema, updateServiceSchema } from "./services.schema.ts";
 import type { Request, Response, NextFunction } from "express";
+import { BadRequestError } from "../../shared/errors/http.errors.ts";
 
 export class ServicesController{
 
@@ -32,6 +33,41 @@ export class ServicesController{
         try{
             const services = await this.servicesService.getServices();
             return res.status(200).json(services);
+        }
+        catch(error){
+            next(error);
+        }
+    }
+
+    async getService(req: Request, res: Response, next: NextFunction){
+        try{
+            const serviceId = parseInt(req.params.id!);
+            const service = await this.servicesService.getService(serviceId);
+            return res.status(200).json(service);
+        }
+        catch(error){
+            next(error);
+        }
+    }
+
+    async updateService(req: Request, res: Response, next: NextFunction) {
+        try{
+            const serviceId = parseInt(req.params.id!);
+            const dataToUpdate = updateServiceSchema.parse(req.body);
+            const updatedService =  await this.servicesService.updateService(serviceId, dataToUpdate);
+            
+            return res.status(200).json(updatedService);
+        }
+        catch(error){
+            next(error);
+        }
+    }
+
+    async deleteService(req: Request, res: Response, next: NextFunction) {
+        try{
+            const serviceId = parseInt(req.params.id!);
+            await this.servicesService.deleteService(serviceId);
+            return res.status(204).send();
         }
         catch(error){
             next(error);
