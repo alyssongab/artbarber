@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 
-export function validadeId(req: Request, res: Response, next: NextFunction){
+export function validateId(req: Request, res: Response, next: NextFunction){
     const { id } = req.params;
 
     if (!id) {

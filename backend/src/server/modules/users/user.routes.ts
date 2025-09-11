@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { UserController } from "./user.controller.ts";
 import upload from '../../shared/config/multer.ts';
-import { validadeId } from "../../shared/middlewares/id.validation.ts";
+import { validateId } from "../../shared/middlewares/id.validation.ts";
 
 const userController = new UserController();
 const usersRouter = Router();
@@ -22,7 +22,7 @@ usersRouter.get(
 // get a single user
 usersRouter.get(
     '/:id',
-    validadeId, 
+    validateId, 
     (req: Request, res: Response, next: NextFunction) => userController.getUser(req, res, next)
 );
 
@@ -35,7 +35,7 @@ usersRouter.post(
 // update a user
 usersRouter.put(
     '/:id',
-    validadeId,
+    validateId,
     (req: Request, res: Response, next: NextFunction) => userController.updateUser(req, res, next)
 );
 
@@ -48,7 +48,7 @@ usersRouter.post(
 
 usersRouter.delete(
     '/:id',
-    validadeId,
+    validateId,
     (req: Request, res: Response, next: NextFunction) => userController.deleteUser(req, res, next)
 );
 
