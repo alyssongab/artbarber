@@ -9,7 +9,7 @@ export class AppointmentController {
         this.appointmentService = new AppointmentService();
     }
 
-    async createAppointment(req: Request, res: Response, next: NextFunction) {
+    createAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const parsedData = createAppointmentSchema.parse(req.body);
             const appointment = await this.appointmentService.createAppointment(parsedData);
@@ -20,7 +20,7 @@ export class AppointmentController {
         }
     }
 
-    async getAppointments(req: Request, res: Response, next: NextFunction) {
+    getAppointments = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const appointments = await this.appointmentService.getAppointments();
             res.status(200).json(appointments);
@@ -30,7 +30,7 @@ export class AppointmentController {
         }
     }
 
-    async deleteAppointment(req: Request, res: Response, next: NextFunction) {
+    deleteAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = parseInt(req.params.id!);
             await this.appointmentService.deleteAppointment(id);

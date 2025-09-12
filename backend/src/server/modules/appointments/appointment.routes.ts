@@ -7,21 +7,12 @@ const appointmentController = new AppointmentController();
 const appointmentsRouter = Router();
 
 // create appointment endpoint
-appointmentsRouter.post('/',
-    (req: Request, res: Response, next: NextFunction) =>
-    appointmentController.createAppointment(req, res, next)
-);
+appointmentsRouter.post('/', appointmentController.createAppointment);
 
 // get all appointments endpoint
-appointmentsRouter.get('/',
-    (req: Request, res: Response, next: NextFunction) =>
-    appointmentController.getAppointments(req, res, next)
-);
+appointmentsRouter.get('/', appointmentController.getAppointments);
 
-appointmentsRouter.delete('/:id',
-    validateId,
-    (req: Request, res: Response, next: NextFunction) =>
-    appointmentController.deleteAppointment(req, res, next)
-)
+// delete appointment endpoint
+appointmentsRouter.delete('/:id', validateId, appointmentController.deleteAppointment);
 
 export default appointmentsRouter;
