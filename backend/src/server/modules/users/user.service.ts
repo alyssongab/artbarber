@@ -88,11 +88,11 @@ export class UserService {
      * @param data email and password
      * @returns jwt token
      */
-    async login(data: LoginInput): Promise<{ accessToken: string }> {
-        const user = await this.userRepository.findByEmail(data.email);
+    async login(credentials: LoginInput): Promise<{ accessToken: string }> {
+        const user = await this.userRepository.findByEmail(credentials.email);
         if(!user) throw new Error("Email ou senha inválidos.");
 
-        const validPassword = await bcrypt.compare(data.password, user.password);
+        const validPassword = await bcrypt.compare(credentials.password, user.password);
         if(!validPassword) throw new BadRequestError("Email ou senha inválidos.");
 
         const payload = {
