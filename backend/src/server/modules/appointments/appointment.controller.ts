@@ -1,0 +1,32 @@
+import { AppointmentService } from "./appointments.service.ts";
+import { createAppointmentSchema } from "./appointment.schema.ts";
+import type { Request, Response, NextFunction } from "express";
+
+export class AppointmentController {
+    private appointmentService: AppointmentService
+
+    constructor(){
+        this.appointmentService = new AppointmentService();
+    }
+
+    async createAppointment(req: Request, res: Response, next: NextFunction) {
+        try{
+            const parsedData = createAppointmentSchema.parse(req.body);
+            const appointment = await this.appointmentService.createAppointment(parsedData);
+            return res.status(201).json(appointment);
+        }
+        catch(error){
+            next(error);
+        }
+    }
+
+    async getAppointments(req: Request, res: Response, next: NextFunction) {
+        try{
+            const appointments = await this.appointmentService.getAppointments();
+            res.status(200).json(appointments);
+        }
+        catch(error){
+            next(error);
+        }
+    }
+}
