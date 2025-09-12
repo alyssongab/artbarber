@@ -1,34 +1,25 @@
 import { Router } from "express";
-import type { Request, Response, NextFunction } from "express";
 import { UserController } from "./user.controller.ts";
 import upload from '../../shared/config/multer.ts';
 import { validateId } from "../../shared/middlewares/id.validation.ts";
+import { authenticate } from "../../shared/middlewares/auth.middleware.ts";
 
 const userController = new UserController();
 const usersRouter = Router();
 
 // Route ('/users')
 
-// signup for clients
+// ----- PUBLIC ROUTES (NO JWT) -----
 usersRouter.post('/client', userController.createClient);
-
-// get all users
-usersRouter.get('/', userController.getAllUsers);
-
-// get a single user
-usersRouter.get('/:id', validateId, userController.getUser);
-
-// login for all users
 usersRouter.post('/login',  userController.login);
 
-// update a user
-usersRouter.put('/:id', validateId, userController.updateUser);
 
-// create barber with their photo
-usersRouter.post('/barber', upload.single('photo'), userController.createBarber);
-
-// delete a user
-usersRouter.delete('/:id', validateId, userController.deleteUser);
+// ---- PROTECTED ROUTES (JWT) -----
+usersRouter.post('/barber', authenticate, upload.single('photo'), userController.createBarber);
+usersRouter.get('/', authenticate, userController.getAllUsers);
+usersRouter.get('/:id', validateId, authenticate, userController.getUser);
+usersRouter.put('/:id', validateId, authenticate, userController.updateUser);
+usersRouter.delete('/:id', validateId, authenticate, userController.deleteUser);
 
 
 export default usersRouter;

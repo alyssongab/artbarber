@@ -1,18 +1,18 @@
 import { Router } from "express";
-import type { Request, Response, NextFunction } from "express";
 import { AppointmentController } from "./appointment.controller.ts";
 import { validateId } from "../../shared/middlewares/id.validation.ts";
+import { authenticate } from "../../shared/middlewares/auth.middleware.ts";
 
 const appointmentController = new AppointmentController();
 const appointmentsRouter = Router();
 
 // create appointment endpoint
-appointmentsRouter.post('/', appointmentController.createAppointment);
+appointmentsRouter.post('/', authenticate, appointmentController.createAppointment);
 
 // get all appointments endpoint
-appointmentsRouter.get('/', appointmentController.getAppointments);
+appointmentsRouter.get('/', authenticate, appointmentController.getAppointments);
 
 // delete appointment endpoint
-appointmentsRouter.delete('/:id', validateId, appointmentController.deleteAppointment);
+appointmentsRouter.delete('/:id', validateId, authenticate, appointmentController.deleteAppointment);
 
 export default appointmentsRouter;
