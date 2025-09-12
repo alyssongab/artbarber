@@ -11,7 +11,8 @@ import jwt from 'jsonwebtoken';
 import { removeUndefined } from "../../shared/utils/object.utils.ts";
 import { NotFoundError, 
     ConflictError, 
-    BadRequestError } from "../../shared/errors/http.errors.ts";
+    BadRequestError, 
+    UnauthorizedError} from "../../shared/errors/http.errors.ts";
 
 export class UserService {
 
@@ -90,10 +91,10 @@ export class UserService {
      */
     async login(credentials: LoginInput): Promise<{ accessToken: string }> {
         const user = await this.userRepository.findByEmail(credentials.email);
-        if(!user) throw new Error("Email ou senha inválidos.");
+        if(!user) throw new UnauthorizedError("Credenciais inválidas.");
 
         const validPassword = await bcrypt.compare(credentials.password, user.password);
-        if(!validPassword) throw new BadRequestError("Email ou senha inválidos.");
+        if(!validPassword) throw new UnauthorizedError("Credenciais inválidas.");
 
         const payload = {
             sub: user.user_id,
@@ -101,7 +102,7 @@ export class UserService {
         };
 
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-            expiresIn: "3600"
+            expiresIn: "1d"
         });
 
         return { accessToken };
