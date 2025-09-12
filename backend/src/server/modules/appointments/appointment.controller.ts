@@ -29,4 +29,15 @@ export class AppointmentController {
             next(error);
         }
     }
+
+    async deleteAppointment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = parseInt(req.params.id!);
+            await this.appointmentService.deleteAppointment(id);
+            return res.status(204).send();
+        }
+        catch(error) {
+            next(error);
+        }
+    }
 }

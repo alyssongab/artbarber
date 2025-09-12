@@ -14,6 +14,17 @@ export class AppointmentRepository {
     }
 
     /**
+     * Find an appointment by Id
+     * @param appointmentId 
+     * @returns 
+     */
+    async findById(appointmentId: number): Promise<Appointment | null> {
+        return await prismaClient.appointment.findUnique({
+            where: { appointment_id: appointmentId }
+        });
+    }
+
+    /**
      * Get all appointments
      * @returns 
      */
@@ -38,6 +49,17 @@ export class AppointmentRepository {
                     { id_barber: barberId }
                 ]
             }
+        });
+    }
+
+    /**
+     * Delete an appointment by id
+     * @param appointmentId 
+     * @returns The deleted object
+     */
+    async delete(appointmentId: number): Promise<Appointment> {
+        return await prismaClient.appointment.delete({
+            where: { appointment_id: appointmentId }
         });
     }
 }

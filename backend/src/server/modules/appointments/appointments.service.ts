@@ -62,8 +62,18 @@ export class AppointmentService {
         return this.toAppointmentResponseDTO(newAppointment);
     }
 
+    /**
+     * Get all appointments
+     * @returns List of appointments in DTO Response format
+     */
     async getAppointments() {
         const appointments = await this.appointmentRepository.findAll();
         return appointments.map( ap => this.toAppointmentResponseDTO(ap));
+    }
+
+    async deleteAppointment(appointmentId: number){
+        const appointmentExists = await this.appointmentRepository.findById(appointmentId);
+        if(!appointmentExists) throw new NotFoundError("Agendamento não encontrado");
+        return await this.appointmentRepository.delete(appointmentId);
     }
 }
