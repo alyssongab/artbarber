@@ -3,12 +3,15 @@ import type { InputServiceDTO, UpdateServiceDTO } from "./services.schema.ts";
 import { ServiceRepository } from "./services.repository.ts";
 import { ConflictError, NotFoundError, BadRequestError } from "../../shared/errors/http.errors.ts";
 import { removeUndefined } from "../../shared/utils/object.utils.ts";
+import { AppointmentRepository } from "../appointments/appointments.repository.ts";
 
 export class ServicesService {
     private serviceRepository: ServiceRepository;
+    private appointmentRepository: AppointmentRepository;
 
     constructor(){
         this.serviceRepository = new ServiceRepository();
+        this.appointmentRepository = new AppointmentRepository();
     }
 
     async createService(data: InputServiceDTO): Promise<Service> {
@@ -41,11 +44,16 @@ export class ServicesService {
         return await this.serviceRepository.update(serviceId, cleanData as Prisma.ServiceUpdateInput);
     }
 
-    async deleteService(serviceId: number): Promise<Boolean> {
-        const service = await this.serviceRepository.findById(serviceId);
-        if(!service) throw new NotFoundError("Serviço não encontrado");
+    async deleteService(serviceId: number): Promise<void> {
+        const serviceExists = await this.serviceRepository.findById(serviceId);
+        if(!serviceExists) throw new NotFoundError("Serviço não encontrado");
 
-        const deletedService = await this.serviceRepository.delete(serviceId);
-        return (deletedService) ? true : false;
+        // It keeps integrity
+        const existingAppointment = await this.appointmentRepository.findFirstByServiceId(serviceId);
+        if(existingAppointment) {
+            throw new ConflictError("Não é possível deletar o serviço pois ele está vinculado a um ou mais agendamentos.");
+        }
+
+        await this.serviceRepository.delete(serviceId);
     }
 }

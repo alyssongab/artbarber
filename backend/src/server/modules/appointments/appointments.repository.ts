@@ -62,4 +62,17 @@ export class AppointmentRepository {
             where: { appointment_id: appointmentId }
         });
     }
+
+    /**
+     * Finds the first appointment asssociated with a service id
+     * @param serviceId 
+     * @returns An appointment or null
+     */
+    async findFirstByServiceId(serviceId: number): Promise<Appointment | null> {
+        return await prismaClient.appointment.findFirst({
+            where: {
+                id_service: serviceId
+            }
+        });
+    }
 }
