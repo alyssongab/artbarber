@@ -8,8 +8,8 @@ export const createServiceSchema = z.strictObject({
 
 export const updateServiceSchema = z.strictObject({
     name: z.string("Nome inválido")
-        .min(1, "Nome não pode ser vazio") // Garante que se for enviado, não é ""
-        .optional(), // Torna o campo opcional
+        .min(1, "Nome não pode ser vazio")
+        .optional(), 
     price: z.number("Valor do preço inválido")
         .min(10, "Preço deve ser maior que 10")
         .optional(),

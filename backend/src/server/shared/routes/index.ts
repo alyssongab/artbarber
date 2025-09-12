@@ -2,6 +2,7 @@ import { Router } from "express";
 import express from 'express';
 import usersRouter from "../../modules/users/user.routes.ts";
 import servicesRoutes from "../../modules/service/services.routes.ts";
+import appointmentsRouter from "../../modules/appointments/appointment.routes.ts";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -14,6 +15,7 @@ const routes = Router();
 
 routes.use('/users', usersRouter);
 routes.use('/services', servicesRoutes);
+routes.use('/appointments', appointmentsRouter);
 routes.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 routes.use(errorHandler);
 
