@@ -6,26 +6,12 @@ import { validateId } from "../../shared/middlewares/id.validation.ts";
 const servicesController = new ServicesController();
 const servicesRoutes = Router();
 
-servicesRoutes.post('/',
-    (req: Request, res: Response, next: NextFunction) =>
-    servicesController.createService(req, res, next)
-);
+servicesRoutes.post('/', servicesController.createService);
 
-servicesRoutes.get('/',
-    (req: Request, res: Response, next: NextFunction) =>
-    servicesController.getServices(req, res, next)
-);
+servicesRoutes.get('/', servicesController.getServices);
 
-servicesRoutes.put('/:id',
-     validateId,
-    (req: Request, res: Response, next: NextFunction) =>
-    servicesController.updateService(req, res, next)
-);
+servicesRoutes.put('/:id', validateId, servicesController.updateService);
 
-servicesRoutes.delete('/:id',
-    validateId,
-    (req: Request, res: Response, next: NextFunction) =>
-    servicesController.deleteService(req, res, next)
-);
+servicesRoutes.delete('/:id', validateId, servicesController.deleteService);
 
 export default servicesRoutes;

@@ -18,7 +18,7 @@ export class ServicesController{
      * @param next 
      * @returns 
      */
-    async createService(req: Request, res: Response, next: NextFunction){
+    createService = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const serviceData = createServiceSchema.parse(req.body);
             const newService = await this.servicesService.createService(serviceData);
@@ -29,7 +29,7 @@ export class ServicesController{
         }
     }
 
-    async getServices(req: Request, res: Response, next: NextFunction){
+    getServices = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const services = await this.servicesService.getServices();
             return res.status(200).json(services);
@@ -39,7 +39,7 @@ export class ServicesController{
         }
     }
 
-    async getService(req: Request, res: Response, next: NextFunction){
+    gerService = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const serviceId = parseInt(req.params.id!);
             const service = await this.servicesService.getService(serviceId);
@@ -50,7 +50,7 @@ export class ServicesController{
         }
     }
 
-    async updateService(req: Request, res: Response, next: NextFunction) {
+    updateService = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const serviceId = parseInt(req.params.id!);
             const dataToUpdate = updateServiceSchema.parse(req.body);
@@ -63,7 +63,7 @@ export class ServicesController{
         }
     }
 
-    async deleteService(req: Request, res: Response, next: NextFunction) {
+    deleteService = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const serviceId = parseInt(req.params.id!);
             await this.servicesService.deleteService(serviceId);
