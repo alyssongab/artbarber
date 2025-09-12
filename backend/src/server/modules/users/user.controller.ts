@@ -17,7 +17,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async createClient(req: Request, res: Response, next: NextFunction){
+    createClient = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const clientData = createClientSchema.parse(req.body);
             const newClient = await this.userService.createClient(clientData);
@@ -37,7 +37,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async createBarber(req: Request, res: Response, next: NextFunction){
+    createBarber = async (req: Request, res: Response, next: NextFunction) => {
         try{
 
             // validate file (photo)
@@ -61,21 +61,20 @@ export class UserController{
         }
     }
 
-    // for all user roles
 
     /**
      * Find all users
      * @param req 
      * @param res 
      */
-    async getAllUsers(req: Request, res: Response, next: NextFunction){
+    getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
         const users = await this.userService.listUsers();
         res.status(200).json({
             data: users
         });
     }
 
-    async login(req: Request, res: Response, next: NextFunction){
+    login = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const credentials = req.body;
             const { accessToken } = await this.userService.login(credentials);
@@ -95,7 +94,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async updateUser(req: Request, res: Response, next: NextFunction){
+    updateUser = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const userId = parseInt(req.params.id!);
             const updatedData = updateUserSchema.parse(req.body);
@@ -114,7 +113,7 @@ export class UserController{
      * @param res 
      * @returns 
      */
-    async getUser(req: Request, res: Response, next: NextFunction){
+    getUser = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const userId = parseInt(req.params.id!);
             const user = await this.userService.findUser(userId);
@@ -125,7 +124,7 @@ export class UserController{
         }
     }
 
-    async deleteUser(req: Request, res: Response, next: NextFunction){
+    deleteUser = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const userId = parseInt(req.params.id!);
             await this.userService.deleteUser(userId);
