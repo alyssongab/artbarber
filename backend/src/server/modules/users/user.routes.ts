@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { UserController } from "./user.controller.ts";
-import upload from '../../shared/config/multer.ts';
+import { upload } from '../../shared/config/multer.ts';
 import { validateId } from "../../shared/middlewares/id.validation.ts";
 import { authenticate } from "../../shared/middlewares/jwt.authentication.ts";
-import authorize from "../../shared/middlewares/role.authorization.ts";
+import { authorize } from "../../shared/middlewares/role.authorization.ts";
 
 const userController = new UserController();
 const usersRouter = Router();

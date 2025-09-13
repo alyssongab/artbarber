@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AppointmentController } from "./appointment.controller.ts";
 import { validateId } from "../../shared/middlewares/id.validation.ts";
 import { authenticate } from "../../shared/middlewares/jwt.authentication.ts";
-import authorize from "../../shared/middlewares/role.authorization.ts";
+import { authorize } from "../../shared/middlewares/role.authorization.ts";
 
 const appointmentController = new AppointmentController();
 const appointmentsRouter = Router();

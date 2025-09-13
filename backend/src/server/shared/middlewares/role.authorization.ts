@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from "express";
  * @param allowedRoles List of roles that are allowed to access this route
  * @returns An express middleware function
  */
-const authorize = (...allowedRoles: string[]) => {
+export const authorize = (...allowedRoles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const user = req.user
         if(!user || !allowedRoles.includes(user.role)) {
@@ -17,5 +17,3 @@ const authorize = (...allowedRoles: string[]) => {
         next();
     }
 }
-
-export default authorize;

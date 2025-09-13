@@ -6,7 +6,7 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const upload = multer({
+export const upload = multer({
     storage: multer.diskStorage({
         destination: path.join(__dirname, "..", "uploads"),
         filename(req, file, callback) {
@@ -25,5 +25,3 @@ const upload = multer({
         callback(null, true) ;
     },
 });
-
-export default upload;
