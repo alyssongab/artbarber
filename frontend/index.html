@@ -84,30 +84,51 @@
             font-weight: bold;
             color: #0056b3;
         }
+        /* Estilos para o painel de admin e login */
+        #admin-panel { display: none; } /* Esconde o painel por padrão */
+        #auth-status { text-align: center; margin-bottom: 20px; }
+        #logout-btn {
+            background-color: #dc3545;
+        }
+        #logout-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
 
     <h1>ArtBarber - Painel de Controle</h1>
 
-    <div class="container">
-        <h2>Cadastrar Novo Barbeiro</h2>
-        <form id="create-barber-form">
-            <input type="text" name="first_name" placeholder="Nome" required>
-            <input type="text" name="last_name" placeholder="Sobrenome">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <input type="text" name="phone_number" placeholder="Telefone (11 dígitos)" required>
-            <label for="photo">Foto do Barbeiro:</label>
-            <input type="file" name="photo" accept="image/*" required>
-            <button type="submit">Cadastrar Barbeiro</button>
+    <!-- Container de Login -->
+    <div class="container" id="login-container">
+        <h2>Login de Administrador</h2>
+        <form id="login-form">
+            <input type="email" name="email" placeholder="Email" required value="adm@email.com">
+            <input type="password" name="password" placeholder="Senha" required value="admin12345">
+            <button type="submit">Entrar</button>
         </form>
     </div>
 
-    <div class="container">
-        <h2>Lista de Usuários</h2>
-        <div id="user-list">
-            <!-- Os usuários serão inseridos aqui pelo JavaScript -->
+    <!-- Painel de Controle (inicialmente escondido) -->
+    <div id="admin-panel">
+        <div id="auth-status"></div>
+        <div class="container">
+            <h2>Cadastrar Novo Barbeiro</h2>
+            <form id="create-barber-form">
+                <input type="text" name="first_name" placeholder="Nome" required>
+                <input type="text" name="last_name" placeholder="Sobrenome">
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="password" name="password" placeholder="Senha" required>
+                <input type="text" name="phone_number" placeholder="Telefone (11 dígitos)" required>
+                <label for="photo">Foto do Barbeiro:</label>
+                <input type="file" name="photo" accept="image/*" required>
+                <button type="submit">Cadastrar Barbeiro</button>
+            </form>
+        </div>
+
+        <div class="container">
+            <h2>Lista de Usuários</h2>
+            <div id="user-list"></div>
         </div>
     </div>
 
@@ -115,28 +136,40 @@
         const API_URL = 'http://localhost:3030/api';
         const userList = document.getElementById('user-list');
         const createBarberForm = document.getElementById('create-barber-form');
+        const loginForm = document.getElementById('login-form');
+        const loginContainer = document.getElementById('login-container');
+        const adminPanel = document.getElementById('admin-panel');
+        const authStatus = document.getElementById('auth-status');
 
-        // Função para buscar e exibir os usuários
+        // Função para pegar o token do localStorage
+        function getToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        // Função para buscar e exibir os usuários (AGORA COM AUTENTICAÇÃO)
         async function fetchUsers() {
+            const token = getToken();
+            if (!token) return; // Não faz nada se não houver token
+
             try {
-                const response = await fetch(`${API_URL}/users`);
+                const response = await fetch(`${API_URL}/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) throw new Error('Erro ao buscar usuários');
                 
                 const responseData = await response.json();
                 const users = responseData.data;
                 
-                userList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
+                userList.innerHTML = ''; 
 
                 users.forEach(user => {
                     const card = document.createElement('div');
                     card.className = 'user-card';
 
                     let photoHtml = '<img src="https://via.placeholder.com/80" alt="Foto padrão">';
-                    // Se o usuário tiver uma URL de foto, use-a.
-                    // Isso assume que você está servindo a pasta 'uploads' estaticamente.
                     if (user.photo_url) {
-                        // O backend salva o caminho como 'uploads/nome-do-arquivo.jpg'
-                        // Nós precisamos remover o 'uploads/' para montar a URL correta
                         const photoPath = user.photo_url.replace('uploads/', '');
                         photoHtml = `<img src="${API_URL}/uploads/${photoPath}" alt="Foto de ${user.first_name}">`;
                     }
@@ -157,18 +190,23 @@
             }
         }
 
-        // Event listener para o formulário de cadastro de barbeiro
+        // Event listener para o formulário de cadastro de barbeiro (AGORA COM AUTENTICAÇÃO)
         createBarberForm.addEventListener('submit', async (event) => {
             event.preventDefault();
+            const token = getToken();
+            if (!token) {
+                alert('Sessão expirada. Faça login novamente.');
+                return;
+            }
 
-            // FormData é a maneira correta de enviar formulários com arquivos
             const formData = new FormData(createBarberForm);
 
             try {
                 const response = await fetch(`${API_URL}/users/barber`, {
                     method: 'POST',
-                    // Não defina o header 'Content-Type'. O navegador fará isso
-                    // automaticamente com o 'boundary' correto para multipart/form-data.
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: formData
                 });
 
@@ -178,8 +216,8 @@
                 }
 
                 alert('Barbeiro cadastrado com sucesso!');
-                createBarberForm.reset(); // Limpa o formulário
-                fetchUsers(); // Atualiza a lista de usuários
+                createBarberForm.reset();
+                fetchUsers();
 
             } catch (error) {
                 console.error('Erro no cadastro:', error);
@@ -187,6 +225,57 @@
             }
         });
 
-        // Carrega os usuários quando a página é aberta
-        fetchUsers();
+        // Event listener para o formulário de LOGIN
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(loginForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Credenciais inválidas');
+}
+
+                const { accessToken } = await response.json();
+                localStorage.setItem('authToken', accessToken); // Armazena o token
+                
+                // Atualiza a UI
+                showAdminPanel();
+
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        function showAdminPanel() {
+            loginContainer.style.display = 'none';
+            adminPanel.style.display = 'block';
+            
+            // Adiciona botão de logout
+            authStatus.innerHTML = `
+                <p>Logado como ADMIN</p>
+                <button id="logout-btn">Sair</button>
+            `;
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                loginContainer.style.display = 'block';
+                adminPanel.style.display = 'none';
+                userList.innerHTML = '';
+            });
+
+            fetchUsers(); // Carrega os usuários após o login
+        }
+
+        // Verifica se já existe um token ao carregar a página
+        if (getToken()) {
+            showAdminPanel();
+        }
     </script>
+</body>
+</html>
