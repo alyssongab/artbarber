@@ -130,7 +130,6 @@ export class UserService {
         const isAdmin = actor.role === 'ADMIN';
 
         if(isAdmin && userExists.role !== 'ADMIN'){}
-        
         else if(isOwner){}
         
         else{
@@ -155,9 +154,19 @@ export class UserService {
      * @param userId 
      * @returns User or null
      */
-    async findUser(userId: number): Promise<UserResponseDTO | null> {
+    async getUser(userId: number, actor: Actor): Promise<UserResponseDTO | null> {
         const user = await this.userRepository.findById(userId);
         if(!user) throw new NotFoundError("Usuário não encontrado.");
+
+        const isOwner = actor.user_id === user.user_id;
+        const isAdmin = actor.role === 'ADMIN';
+
+        if(isAdmin && user.role !== 'ADMIN'){}
+        else if(isOwner){}
+        
+        else{
+            throw new ForbiddenError("Você não tem permissão para visualizar este usuário.");    
+        }
 
         return this.toUserResponseDTO(user);
     }

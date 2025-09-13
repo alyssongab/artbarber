@@ -118,7 +118,9 @@ export class UserController{
     getUser = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const userId = parseInt(req.params.id!);
-            const user = await this.userService.findUser(userId);
+            const actor = req.user!;
+            const user = await this.userService.getUser(userId, actor);
+
             return res.status(200).json(user);
         }
         catch(error){
