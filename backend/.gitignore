@@ -2,3 +2,5 @@
 
 .env
 /src/generated/prisma
+
+/src/generate-hash.js

@@ -33,3 +33,9 @@ export class UnauthorizedError extends HttpError {
         super(message, 401);
     }
 }
+
+export class ForbiddenError extends HttpError {
+    constructor(message: string){
+        super(message, 403);
+    }
+}
