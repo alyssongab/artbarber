@@ -18,7 +18,11 @@ export class UserRepository {
      * @returns User[]
      */
     async findAll(): Promise<User[]> {
-        return await prismaClient.user.findMany();
+        return await prismaClient.user.findMany({
+            orderBy: [
+                { user_id: 'asc' }
+            ]
+        });
     }
 
     /**

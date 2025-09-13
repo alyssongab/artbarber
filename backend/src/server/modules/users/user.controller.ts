@@ -98,7 +98,9 @@ export class UserController{
         try{
             const userId = parseInt(req.params.id!);
             const updatedData = updateUserSchema.parse(req.body);
-            const updatedUser = await this.userService.updateUser(userId, updatedData);
+            const actor = req.user!;
+
+            const updatedUser = await this.userService.updateUser(userId, updatedData, actor);
 
             return res.status(200).json(updatedUser);
         }

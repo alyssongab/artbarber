@@ -1,18 +1,16 @@
 import { Prisma } from "@prisma/client";
 import type { User } from "@prisma/client";
-import type { CreateClientDTO, 
-    LoginInput, 
-    UserResponseDTO, 
-    UpdateUserDTO,
-    CreateBarberDTO } from "./user.schema.ts";
+import type { CreateClientDTO, LoginInput, UserResponseDTO, UpdateUserDTO,CreateBarberDTO } from "./user.schema.ts";
 import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { removeUndefined } from "../../shared/utils/object.utils.ts";
-import { NotFoundError, 
-    ConflictError, 
-    BadRequestError, 
-    UnauthorizedError} from "../../shared/errors/http.errors.ts";
+import { NotFoundError, ConflictError, BadRequestError, UnauthorizedError, ForbiddenError} from "../../shared/errors/http.errors.ts";
+
+type Actor = {
+    user_id: number,
+    role: string
+}
 
 export class UserService {
 
@@ -123,10 +121,21 @@ export class UserService {
      * @param data 
      * @returns 
      */
-    async updateUser(userId: number, data: UpdateUserDTO): Promise<UserResponseDTO> {
+    async updateUser(userId: number, data: UpdateUserDTO, actor: Actor): Promise<UserResponseDTO> {
 
         const userExists = await this.userRepository.findById(userId);
         if(!userExists) throw new NotFoundError("Usuário não encontrado.");
+
+        const isOwner = actor.user_id === userExists.user_id;
+        const isAdmin = actor.role === 'ADMIN';
+
+        if(isAdmin && userExists.role !== 'ADMIN'){}
+        
+        else if(isOwner){}
+        
+        else{
+            throw new ForbiddenError("Você não tem permissão para atualizar este usuário.");    
+        }
 
         // if password is provided
         if(data.password){

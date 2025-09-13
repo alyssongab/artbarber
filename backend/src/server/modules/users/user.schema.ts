@@ -32,7 +32,7 @@ export const updateUserSchema = z.strictObject({
     phone_number: z.string().length(11, "Número de celular inválido."),
     pix_key: z.string(),
     birthday: z.coerce.date("Formato invalido").nullable()
-}, "Campo fornecido não existe").partial();
+}, "Campo fornecido não permitido").partial();
 
 
 // =================== RESPONSE DTOs =====================
