@@ -1,5 +1,5 @@
 import { AppointmentService } from "./appointments.service.ts";
-import { createAppointmentSchema } from "./appointment.schema.ts";
+import { createAppointmentSchema, updateAppointmentStatusSchema } from "./appointment.schema.ts";
 import type { Request, Response, NextFunction } from "express";
 
 export class AppointmentController {
@@ -35,6 +35,18 @@ export class AppointmentController {
             const id = parseInt(req.params.id!);
             await this.appointmentService.deleteAppointment(id);
             return res.status(204).send();
+        }
+        catch(error) {
+            next(error);
+        }
+    }
+
+    updateAppointmentStatus = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const id = parseInt(req.params.id!);
+            const parsedStatus = updateAppointmentStatusSchema.parse(req.body);
+            const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus);
+            return res.status(200).json(updatedAppointment);
         }
         catch(error) {
             next(error);

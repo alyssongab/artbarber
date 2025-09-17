@@ -1,8 +1,8 @@
 import { AppointmentRepository } from "./appointments.repository.ts";
-import { BadRequestError, ConflictError, NotFoundError } from "../../shared/errors/http.errors.ts";
+import { ConflictError, NotFoundError } from "../../shared/errors/http.errors.ts";
 import { Prisma } from "@prisma/client";
 import type { Appointment } from "@prisma/client";
-import type { AppointmentInputDTO } from "./appointment.schema.ts";
+import type { AppointmentInputDTO, AppointmentStatusEnum } from "./appointment.schema.ts";
 
 export class AppointmentService {
     private appointmentRepository: AppointmentRepository;
@@ -11,7 +11,11 @@ export class AppointmentService {
         this.appointmentRepository = new AppointmentRepository();
     }
 
-    // DTO 
+    /**
+     * Convert response into DTO Response
+     * @param appointment 
+     * @returns 
+     */
     private toAppointmentResponseDTO(appointment: Appointment) {
         return {
             appointment_id: appointment.appointment_id,
@@ -19,10 +23,17 @@ export class AppointmentService {
             appointment_time: appointment.appointment_time.toISOString().split('T')[1]!.substring(0, 8),
             id_barber: appointment.id_barber,
             id_client: appointment.id_client,
-            id_service: appointment.id_service
+            id_service: appointment.id_service,
+            appointment_status: appointment.appointment_status
         }
     }
 
+    /**
+     * Create a new appointment
+     * Checks availability of barber at date and time given 
+     * @param data 
+     * @returns 
+     */
     async createAppointment(data: AppointmentInputDTO) {
         // Date conversion
         // Z = UTC Time to keep date and time consistent in server and database
@@ -71,9 +82,21 @@ export class AppointmentService {
         return appointments.map( ap => this.toAppointmentResponseDTO(ap));
     }
 
+    /**
+     * Delete an appointment
+     * @param appointmentId 
+     * @returns 
+     */
     async deleteAppointment(appointmentId: number){
         const appointmentExists = await this.appointmentRepository.findById(appointmentId);
         if(!appointmentExists) throw new NotFoundError("Agendamento não encontrado");
         return await this.appointmentRepository.delete(appointmentId);
+    }
+
+    async updateAppointmentStatus(appointmentId: number, newStatus: AppointmentStatusEnum){
+        const appointmentExists = await this.appointmentRepository.findById(appointmentId);
+        if(!appointmentExists) throw new NotFoundError("Agendamento informado não encontrado.");
+
+        return await this.appointmentRepository.updateStatus(appointmentId, newStatus.appointment_status);
     }
 }

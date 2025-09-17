@@ -16,4 +16,7 @@ appointmentsRouter.get('/', authenticate, appointmentController.getAppointments)
 // delete appointment endpoint
 appointmentsRouter.delete('/:id', validateId, authenticate, authorize('CLIENT', 'BARBER'), appointmentController.deleteAppointment);
 
+// update the status of an appointment
+appointmentsRouter.patch('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.updateAppointmentStatus);
+
 export default appointmentsRouter;

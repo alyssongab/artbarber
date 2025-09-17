@@ -1,4 +1,4 @@
-import type { Appointment } from "@prisma/client";
+import type { Appointment, AppointmentStatus } from "@prisma/client";
 import prismaClient from "../../shared/config/prisma.ts";
 import { Prisma } from "@prisma/client";
 
@@ -65,6 +65,7 @@ export class AppointmentRepository {
 
     /**
      * Finds the first appointment asssociated with a service id
+     * This is invoked when user tries to delete a existing service
      * @param serviceId 
      * @returns An appointment or null
      */
@@ -73,6 +74,19 @@ export class AppointmentRepository {
             where: {
                 id_service: serviceId
             }
+        });
+    }
+
+    /**
+     * Updates the status of a specific appointment
+     * @param appointmentId 
+     * @param newStatus Status to be set (PENDENTE, CONCLUIDO, CANCELADO)
+     * @returns Appointment object
+     */
+    async updateStatus(appointmentId: number, newStatus: AppointmentStatus): Promise<Appointment> {
+        return await prismaClient.appointment.update({
+            where: { appointment_id: appointmentId },
+            data: { appointment_status: newStatus }
         });
     }
 }
