@@ -51,6 +51,7 @@ model Appointment {
   appointment_id        Int                @id @default(autoincrement())
   appointment_date      DateTime           @db.Date
   appointment_time      DateTime           @db.Time
+  appointment_status    AppointmentStatus  @default(PENDENTE)
 
   id_barber             Int
   barber                User               @relation("BarberAppointments", fields: [id_barber], references: [user_id])
@@ -61,6 +62,6 @@ model Appointment {
 
   id_service            Int
   service               Service            @relation(fields: [id_service], references: [service_id])
-
-  appointment_status    AppointmentStatus  @default(PENDENTE)
+  
+  notification_sent      Boolean            @default(false)
 }
