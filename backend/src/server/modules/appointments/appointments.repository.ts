@@ -89,4 +89,45 @@ export class AppointmentRepository {
             data: { appointment_status: newStatus }
         });
     }
+
+    /**
+     * Find appointments by date range (simple database query)
+     * @param startDate 
+     * @param endDate 
+     * @returns 
+     */
+    async findByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]> {
+        return await prismaClient.appointment.findMany({
+            where: {
+                AND: [
+                    {
+                        appointment_date: {
+                            gte: startDate,
+                            lte: endDate
+                        }
+                    },
+                    { appointment_status: 'PENDENTE' },
+                    { notification_sent: false }
+                ]
+            },
+            include: {
+                client: true,
+                barber: true,
+                service: true
+            }
+        });
+    }
+
+    /**
+     * Update notification status
+     * @param appointmentId 
+     * @param notificationSent 
+     * @returns 
+     */
+    async updateNotificationStatus(appointmentId: number, status: boolean){
+        return await prismaClient.appointment.update({
+            where: { appointment_id: appointmentId },
+            data: { notification_sent: status }
+        });
+    }
 }
