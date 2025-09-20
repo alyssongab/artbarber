@@ -56,34 +56,34 @@ export class NotificationService {
    * @throws {Error} if fails either to find appointments or send notifications
    */
   private async checkUpcomingAppointments(){
-        try {
-            const now = new Date();
+      try {
+          const now = new Date();
 
-            const startOfDay = new Date(now);
-            startOfDay.setHours(0, 0, 0, 0);
+          const startOfDay = new Date(now);
+          startOfDay.setHours(0, 0, 0, 0);
 
-            const endOfDay = new Date(now);
-            endOfDay.setHours(23, 59, 59, 999);
+          const endOfDay = new Date(now);
+          endOfDay.setHours(23, 59, 59, 999);
 
-            console.log(`📅 Buscando agendamentos do dia: ${startOfDay.toLocaleDateString('pt-BR')}`);
+          console.log(`📅 Buscando agendamentos do dia: ${startOfDay.toLocaleDateString('pt-BR')}`);
 
-            const allTodayAppointments = await this.appointmentRepository.findByDateRange(startOfDay, endOfDay);
+          const allTodayAppointments = await this.appointmentRepository.findByDateRange(startOfDay, endOfDay);
 
-            console.log(`📋 Total de agendamentos do dia (não notificados): ${allTodayAppointments.length}`);
+          console.log(`📋 Total de agendamentos do dia (não notificados): ${allTodayAppointments.length}`);
 
-            const appointmentsToNotify = this.filterAppointmentsForNotification(allTodayAppointments, now);
+          const appointmentsToNotify = this.filterAppointmentsForNotification(allTodayAppointments, now);
 
-            console.log(`📨 Agendamentos a serem notificados (dentro de 15min): ${appointmentsToNotify.length}`);
-            console.log("-".repeat(50))
+          console.log(`📨 Agendamentos a serem notificados (dentro de 15min): ${appointmentsToNotify.length}`);
+          console.log("-".repeat(50))
 
 
-            for (const appointment of appointmentsToNotify) {
-                await this.sendAppointmentReminder(appointment);
-            }
+          for (const appointment of appointmentsToNotify) {
+              await this.sendAppointmentReminder(appointment);
+          }
 
-        } catch (error) {
-            console.error('❌ Erro ao verificar agendamentos:', error);
-        }
+      } catch (error) {
+          console.error('❌ Erro ao verificar agendamentos:', error);
+      }
   }
 
   /**
@@ -103,7 +103,6 @@ export class NotificationService {
       const minutesDifference = timeDifference / (60 * 1000) // convert into minutes
 
       // Log for debugging
-      console.log(`🕐 DEBUG filterAppointmentsForNotification:`);
       console.log(`📋 Agendamento ID ${appointment.appointment_id}:`);
       console.log(`   Data/Hora: ${appointmentDateTime.toLocaleString('pt-BR')}`);
       console.log(`   Diferença: ${minutesDifference.toFixed(2)} minutos`);
@@ -141,9 +140,9 @@ export class NotificationService {
     const combinedStr = `${dateStr}T${timeStr}Z`;
     const combined = new Date(combinedStr);
     
-    console.log(`   combinedStr: ${combinedStr}`);
-    console.log(`   combined result: ${combined.toISOString()}`);
-    console.log(`   combined local: ${combined.toLocaleString('pt-BR')}`);
+    // console.log(`   combinedStr: ${combinedStr}`);
+    // console.log(`   combined result: ${combined.toISOString()}`);
+    // console.log(`   combined local: ${combined.toLocaleString('pt-BR')}`);
 
     return combined;
   }
@@ -232,11 +231,18 @@ export class NotificationService {
    * @returns Object with numbered variables to the template
    */
   private prepareTemplateVariables(appointment: Appointment, client: User, service: Service, barber: User){
-    const date = new Date(appointment.appointment_date).toLocaleDateString('pt-BR');
+
+    const date = new Date(appointment.appointment_date).toLocaleDateString('pt-BR', {
+      timeZone: 'UTC'
+    });
+
     const time = new Date(appointment.appointment_time).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit'
     });
+    
+    // console.log(`date: ${date}`);
+    // console.log(`time: ${time}`);
 
     return {
       1: "ArtBarber",           // Barbershop's name
