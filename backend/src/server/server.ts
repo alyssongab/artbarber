@@ -6,6 +6,6 @@ const PORT = process.env.PORT_BACKEND;
 app.listen(PORT, () => {
     console.log(`servidor on na porta ${PORT}`);
     if (process.env.NOTIFICATIONS_ENABLED === 'true') {
-        initializeNotificationService();
+        // initializeNotificationService();
     }
 });

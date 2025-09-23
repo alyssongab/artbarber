@@ -26,20 +26,20 @@ notificationRouter.post('/status-webhook', (req: Request, res: Response) => {
       console.log(`   Error Message: ${ErrorMessage}`);
     }
 
-    // Verificar se temos os dados mínimos necessários
+    // Verify nedeed data
     if (!MessageSid || !MessageStatus) {
       console.log('⚠️ Dados insuficientes no webhook');
       return res.sendStatus(400);
     }
 
-    // Processar o status no serviço de notificações
+    // Process status in the notification service
     if (notificationServiceInstance) {
       notificationServiceInstance.handleStatusWebhook(MessageSid, MessageStatus);
     } else {
       console.log('⚠️ NotificationService não inicializado');
     }
 
-    res.sendStatus(200); // Confirmar recebimento para o Twilio
+    res.sendStatus(200); // Confirm response to Twilio
   } catch (error: any) {
     console.error('❌ Erro ao processar webhook:', error);
     console.error('Stack trace:', error.stack);
@@ -47,7 +47,7 @@ notificationRouter.post('/status-webhook', (req: Request, res: Response) => {
   }
 });
 
-// Rota para testar o webhook
+// Webhook manual test
 notificationRouter.get('/test', (req: Request, res: Response) => {
   res.json({
     message: 'Notification service is running',
@@ -57,7 +57,7 @@ notificationRouter.get('/test', (req: Request, res: Response) => {
   });
 });
 
-// Rota para testar o webhook manualmente
+// Webhook manual test
 notificationRouter.post('/test-webhook', (req: Request, res: Response) => {
   console.log('🧪 Teste de webhook manual:');
   console.log('Headers:', req.headers);

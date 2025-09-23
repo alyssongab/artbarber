@@ -11,10 +11,13 @@ const appointmentsRouter = Router();
 appointmentsRouter.post('/', authenticate, authorize('CLIENT', 'BARBER'), appointmentController.createAppointment);
 
 // get all appointments endpoint
-appointmentsRouter.get('/', authenticate, appointmentController.getAppointments);
+appointmentsRouter.get('/all', authenticate, authorize('BARBER', 'ADMIN'), appointmentController.getAppointments);
+
+// get appointments related to the user
+appointmentsRouter.get('/', authenticate, appointmentController.getRelatedAppointments);
 
 // delete appointment endpoint
-appointmentsRouter.delete('/:id', validateId, authenticate, authorize('CLIENT', 'BARBER'), appointmentController.deleteAppointment);
+appointmentsRouter.delete('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.deleteAppointment);
 
 // update the status of an appointment
 appointmentsRouter.patch('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.updateAppointmentStatus);

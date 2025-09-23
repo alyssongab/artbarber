@@ -6,3 +6,15 @@ declare global {
         }
     }
 }
+
+declare global {
+  namespace Express {
+    interface Request {
+      User: {
+        user_id: number;
+        role: string;
+        email: string;
+      };
+    }
+  }
+}

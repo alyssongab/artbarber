@@ -12,7 +12,10 @@ export class AppointmentController {
     createAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const parsedData = createAppointmentSchema.parse(req.body);
-            const appointment = await this.appointmentService.createAppointment(parsedData);
+            const userRole = req.user!.role;
+            const userId = req.user!.user_id;
+
+            const appointment = await this.appointmentService.createAppointment(parsedData, userRole, userId);
             return res.status(201).json(appointment);
         }
         catch(error){
@@ -22,7 +25,8 @@ export class AppointmentController {
 
     getAppointments = async (req: Request, res: Response, next: NextFunction) => {
         try{
-            const appointments = await this.appointmentService.getAppointments();
+            const userRole = req.user!.role;
+            const appointments = await this.appointmentService.getAllAppointments(userRole);
             res.status(200).json(appointments);
         }
         catch(error){
@@ -30,10 +34,26 @@ export class AppointmentController {
         }
     }
 
+    getRelatedAppointments = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userRole = req.user!.role;
+            const userId = req.user!.user_id;
+            const appointments = await this.appointmentService.getRelatedAppointments(userRole, userId);
+            console.log('=====> Agendamentos <======');
+            console.log(`ID Client Solicitante: ${userId}`);
+            console.log(`Agendamentos: ${appointments.length}`)
+            return res.status(200).json(appointments); 
+        }
+        catch(error) {
+            next(error);
+        }
+    }
+
     deleteAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const userRole = req.user!.role;
             const id = parseInt(req.params.id!);
-            await this.appointmentService.deleteAppointment(id);
+            await this.appointmentService.deleteAppointment(id, userRole);
             return res.status(204).send();
         }
         catch(error) {
@@ -44,8 +64,9 @@ export class AppointmentController {
     updateAppointmentStatus = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const id = parseInt(req.params.id!);
+            const userRole = req.user!.role;
             const parsedStatus = updateAppointmentStatusSchema.parse(req.body);
-            const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus);
+            const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus, userRole);
             return res.status(200).json(updatedAppointment);
         }
         catch(error) {

@@ -52,6 +52,36 @@ export class AppointmentRepository {
         });
     }
 
+    async findAllByClientId(clientId: number): Promise<Appointment[]> {
+        return await prismaClient.appointment.findMany({
+            where: { id_client: clientId },
+            include: {
+                client: true,
+                barber: true,
+                service : true,
+            },
+            orderBy: [
+                { appointment_date: 'asc' },
+                { appointment_time: 'asc' }
+            ]
+        });
+    }
+
+    async findAllByBarberId(barberId: number): Promise<Appointment[]> {
+        return await prismaClient.appointment.findMany({
+            where: { id_barber: barberId },
+            include: {
+                client: true,
+                barber: true,
+                service : true,
+            },
+            orderBy: [
+                { appointment_date: 'asc' },
+                { appointment_time: 'asc' }
+            ]
+        });
+    }
+
     /**
      * Delete an appointment by id
      * @param appointmentId 
