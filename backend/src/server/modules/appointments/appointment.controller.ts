@@ -39,9 +39,6 @@ export class AppointmentController {
             const userRole = req.user!.role;
             const userId = req.user!.user_id;
             const appointments = await this.appointmentService.getRelatedAppointments(userRole, userId);
-            console.log('=====> Agendamentos <======');
-            console.log(`ID Client Solicitante: ${userId}`);
-            console.log(`Agendamentos: ${appointments.length}`)
             return res.status(200).json(appointments); 
         }
         catch(error) {
