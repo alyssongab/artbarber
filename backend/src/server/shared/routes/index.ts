@@ -1,7 +1,7 @@
 import { Router } from "express";
 import express from 'express';
 import usersRouter from "../../modules/users/user.routes.ts";
-import servicesRouter from "../../modules/service/services.routes.ts";
+import servicesRouter from "../../modules/services/services.routes.ts";
 import appointmentsRouter from "../../modules/appointments/appointment.routes.ts";
 import notificationRouter  from "../../modules/notification/notification.routes.ts";
 import path from "path";

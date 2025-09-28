@@ -2,7 +2,7 @@ import twilio from 'twilio';
 import { CronJob } from 'cron';
 import { AppointmentRepository } from '../appointments/appointments.repository.ts';
 import { UserRepository } from '../users/user.repository.ts';
-import { ServiceRepository } from '../service/services.repository.ts';
+import { ServiceRepository } from '../services/services.repository.ts';
 import type { Appointment, Service, User } from '@prisma/client';
 
 export class NotificationService {
