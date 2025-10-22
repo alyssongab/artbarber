@@ -1,12 +1,13 @@
 // User types
-
 export interface User {
-    user_id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone_number: string;
-    role: 'CLIENT' | 'BARBER' | 'ADMIN'
+  id: number;
+  first_name: string;
+  last_name?: string | null;
+  email: string;
+  phone_number: string;
+  birthday?: string | null;
+  role: 'CLIENT' | 'BARBER' | 'ADMIN';
+  photo_url?: string | null;
 }
 
 export interface LoginRequest {
@@ -16,15 +17,14 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
     first_name: string;
-    last_name: string;
+    last_name?: string;
     email: string;
     phone_number: string;
     password: string;
-    role: 'CLIENT' | 'BARBER';
 }
 
 export interface AuthResponse {
-    token: string;
+    accessToken: string;
     user: User;
 }
 
