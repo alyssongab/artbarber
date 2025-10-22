@@ -38,7 +38,7 @@ export const updateUserSchema = z.strictObject({
 // =================== RESPONSE DTOs =====================
 
 export const userResponseSchema = z.strictObject({
-    id: z.int(),
+    user_id: z.int(),
     first_name: z.string(),
     last_name: z.string().nullable(),
     email: z.email(),

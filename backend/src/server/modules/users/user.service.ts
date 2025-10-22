@@ -27,7 +27,7 @@ export class UserService {
      */
     private toUserResponseDTO(user: User): UserResponseDTO{
         return{
-            id: user.user_id,
+            user_id: user.user_id,
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
@@ -85,9 +85,9 @@ export class UserService {
     /**
      * Log in
      * @param data email and password
-     * @returns jwt token
+     * @returns jwt token and user data
      */
-    async login(credentials: LoginInput): Promise<{ accessToken: string }> {
+    async login(credentials: LoginInput): Promise<{ accessToken: string; user: UserResponseDTO }> {
         const user = await this.userRepository.findByEmail(credentials.email);
         if(!user) throw new UnauthorizedError("Credenciais inválidas.");
 
@@ -103,7 +103,10 @@ export class UserService {
             expiresIn: "1d"
         });
 
-        return { accessToken };
+        return { 
+            accessToken,
+            user: this.toUserResponseDTO(user)
+        };
     }
 
     /**

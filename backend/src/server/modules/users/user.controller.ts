@@ -77,9 +77,10 @@ export class UserController{
     login = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const credentials = req.body;
-            const { accessToken } = await this.userService.login(credentials);
+            const { accessToken, user } = await this.userService.login(credentials);
             res.status(200).json({
                 accessToken: accessToken,
+                user: user,
                 message: "logado"
             });
         }
