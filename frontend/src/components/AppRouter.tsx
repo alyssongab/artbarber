@@ -1,18 +1,8 @@
 import { useAuth } from '../contexts/auth.context';
-import Auth from './layout/auth';
+import { Navigate } from 'react-router';
+import ClientHome from '../pages/client/home';
 
 // Dashboard components (mocked)
-const ClientDashboard = () => {
-  const { logout } = useAuth();
-  return (
-    <div className="min-h-screen bg-green-100 p-8">
-      <h1 className="text-3xl font-bold text-green-800">Dashboard do Cliente</h1>
-      <p className="mt-4">Bem-vindo ao seu painel de cliente!</p>
-      <button onClick={logout} className='bg-black text-white px-3 py-1 rounded-md mt-4'>Logout</button>
-    </div>
-  );
-};
-
 const BarberDashboard = () => {
   const { logout } = useAuth();
   return (
@@ -51,10 +41,9 @@ function AppRouter() {
     );
   }
 
-  // If not logged in, show auth screen
   if (!user) {
-    console.log('🚫 AppRouter - No user, showing Auth');
-    return <Auth />;
+    console.log('🚫 AppRouter - No user, redirecting to /login');
+    return <Navigate to="/login" replace />;
   }
 
   // Redirect based on user role
@@ -62,13 +51,13 @@ function AppRouter() {
   
   switch (user.role) {
     case 'CLIENT':
-      return <ClientDashboard />;
+      return <ClientHome />;
     case 'BARBER':
       return <BarberDashboard />;
     case 'ADMIN':
       return <AdminDashboard />;
     default:
-      return <ClientDashboard />;
+      return <ClientHome />;
   }
 }
 

@@ -1,8 +1,14 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
+import { useLocation, useNavigate } from "react-router";
 import Login from "../../pages/auth/login";
 import Register from "../../pages/auth/register";
 
 function Auth(){
+    // Manages tab based on current route (login or register)
+    const location = useLocation();
+    const navigate = useNavigate();
+    const currentTab = location.pathname.includes('register') ? 'register' : 'login';
+
     return(
         <div className="min-h-screen bg-[#F1F1F1]">
             {/* Header with image on background */}
@@ -39,7 +45,14 @@ function Auth(){
             {/* Main content with forms */}
             <main className="px-4 py-8 min-h-[calc(100vh-300px)] sm:min-h-[calc(100vh-400px)]">
                 <div className="w-full max-w-md sm:max-w-lg mx-auto">
-                    <Tabs defaultValue="login" className="w-full">
+                    <Tabs 
+                        value={currentTab}
+                        onValueChange={(val) => {
+                            if (val === 'register') navigate('/register');
+                            else navigate('/login');
+                        }}
+                        className="w-full"
+                    >
                         <TabsList className="w-full bg-gray-300">
                             <TabsTrigger 
                                 value="login" 

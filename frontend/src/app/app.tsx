@@ -1,11 +1,12 @@
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '../contexts/auth.context';
-import AppRouter from '../components/AppRouter';
+import { RouterProvider } from 'react-router';
+import router from '../routes/index';
 
 function App() {
   return (
     <AuthProvider>
-      <AppRouter />
+      <RouterProvider router={router} />
       <Toaster 
         position="top-right"
         toastOptions={{

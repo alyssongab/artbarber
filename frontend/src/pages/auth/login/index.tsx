@@ -1,10 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router";
 import { LoginFormData, loginSchema } from "../../../utils/validations";
 import { useAuth } from "../../../contexts/auth.context";
 
 function Login(){
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -17,6 +19,8 @@ function Login(){
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data);
+      // After sucessfully logged in, AppRouter will decide the destiny based on role
+      navigate('/');
     } catch (error) {
       // Error is already handled on context with toast
       console.error('Erro no login:', error);
