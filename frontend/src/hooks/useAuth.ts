@@ -1,33 +1,33 @@
 import { useAuth } from '../contexts/auth.context';
 
-// Re-export do hook principal para facilitar importação
+// Re-export to facilitate import
 export { useAuth } from '../contexts/auth.context';
 
-// Hook para verificar se está logado
+// Hook to verify if logged in
 export const useIsAuthenticated = () => {
   const { user } = useAuth();
   return !!user;
 };
 
-// Hook para obter role do usuário
+// Hook to get user role
 export const useUserRole = () => {
   const { user } = useAuth();
   return user?.role || null;
 };
 
-// Hook para verificar se é admin
+// Hook to verify if user is admin
 export const useIsAdmin = () => {
   const { user } = useAuth();
   return user?.role === 'ADMIN';
 };
 
-// Hook para verificar se é barbeiro
+// Hook to verify if user is barber
 export const useIsBarber = () => {
   const { user } = useAuth();
   return user?.role === 'BARBER';
 };
 
-// Hook para verificar se é cliente
+// Hook to verify if user is client
 export const useIsClient = () => {
   const { user } = useAuth();
   return user?.role === 'CLIENT';

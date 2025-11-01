@@ -11,7 +11,7 @@ export const api = axios.create({
   },
 });
 
-// Interceptor para adicionar token automaticamente
+// Interceptor to add token automatically
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -25,12 +25,12 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para lidar com respostas e erros
+// Interceptor to handle with responses and errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token inválido, limpar localStorage
+      // invalid token, clean localstorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';
@@ -46,7 +46,7 @@ export const authService = {
   },
 
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    // Sempre força role CLIENT para registro público
+    // Always force CLIENT role to public registration
     const registerData = { ...data, role: 'CLIENT' };
     const response = await api.post('/users/register', registerData);
     return response.data;
