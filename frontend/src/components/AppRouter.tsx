@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/auth.context';
 import { Navigate } from 'react-router';
-import ClientHome from '../pages/client/home';
+// import ClientHomePage from '../pages/client/home';
 
 // Dashboard components (mocked)
 const BarberDashboard = () => {
@@ -51,13 +51,13 @@ function AppRouter() {
   
   switch (user.role) {
     case 'CLIENT':
-      return <ClientHome />;
+      return <Navigate to="/client/home" replace />;
     case 'BARBER':
       return <BarberDashboard />;
     case 'ADMIN':
       return <AdminDashboard />;
     default:
-      return <ClientHome />;
+      return <Navigate to="/client/home" replace />;
   }
 }
 
