@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useEffect, useState, useContext } from "react";
-import { LoginRequest, RegisterRequest, User } from "../types";
+import { LoginRequest, RegisterClientRequest, User } from "../types";
 import { authService } from "../services/api";
 import toast from 'react-hot-toast';
 
@@ -7,7 +7,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (data: LoginRequest) => Promise<void>;
-    register: (data: RegisterRequest) => Promise<void>;
+    register: (data: RegisterClientRequest) => Promise<void>;
     logout: () => void;
 }
 
@@ -114,25 +114,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    const register = async (data: RegisterRequest): Promise<void> => {
+    const register = async (data: RegisterClientRequest): Promise<void> => {
         try {
             console.log('AuthContext - Register iniciado com:', data);
             setLoading(true);
 
-            const response = await authService.register(data);
-            console.log('AuthContext - Register response:', response);
+            // 1) Create user (backend returns created user, not token)
+            const created = await authService.register(data);
+            console.log('AuthContext - Register response:', created);
 
-            if (!response.accessToken || !response.user) {
-                throw new Error('Resposta inválida do servidor');
+            // 2) Immediately login with provided credentials to obtain token
+            const loginResp = await authService.login({ email: data.email, password: data.password });
+
+            if (!loginResp?.accessToken) {
+                throw new Error('Não foi possível autenticar após o cadastro');
             }
 
+            // Prefer user from login if available; fallback to created user (mapped)
+            const finalUser: User = (loginResp as any).user ?? {
+                id: (created as any).id ?? (created as any).user_id,
+                full_name: created.full_name,
+                email: created.email,
+                phone_number: created.phone_number,
+                birthday: created.birthday ?? null,
+                role: created.role as User['role'],
+                photo_url: created.photo_url ?? null,
+            };
+
             // Save on localstorage
-            localStorage.setItem('token', response.accessToken);
-            localStorage.setItem('user', JSON.stringify(response.user));
+            localStorage.setItem('token', loginResp.accessToken);
+            localStorage.setItem('user', JSON.stringify(finalUser));
             
             // Update state
-            setUser(response.user);
-            console.log('AuthContext - Usuário registrado com sucesso:', response.user);
+            setUser(finalUser);
+            console.log('AuthContext - Usuário registrado e autenticado com sucesso:', finalUser);
             
             toast.success('Cadastro realizado com sucesso!');
             

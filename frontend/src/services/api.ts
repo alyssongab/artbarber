@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterRequest, AuthResponse } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3030';
 
@@ -45,10 +45,17 @@ export const authService = {
     return response.data;
   },
 
-  register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    // Always force CLIENT role to public registration
-    const registerData = { ...data, role: 'CLIENT' };
-    const response = await api.post('/users/register', registerData);
+  // Backend returns created user DTO (no token)
+  register: async (data: RegisterClientRequest): Promise<{
+    user_id: number;
+    full_name: string;
+    email: string;
+    phone_number: string;
+    birthday?: string | null;
+    role: 'CLIENT' | 'BARBER' | 'ADMIN';
+    photo_url?: string | null;
+  }> => {
+    const response = await api.post('/users/client', data);
     return response.data;
   },
 

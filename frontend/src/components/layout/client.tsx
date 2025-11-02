@@ -6,6 +6,8 @@ import { Outlet } from "react-router";
 
 function ClientLayout(){
     const { logout, user } = useAuth()
+    const first_name = user?.full_name.split(' ');
+    console.log(first_name);
     return (
         <div className="min-h-screen bg-[#F1F1F1] p-5">
             <header id="client-header" className="flex w-full max-w-md sm:max-w-lg mx-auto pb-5 justify-between items-center border-b-2 border-gray-300">
@@ -18,7 +20,7 @@ function ClientLayout(){
                         />
                         <h1 className="text-3xl">Barbearia</h1>
                     </div>
-                    <span className="text-gray-700">Olá, {user?.first_name ?? 'cliente'}!</span>
+                    <span className="text-gray-700">Olá, {user?.full_name ?? 'cliente'}!</span>
                 </div>
                 <div>
                     <button onClick={logout} className='cursor-pointer'>

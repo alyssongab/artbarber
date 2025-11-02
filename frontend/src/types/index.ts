@@ -1,8 +1,7 @@
 // User types
 export interface User {
   id: number;
-  first_name: string;
-  last_name?: string | null;
+  full_name: string;
   email: string;
   phone_number: string;
   birthday?: string | null;
@@ -15,12 +14,19 @@ export interface LoginRequest {
     password: string;
 }
 
-export interface RegisterRequest {
-    first_name: string;
-    last_name?: string;
-    email: string;
-    phone_number: string;
-    password: string;
+export interface RegisterClientRequest {
+  full_name: string;
+  email: string;
+  password: string;
+  phone_number: string;
+  birthday?: string | null; // YYYY-MM-DD or null
+}
+
+export interface RegisterBarberRequest {
+  full_name: string;
+  email: string;
+  password: string
+  phone_number: string;
 }
 
 export interface AuthResponse {
