@@ -9,8 +9,7 @@ export const loginSchema = z.object({
 
 
 export const createClientSchema = z.strictObject({
-    first_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
-    last_name: z.string("Sobrenome inválido").nullable().optional().default(null),
+    full_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
     email: z.email("Email inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     phone_number: z.string().length(11, "Número de celular inválido."),
@@ -18,19 +17,16 @@ export const createClientSchema = z.strictObject({
 }, "Campo fornecido não existe");
 
 export const createBarberSchema = z.strictObject({
-    first_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
-    last_name: z.string("Sobrenome inválido").nullable().optional().default(null),
+    full_name: z.string("Nome inválido").min(1, "Nome obrigatório"),
     email: z.email("Email inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     phone_number: z.string().length(11, "Número de celular inválido."),
 }, "Campo fornecido não existe");
 
 export const updateUserSchema = z.strictObject({
-    first_name: z.string().min(1, "Nome obrigatório"),
-    last_name: z.string().nullable(),
+    full_name: z.string().min(1, "Nome obrigatório"),
     password: z.string().min(6, "Senha Mínimo 6 caracteres"),
     phone_number: z.string().length(11, "Número de celular inválido."),
-    pix_key: z.string(),
     birthday: z.coerce.date("Formato invalido").nullable()
 }, "Campo fornecido não permitido").partial();
 
@@ -39,8 +35,7 @@ export const updateUserSchema = z.strictObject({
 
 export const userResponseSchema = z.strictObject({
     user_id: z.int(),
-    first_name: z.string(),
-    last_name: z.string().nullable(),
+    full_name: z.string(),
     email: z.email(),
     phone_number: z.string(),
     birthday: z.date().nullable(),

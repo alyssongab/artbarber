@@ -27,8 +27,7 @@ enum AppointmentStatus {
 
 model User {
   user_id                   Int               @id @default(autoincrement())
-  first_name                String
-  last_name                 String?
+  full_name                 String
   email                     String            @unique
   password                  String
   phone_number              String

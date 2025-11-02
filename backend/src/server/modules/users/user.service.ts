@@ -28,8 +28,7 @@ export class UserService {
     private toUserResponseDTO(user: User): UserResponseDTO{
         return{
             user_id: user.user_id,
-            first_name: user.first_name,
-            last_name: user.last_name,
+            full_name: user.full_name,
             email: user.email,
             phone_number: user.phone_number,
             birthday: user.birthday,
