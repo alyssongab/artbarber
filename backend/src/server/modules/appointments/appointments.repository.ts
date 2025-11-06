@@ -1,6 +1,8 @@
-import type { Appointment, AppointmentStatus } from "@prisma/client";
+import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
 import prismaClient from "../../shared/config/prisma.ts";
-import { Prisma } from "@prisma/client";
+import type { AppointmentWithRelations } from "./appointment.types.ts";
+
+const INCLUDE_RELATIONS = { barber: true, client: true, service: true } as const;
 
 export class AppointmentRepository {
 
@@ -9,8 +11,11 @@ export class AppointmentRepository {
      * @param data date, time, clientId?, barberId, serviceId
      * @returns 
      */
-    async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
-        return await prismaClient.appointment.create({ data });
+    async create(data: Prisma.AppointmentCreateInput): Promise<AppointmentWithRelations> {
+        return await prismaClient.appointment.create({ 
+            data,
+            include: INCLUDE_RELATIONS
+        });
     }
 
     /**
@@ -18,9 +23,10 @@ export class AppointmentRepository {
      * @param appointmentId 
      * @returns 
      */
-    async findById(appointmentId: number): Promise<Appointment | null> {
+    async findById(appointmentId: number): Promise<AppointmentWithRelations | null> {
         return await prismaClient.appointment.findUnique({
-            where: { appointment_id: appointmentId }
+            where: { appointment_id: appointmentId },
+            include: INCLUDE_RELATIONS
         });
     }
 
@@ -28,8 +34,10 @@ export class AppointmentRepository {
      * Get all appointments
      * @returns 
      */
-    async findAll(): Promise<Appointment[]> {
-        return await prismaClient.appointment.findMany();
+    async findAll(): Promise<AppointmentWithRelations[]> {
+        return await prismaClient.appointment.findMany({
+            include: INCLUDE_RELATIONS
+        });
     }
 
     /**
@@ -38,7 +46,7 @@ export class AppointmentRepository {
      * @param date Date object for specific day.
      * @param time Date object for specific time.
      * @param barberId 
-     * @returns An appointment if exists or null
+     * @returns An appointment if exists or nulls
      */
     async findByDatetimeAndBarber(appointmentDate: Date, appointmentTime: Date, barberId: number): Promise<Appointment | null> {
         return await prismaClient.appointment.findFirst({
@@ -52,14 +60,10 @@ export class AppointmentRepository {
         });
     }
 
-    async findAllByClientId(clientId: number): Promise<Appointment[]> {
+    async findAllByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: { id_client: clientId },
-            include: {
-                client: true,
-                barber: true,
-                service : true,
-            },
+            include: INCLUDE_RELATIONS,
             orderBy: [
                 { appointment_date: 'asc' },
                 { appointment_time: 'asc' }
@@ -67,14 +71,10 @@ export class AppointmentRepository {
         });
     }
 
-    async findAllByBarberId(barberId: number): Promise<Appointment[]> {
+    async findAllByBarberId(barberId: number): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: { id_barber: barberId },
-            include: {
-                client: true,
-                barber: true,
-                service : true,
-            },
+            include: INCLUDE_RELATIONS,
             orderBy: [
                 { appointment_date: 'asc' },
                 { appointment_time: 'asc' }
@@ -113,10 +113,11 @@ export class AppointmentRepository {
      * @param newStatus Status to be set (PENDENTE, CONCLUIDO, CANCELADO)
      * @returns Appointment object
      */
-    async updateStatus(appointmentId: number, newStatus: AppointmentStatus): Promise<Appointment> {
+    async updateStatus(appointmentId: number, newStatus: AppointmentStatus): Promise<AppointmentWithRelations> {
         return await prismaClient.appointment.update({
             where: { appointment_id: appointmentId },
-            data: { appointment_status: newStatus }
+            data: { appointment_status: newStatus },
+            include: INCLUDE_RELATIONS
         });
     }
 
