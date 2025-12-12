@@ -11,23 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import React, { Fragment } from "react";
+import { Fragment } from "react";
 
-interface LinkCardProps {
-  to: string,
-  title: string,
-  children: React.ReactNode
-}
-
-interface SelectFieldProps {
-  id: string,
-  label: string,
-  placeholder: string,
-  items: Array<{value: string, label: string}>
-}
-
-// small reusable Link card for history and next appointments
-function LinkCard({ to, title, children }: LinkCardProps){
+// small reusable Link card
+function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
   return (
     <Link
       to={to}
@@ -40,7 +27,7 @@ function LinkCard({ to, title, children }: LinkCardProps){
 }
 
 // small reusable select field (keeps same uncontrolled behavior as before)
-function SelectField({ id, label, placeholder, items }: SelectFieldProps){
+function SelectField({ id, label, placeholder, items }: { id: string; label: string; placeholder: string; items: Array<{ value: string; label: string }> }){
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="pl-1">{label}</label>
@@ -97,7 +84,7 @@ function ClientHomePage() {
           </div>
           {/* Subtitle */}
           <div>
-            <p className="opacity-70 text-sm">Escolha o serviço, barbeiro e horário desejado</p>
+            <p className="opacity-70 text-sm">Escolha o serviço, barbeiro, data e horário desejado.</p>
           </div>
 
           {/* Form */}
