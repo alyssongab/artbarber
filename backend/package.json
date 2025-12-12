@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon --exec ts-node-esm src/server/server.ts",
-    "test-notification": "tsx --env-file=.env src/server/modules/notification/notification.service.ts"
+    "test-notification": "tsx src/server/modules/notification/notification.service.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
