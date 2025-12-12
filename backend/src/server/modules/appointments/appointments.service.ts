@@ -1,7 +1,7 @@
 import { AppointmentRepository } from "./appointments.repository.ts";
 import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/http.errors.ts";
-import { Prisma } from "@prisma/client";
-import type { User } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client.ts";
+import type { User } from "../../../generated/prisma/client.ts";
 import type { AppointmentWithRelations, AppointmentResponseDTO, UserPublicDTO } from "./appointment.types.ts";
 import type { AppointmentInputDTO, AppointmentStatusEnum } from "./appointment.schema.ts";
 

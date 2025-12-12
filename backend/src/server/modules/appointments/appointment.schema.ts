@@ -1,5 +1,5 @@
 import z from "zod";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus } from "../../../generated/prisma/client.ts";
 
 export const createAppointmentSchema = z.strictObject({
     appointment_date: z.iso.date("Data inválida"),

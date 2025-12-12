@@ -1,4 +1,4 @@
-import type { Prisma, Service } from "@prisma/client";
+import type { Prisma, Service } from "../../../generated/prisma/client.ts";
 import type { InputServiceDTO, UpdateServiceDTO } from "./services.schema.ts";
 import { ServiceRepository } from "./services.repository.ts";
 import { ConflictError, NotFoundError, BadRequestError } from "../../shared/errors/http.errors.ts";

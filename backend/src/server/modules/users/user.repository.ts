@@ -1,6 +1,6 @@
 import prismaClient from '../../shared/config/prisma.ts';
-import { Prisma } from "@prisma/client";
-import type { User } from "@prisma/client";
+import { Prisma } from '../../../generated/prisma/client.ts';
+import type { User } from '../../../generated/prisma/client.ts';
 
 export class UserRepository {
 

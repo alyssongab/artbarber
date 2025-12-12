@@ -1,4 +1,4 @@
-import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
+import type { Appointment, AppointmentStatus, Prisma } from "../../../generated/prisma/client.ts";
 import prismaClient from "../../shared/config/prisma.ts";
 import type { AppointmentWithRelations } from "./appointment.types.ts";
 

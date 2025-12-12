@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import app from "./shared/http/app.ts";
 import { initializeNotificationService } from "./modules/notification/notification.service.ts";
 

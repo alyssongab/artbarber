@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import type { User } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client.ts";
+import type { User } from "../../../generated/prisma/client.ts";
 import type { CreateClientDTO, LoginInput, UserResponseDTO, UpdateUserDTO,CreateBarberDTO } from "./user.schema.ts";
 import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';

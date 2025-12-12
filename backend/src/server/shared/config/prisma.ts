@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../../generated/prisma/client.ts";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 interface PrismaGlobal {
     prisma: PrismaClient
@@ -6,7 +7,11 @@ interface PrismaGlobal {
 
 declare const global: PrismaGlobal;
 
-const prismaClient = global.prisma || new PrismaClient();
+const adapter = new PrismaPg({ 
+  connectionString: process.env.DATABASE_URL 
+});
+
+const prismaClient = global.prisma || new PrismaClient({ adapter });
 
 if(process.env.NODE_ENV === 'development') global.prisma = prismaClient;
 

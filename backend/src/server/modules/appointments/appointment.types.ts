@@ -1,5 +1,4 @@
-import type { Prisma } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import type { Prisma } from "../../../generated/prisma/client.ts";
 
 // Reusable Prisma payload type with relations included
 export type AppointmentWithRelations = Prisma.AppointmentGetPayload<{

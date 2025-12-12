@@ -3,7 +3,7 @@ import { CronJob } from 'cron';
 import { AppointmentRepository } from '../appointments/appointments.repository.ts';
 import { UserRepository } from '../users/user.repository.ts';
 import { ServiceRepository } from '../services/services.repository.ts';
-import type { Appointment, Service, User } from '@prisma/client';
+import type { Appointment, Service, User } from '../../../generated/prisma/client.ts';
 
 export class NotificationService {
 
@@ -181,7 +181,7 @@ export class NotificationService {
       const webhookUrl = `${process.env.API_URL}/notifications/status-webhook`;
 
       console.log(`📤 ENVIANDO NOTIFICAÇÃO:`);
-      console.log(`   Cliente: ${client.first_name} (${client.phone_number})`);
+      console.log(`   Cliente: ${client.full_name} (${client.phone_number})`);
       console.log(`   Agendamento: ${appointmentDateTime.toLocaleString('pt-BR')}`);
       console.log(`   Diferença exata: ${exactDifference} minutos`);
 
@@ -197,7 +197,7 @@ export class NotificationService {
 
       this.messageSidMap.set(messageResponse.sid, {
         appointmentId: appointment.appointment_id,
-        clientName: client.first_name
+        clientName: client.full_name
       });
 
       await this.appointmentRepository.updateNotificationStatus(appointment.appointment_id, true);
@@ -246,11 +246,11 @@ export class NotificationService {
 
     return {
       1: "ArtBarber",           // Barbershop's name
-      2: client.first_name,     // Client name
+      2: client.full_name,     // Client name
       3: date,                  // Appointment date
       4: time,                  // Appointment time
       5: service.name,          // Service name
-      6: barber.first_name,     // Barber name
+      6: barber.full_name,     // Barber name
       7: service.price.toFixed(2)  // Service price
     };
   }

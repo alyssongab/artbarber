@@ -1,6 +1,6 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client.ts";
 import prismaClient from '../../shared/config/prisma.ts';
-import type { Service } from "@prisma/client";
+import type { Service } from "../../../generated/prisma/client.ts";
 
 export class ServiceRepository {
 
