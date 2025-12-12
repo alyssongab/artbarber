@@ -1,6 +1,6 @@
 # Documentação da API - Artbarber
 
-> **Versão:** 1.22.22  
+> **Versão:** 1.0.0  
 > **Base URL:** `http://localhost:3030/api`  
 > **Autenticação:** JWT Bearer Token (exceto endpoints públicos)
 
