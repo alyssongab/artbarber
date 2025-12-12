@@ -10,32 +10,84 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select"
+} from "../../../components/ui/select";
+import React, { Fragment } from "react";
+
+interface LinkCardProps {
+  to: string,
+  title: string,
+  children: React.ReactNode
+}
+
+interface SelectFieldProps {
+  id: string,
+  label: string,
+  placeholder: string,
+  items: Array<{value: string, label: string}>
+}
+
+// small reusable Link card for history and next appointments
+function LinkCard({ to, title, children }: LinkCardProps){
+  return (
+    <Link
+      to={to}
+      className="flex flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
+    >
+      {children}
+      <h3 className="text-md text-gray-900">{title}</h3>
+    </Link>
+  );
+}
+
+// small reusable select field (keeps same uncontrolled behavior as before)
+function SelectField({ id, label, placeholder, items }: SelectFieldProps){
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="pl-1">{label}</label>
+      <Select>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>{label}</SelectLabel>
+            {items.map((it) => (
+              <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 function ClientHomePage() {
   const handleSubmit = () => {
     alert("Ola");
   }
 
-  return (
-    <>
-      <section id="cards-section" className="flex justify-between gap-4">
-        <Link
-          to="/client/appointments"
-          className="flex flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
-        >
-          <Calendar />
-          <h3 className="text-md text-gray-900">Histórico de agendamentos</h3>
-        </Link>
+  const serviceItems = [
+    { value: 'crt', label: 'Corte de cabelo' },
+    { value: 'brb', label: 'Barba completa' }
+  ];
 
-        <Link
-          to="/client/history"
-          className="flex flex-col items-center justify-center gap-4 text-center group rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
-        >
+  // for now barber/date/time reuse same sample items; later these should come from API
+  const barberItems = serviceItems;
+  const dateItems = serviceItems;
+  const timeItems = serviceItems;
+
+  return (
+    <Fragment>
+      <section id="cards-section" className="flex justify-between gap-4">
+        <LinkCard to="/client/appointments" title="Histórico de agendamentos">
+          <Calendar />
+        </LinkCard>
+
+        <LinkCard to="/client/history" title="Próximos agendamentos">
           <Clock8 />
-          <h3 className="text-md text-gray-900">Próximos agendamentos</h3>
-        </Link>
+        </LinkCard>
       </section>
+
       <section id="appointment-section" className="mt-5">
         <div className="flex flex-col gap-3 rounded-md bg-white border-gray-200 p-5 shadow-sm">
           {/* Title */}
@@ -50,76 +102,16 @@ function ClientHomePage() {
 
           {/* Form */}
           <div className="flex flex-col gap-5">
-            {/* Service */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="service" className="pl-1">Serviço</label>
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o serviço" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Serviços</SelectLabel>
-                    <SelectItem value="crt">Corte de cabelo</SelectItem>
-                    <SelectItem value="brb">Barba completa</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Barber */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="service" className="pl-1">Barbeiro</label>
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o serviço" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Serviços</SelectLabel>
-                    <SelectItem value="crt">Corte de cabelo</SelectItem>
-                    <SelectItem value="brb">Barba completa</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Date */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="service" className="pl-1">Data</label>
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o serviço" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Serviços</SelectLabel>
-                    <SelectItem value="crt">Corte de cabelo</SelectItem>
-                    <SelectItem value="brb">Barba completa</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Time */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="service" className="pl-1">Horário</label>
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o serviço" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Serviços</SelectLabel>
-                    <SelectItem value="crt">Corte de cabelo</SelectItem>
-                    <SelectItem value="brb">Barba completa</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField id="service" label="Serviço" placeholder="Selecione o serviço" items={serviceItems} />
+            <SelectField id="barber" label="Barbeiro" placeholder="Selecione o barbeiro" items={barberItems} />
+            <SelectField id="date" label="Data" placeholder="Selecione a data" items={dateItems} />
+            <SelectField id="time" label="Horário" placeholder="Selecione o horário" items={timeItems} />
 
             {/* Confirm */}
             <div>
               <Button 
-              className="w-full font-bold cursor-pointer bg-green-700 hover:bg-green-500"
-              onClick={handleSubmit}
+                className="w-full font-bold cursor-pointer bg-green-700 hover:bg-green-500"
+                onClick={handleSubmit}
               >
                 Confirmar agendamento
               </Button>
@@ -127,7 +119,7 @@ function ClientHomePage() {
           </div>
         </div>
       </section>
-    </>
+    </Fragment>
   );
 }
 
