@@ -113,10 +113,23 @@ function ClientHomePage() {
     label: barber.full_name
   }));
 
-  const dateItems = [
-    { value: '2025-12-15', label: '15/12/2025' },
-    { value: '2025-12-16', label: '16/12/2025' }
-  ];
+  // Generate next 7 days dynamically
+  const dateItems = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+    
+    return {
+      value: `${year}-${month}-${day}`, // YYYY-MM-DD for backend
+      label: `${day}/${month}/${year} (${weekday})` // DD/MM/YYYY for user
+    };
+  });
+
   const timeItems = [
     { value: '09:00', label: '09:00' },
     { value: '10:00', label: '10:00' },
