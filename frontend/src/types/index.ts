@@ -1,6 +1,6 @@
 // User types
 export interface User {
-  id: number;
+  user_id: number;
   full_name: string;
   email: string;
   phone_number: string;
@@ -60,7 +60,6 @@ export interface CreateAppointmentRequest {
 export interface Service {
     service_id: number;
     name: string;
-    description: string;
     price: number;
     duration: number;
 }

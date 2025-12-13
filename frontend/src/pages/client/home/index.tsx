@@ -11,7 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { getServices } from "../../../services/apiServices";
+import type { Service, User } from "../../../types";
+import { getBarbers } from "../../../services/apiUsers";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -49,19 +52,76 @@ function SelectField({ id, label, placeholder, items }: { id: string; label: str
 }
 
 function ClientHomePage() {
+
+  const [services, setServices] = useState<Service[]>([]);
+  const [barbers, setBarbers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Services
+  useEffect(() => {
+    const fetchServices = async () => {
+      try{
+        setLoading(true);
+        const data = await getServices();
+        setServices(data);
+      }
+      catch(err) {
+        console.error('Erro ao buscar serviços:', err);
+        setError('Falha ao carregar serviços.');
+      }
+      finally {
+        setLoading(false);
+      }
+    }
+
+    fetchServices();
+  }, []);
+
+  // Barbers
+  useEffect(() => {
+    const fetchBarbers = async () => {
+      try{
+        const data = await getBarbers();
+        setBarbers(data);
+      }
+      catch(err){
+        console.error('Erro ao buscar barbeiros:', err);
+        setError('Falha ao carregar barbeiros.');
+      }
+      finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBarbers();
+  }, [])
+
   const handleSubmit = () => {
     alert("Ola");
   }
 
-  const serviceItems = [
-    { value: 'crt', label: 'Corte de cabelo' },
-    { value: 'brb', label: 'Barba completa' }
-  ];
+  // Transform services from api into SelectField format
+  const serviceItems = services.map(service => ({
+    value: service.service_id.toString(),
+    label: `${service.name} - R$ ${service.price} (${service.duration}min)`
+  }));
 
-  // for now barber/date/time reuse same sample items; later these should come from API
-  const barberItems = serviceItems;
-  const dateItems = serviceItems;
-  const timeItems = serviceItems;
+  // Transform barbers from API into SelectField format
+  const barberItems = barbers.map(barber => ({
+    value: barber.user_id.toString(),
+    label: barber.full_name
+  }));
+
+  const dateItems = [
+    { value: '2025-12-15', label: '15/12/2025' },
+    { value: '2025-12-16', label: '16/12/2025' }
+  ];
+  const timeItems = [
+    { value: '09:00', label: '09:00' },
+    { value: '10:00', label: '10:00' },
+    { value: '14:00', label: '14:00' }
+  ];
 
   return (
     <Fragment>
@@ -89,16 +149,25 @@ function ClientHomePage() {
 
           {/* Form */}
           <div className="flex flex-col gap-5">
-            <SelectField id="service" label="Serviço" placeholder="Selecione o serviço" items={serviceItems} />
-            <SelectField id="barber" label="Barbeiro" placeholder="Selecione o barbeiro" items={barberItems} />
-            <SelectField id="date" label="Data" placeholder="Selecione a data" items={dateItems} />
-            <SelectField id="time" label="Horário" placeholder="Selecione o horário" items={timeItems} />
+            {loading ? (
+              <p className="text-center text-gray-500">Carregando serviços...</p>
+            ) : error ? (
+              <p className="text-center text-red-500">{error}</p>
+            ) : (
+              <>
+                <SelectField id="service" label="Serviço" placeholder="Selecione o serviço" items={serviceItems} />
+                <SelectField id="barber" label="Barbeiro" placeholder="Selecione o barbeiro" items={barberItems} />
+                <SelectField id="date" label="Data" placeholder="Selecione a data" items={dateItems} />
+                <SelectField id="time" label="Horário" placeholder="Selecione o horário" items={timeItems} />
+              </>
+            )}
 
             {/* Confirm */}
             <div>
               <Button 
                 className="w-full font-bold cursor-pointer bg-green-700 hover:bg-green-500"
                 onClick={handleSubmit}
+                disabled={loading}
               >
                 Confirmar agendamento
               </Button>
