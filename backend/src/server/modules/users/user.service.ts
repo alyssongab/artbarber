@@ -1,6 +1,6 @@
 import { Prisma } from "../../../generated/prisma/client.ts";
 import type { User } from "../../../generated/prisma/client.ts";
-import type { CreateClientDTO, LoginInput, UserResponseDTO, UpdateUserDTO,CreateBarberDTO } from "./user.schema.ts";
+import type { CreateClientDTO, LoginInput, UserResponseDTO, UpdateUserDTO,CreateBarberDTO, BarberResponseDTO } from "./user.schema.ts";
 import { UserRepository } from "./user.repository.ts";
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -33,6 +33,14 @@ export class UserService {
             phone_number: user.phone_number,
             birthday: user.birthday,
             role: user.role,
+            photo_url: user.photo_url
+        }
+    }
+
+    private toBarberResponseDTO(user: User): BarberResponseDTO {
+        return{
+            user_id: user.user_id,
+            full_name: user.full_name,
             photo_url: user.photo_url
         }
     }
@@ -115,6 +123,11 @@ export class UserService {
     async listUsers(): Promise<UserResponseDTO[]> {
         const users = await this.userRepository.findAll();
         return users.map(user => this.toUserResponseDTO(user));
+    }
+
+    async listBarbers(): Promise<BarberResponseDTO[]> {
+        const barbers = await this.userRepository.findAllBarbers();
+        return barbers.map(barber => this.toBarberResponseDTO(barber));
     }
 
     /**

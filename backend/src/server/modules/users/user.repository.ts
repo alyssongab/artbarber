@@ -26,6 +26,16 @@ export class UserRepository {
     }
 
     /**
+     * List all barbers
+     * @returns User[] - only barbers
+     */
+    async findAllBarbers(): Promise<User[]> {
+        return await prismaClient.user.findMany({
+            where: { role: 'BARBER' }
+        });
+    }
+
+    /**
      * Update a existing user
      * @param userId ID of the user to update
      * @param data Data to be updated

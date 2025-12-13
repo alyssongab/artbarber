@@ -43,9 +43,15 @@ export const userResponseSchema = z.strictObject({
     photo_url: z.string().nullable()
 }, "Chave desconhecida");
 
+export const barberResponseSchema = z.strictObject({
+    user_id: z.int(),
+    full_name: z.string(),
+    photo_url: z.string().nullable()
+}, "Chave desconhecida");
 
 export type CreateClientDTO = z.infer<typeof createClientSchema>;
 export type CreateBarberDTO = z.infer<typeof createBarberSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
+export type BarberResponseDTO = z.infer<typeof barberResponseSchema>;

@@ -17,6 +17,7 @@ usersRouter.post('/login',  userController.login);
 
 // ---- PROTECTED ROUTES (JWT) -----
 usersRouter.post('/barber', authenticate, authorize('ADMIN'), upload.single('photo'), userController.createBarber);
+usersRouter.get('/barbers', authenticate, userController.getBarbers);
 usersRouter.get('/', authenticate, authorize('ADMIN'), userController.getAllUsers);
 usersRouter.get('/:id', validateId, authenticate, userController.getUser);
 usersRouter.put('/:id', validateId, authenticate, userController.updateUser);

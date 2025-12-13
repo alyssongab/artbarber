@@ -69,11 +69,26 @@ export class UserController{
      */
     getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
         const users = await this.userService.listUsers();
-        res.status(200).json({
-            data: users
-        });
+        res.status(200).json(users);
     }
 
+    /**
+     * Find all barbers
+     * @param req 
+     * @param res 
+     * @param next 
+     */
+    getBarbers = async (req: Request, res: Response, next: NextFunction) => {
+        const barbers = await this.userService.listBarbers();
+        res.status(200).json(barbers);
+    }
+
+    /**
+     * Log in
+     * @param req 
+     * @param res 
+     * @param next 
+     */
     login = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const credentials = req.body;
