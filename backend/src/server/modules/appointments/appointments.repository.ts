@@ -60,6 +60,19 @@ export class AppointmentRepository {
         });
     }
 
+    async findByDateAndBarber(appointmentDate: Date, barberId: number): Promise<AppointmentWithRelations[]> {
+        return await prismaClient.appointment.findMany({
+            where: {
+                AND: [
+                    { appointment_date: appointmentDate },
+                    { id_barber: barberId }
+                ]
+            },
+            include: INCLUDE_RELATIONS,
+            orderBy: { appointment_time: 'asc' }
+        });
+    }
+
     async findAllByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: { id_client: clientId },
