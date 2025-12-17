@@ -113,22 +113,31 @@ function ClientHomePage() {
     label: barber.full_name
   }));
 
-  // Generate next 7 days dynamically
-  const dateItems = Array.from({ length: 7 }, (_, i) => {
+  // Generate next 7 days dynamically, skipping Sundays
+  const dateItems = (() => {
+    const items: Array<{ value: string; label: string }> = [];
     const date = new Date();
-    date.setDate(date.getDate() + i);
-    
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-    
-    return {
-      value: `${year}-${month}-${day}`, // YYYY-MM-DD for backend
-      label: `${day}/${month}/${year} (${weekday})` // DD/MM/YYYY for user
-    };
-  });
+
+    while (items.length < 7) {
+      const weekdayIndex = date.getDay(); // 0 = Sunday
+
+      if (weekdayIndex !== 0) {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+
+        items.push({
+          value: `${year}-${month}-${day}`,
+          label: `${day}/${month}/${year} (${weekday})`
+        });
+      }
+
+      date.setDate(date.getDate() + 1);
+    }
+
+    return items;
+  })();
 
   const timeItems = [
     { value: '09:00', label: '09:00' },
