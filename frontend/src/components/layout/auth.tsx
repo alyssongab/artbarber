@@ -39,6 +39,11 @@ function Auth(){
                     <p className="text-white/70 text-sm sm:text-base md:text-lg max-w-md mx-auto">
                         Sua experiência premium começa aqui
                     </p>
+                    <div className="p-3">
+                        <button className="bg-green-800 text-white px-4 py-2 rounded font-medium hover:bg-green-600 transition">
+                            Seg a Sáb | 9:00 - 20:00
+                        </button>
+                    </div>
                 </div>
             </header>
 
