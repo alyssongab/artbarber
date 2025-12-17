@@ -1,12 +1,15 @@
 import { AppointmentService } from "./appointments.service.ts";
+import AvailabilityService from "./availability.service.ts";
 import { createAppointmentSchema, updateAppointmentStatusSchema } from "./appointment.schema.ts";
 import type { Request, Response, NextFunction } from "express";
 
 export class AppointmentController {
     private appointmentService: AppointmentService
+    private availabilityService: AvailabilityService;
 
     constructor(){
         this.appointmentService = new AppointmentService();
+        this.availabilityService = new AvailabilityService();
     }
 
     createAppointment = async (req: Request, res: Response, next: NextFunction) => {
@@ -70,4 +73,17 @@ export class AppointmentController {
             next(error);
         }
     }
+
+    getAvailableHours = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const barberId = req.body.id_barber!;
+            const date = req.body.appointment_date!;
+
+            const availableHours = await this.availabilityService.getAvailableHours({ id_barber: barberId, appointment_date: date });
+            return res.status(200).json(availableHours);
+        }
+        catch(error) {
+            next(error);
+        }
+    }   
 }

@@ -27,3 +27,8 @@ export interface AppointmentResponseDTO {
   appointment_status: "PENDENTE" | "CONCLUIDO" | "CANCELADO";
   notification_sent: boolean;
 }
+
+export interface GetAvailabilityInput {
+    id_barber: number;
+    appointment_date: string; // YYYY-MM-DD
+}
