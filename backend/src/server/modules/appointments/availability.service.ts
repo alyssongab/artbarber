@@ -10,13 +10,7 @@ export class AvailabilityService {
     }
 
     async getAvailableHours(input: GetAvailabilityInput): Promise<string[]> {
-                        console.log('📥 Input recebido:', input);
-                        console.log('📥 Type of input:', typeof input);
         const { appointment_date, id_barber } = input;
-
-                          
-                        console.log('📅 appointment_date:', appointment_date, typeof appointment_date);
-                        console.log('👤 id_barber:', id_barber, typeof id_barber);
 
         // 1.Generate all possible time slots based on business hours
         const allSlots = this.generateTimeSlots();
@@ -24,9 +18,6 @@ export class AvailabilityService {
         // 2. Fetch existing appointments for the barber on the given date
         // Parse date properly to Date object
         const dateObject = new Date(`${appointment_date}T00:00:00.000Z`);
-
-                        console.log('📆 dateObject criado:', dateObject);
-                        console.log('✅ dateObject válido?', !isNaN(dateObject.getTime()));
 
         const appointments = await this.appointmentRepository.findByDateAndBarber(
             dateObject,
