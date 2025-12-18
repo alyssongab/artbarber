@@ -12,9 +12,8 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Fragment, useEffect, useState } from "react";
-import { getServices } from "../../../services/apiServices";
 import type { Service, User } from "../../../types";
-import { getBarbers } from "../../../services/apiUsers";
+import { appointmentService } from "../../../services/api";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -63,7 +62,7 @@ function ClientHomePage() {
     const fetchServices = async () => {
       try{
         setLoading(true);
-        const data = await getServices();
+        const data = await appointmentService.getServices();
         setServices(data);
       }
       catch(err) {
@@ -82,7 +81,7 @@ function ClientHomePage() {
   useEffect(() => {
     const fetchBarbers = async () => {
       try{
-        const data = await getBarbers();
+        const data = await appointmentService.getBarbers();
         setBarbers(data);
       }
       catch(err){

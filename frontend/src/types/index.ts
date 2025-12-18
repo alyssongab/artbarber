@@ -75,3 +75,8 @@ export interface ApiError {
   message: string;
   statusCode: number;
 }
+
+export interface GetAvailabilityInput {
+    appointment_date: string; // YYYY-MM-DD
+    id_barber: number;
+}
