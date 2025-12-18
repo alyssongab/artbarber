@@ -1,16 +1,31 @@
 import { AppointmentRepository } from './appointments.repository.ts';
 import type { GetAvailabilityInput } from './appointment.types.ts';
 import { BUSINESS_HOURS } from '../../shared/config/business-hours.ts';
+import { UserRepository } from '../users/user.repository.ts';
+import { NotFoundError, ForbiddenError } from '../../shared/errors/http.errors.ts';
 
 export class AvailabilityService {
     private appointmentRepository: AppointmentRepository;
+    private userRepository: UserRepository;
 
     constructor(){
         this.appointmentRepository = new AppointmentRepository();
+        this.userRepository = new UserRepository();
     }
 
     async getAvailableHours(input: GetAvailabilityInput): Promise<string[]> {
         const { appointment_date, id_barber } = input;
+
+        // Verify that the user exists and is a barber
+        const user = await this.userRepository.findById(id_barber);
+        
+        if (!user) {
+            throw new NotFoundError("Barbeiro não encontrado.");
+        }
+        
+        if (user.role !== 'BARBER') {
+            throw new ForbiddenError("O usuário informado não é um barbeiro.");
+        }
 
         // 1.Generate all possible time slots based on business hours
         const allSlots = this.generateTimeSlots();
