@@ -16,7 +16,7 @@ appointmentsRouter.get('/all', authenticate, authorize('BARBER', 'ADMIN'), appoi
 // get appointments related to the user
 appointmentsRouter.get('/', authenticate, appointmentController.getRelatedAppointments);
 
-appointmentsRouter.get('/availability', authenticate, appointmentController.getAvailableHours);
+appointmentsRouter.post('/availability', authenticate, appointmentController.getAvailableHours);
 
 // delete appointment endpoint
 appointmentsRouter.delete('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.deleteAppointment);
