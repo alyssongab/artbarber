@@ -39,10 +39,10 @@ export class AvailabilityService {
             id_barber
         );
 
-        // 3. Extract booked times from appointments in format "HH:mm"
+        // 3. Extract booked times using UTC methods (not local timezone)
         const bookedTimes = appointments.map(apt => {
             const time = new Date(apt.appointment_time);
-            return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+            return `${time.getUTCHours().toString().padStart(2, '0')}:${time.getUTCMinutes().toString().padStart(2, '0')}`;
         });
 
         // 4. Remove booked times from all slots to get available slots
