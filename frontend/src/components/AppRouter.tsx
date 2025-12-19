@@ -28,8 +28,6 @@ const AdminDashboard = () => {
 function AppRouter() {
   const { user, loading } = useAuth();
 
-  console.log('🔄 AppRouter - loading:', loading, 'user:', user);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -42,12 +40,10 @@ function AppRouter() {
   }
 
   if (!user) {
-    console.log('🚫 AppRouter - No user, redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 
   // Redirect based on user role
-  console.log('✅ AppRouter - User authenticated, role:', user.role);
   
   switch (user.role) {
     case 'CLIENT':

@@ -28,6 +28,14 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
+export const getUserInfo = () => {
+    const currentUser = authService.getCurrentUser();
+    const isAuth = authService.isAuthenticated();
+    
+    console.log('AuthContext - Usuário do localStorage:', currentUser);
+    console.log('AuthContext - Está autenticado:', isAuth);
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -64,13 +72,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const currentUser = authService.getCurrentUser();
             const isAuth = authService.isAuthenticated();
-            
-            console.log('AuthContext - Usuário do localStorage:', currentUser);
-            console.log('AuthContext - Está autenticado:', isAuth);
 
             if (currentUser && isAuth) {
                 setUser(currentUser);
-                console.log('AuthContext - Usuário definido:', currentUser);
             }
         } catch (error) {
             console.error('AuthContext - Erro ao carregar usuário:', error);
@@ -84,11 +88,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const login = async (data: LoginRequest): Promise<void> => {
         try {
-            console.log('AuthContext - Login iniciado com:', data);
             setLoading(true);
 
             const response = await authService.login(data);
-            console.log('AuthContext - Response recebida:', response);
 
             if (!response.accessToken || !response.user) {
                 throw new Error('Resposta inválida do servidor');
@@ -100,8 +102,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // update state
             setUser(response.user);
-            console.log('AuthContext - Usuário logado com sucesso:', response.user);
             
+            // getUserInfo();
+
             toast.success('Login realizado com sucesso!');
             
         } catch (error: any) {
@@ -116,12 +119,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const register = async (data: RegisterClientRequest): Promise<void> => {
         try {
-            console.log('AuthContext - Register iniciado com:', data);
             setLoading(true);
 
             // 1) Create user (backend returns created user, not token)
             const created = await authService.register(data);
-            console.log('AuthContext - Register response:', created);
 
             // 2) Immediately login with provided credentials to obtain token
             const loginResp = await authService.login({ email: data.email, password: data.password });
@@ -146,9 +147,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             localStorage.setItem('user', JSON.stringify(finalUser));
             
             // Update state
-            setUser(finalUser);
-            console.log('AuthContext - Usuário registrado e autenticado com sucesso:', finalUser);
-            
+            setUser(finalUser);            
+            // getUserInfo();
+
             toast.success('Cadastro realizado com sucesso!');
             
         } catch (error: any) {
@@ -161,9 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    const logout = (): void => {
-        console.log('AuthContext - Logout executado');
-        
+    const logout = (): void => {        
         setUser(null);
         authService.logout();
         
