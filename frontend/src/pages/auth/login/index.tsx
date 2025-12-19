@@ -11,7 +11,9 @@ function Login(){
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors, isSubmitting },
+    setError,
+    resetField
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   });
@@ -21,9 +23,16 @@ function Login(){
       await login(data);
       // After sucessfully logged in, AppRouter will decide the destiny based on role
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       // Error is already handled on context with toast
       console.error('Erro no login:', error);
+      if(error.response?.status === 401){
+        setError('root', {
+          type: 'manual',
+          message: 'E-mail ou senha inválidos. Verifique e tente novamente',
+        });
+        resetField("password");
+      }
     }
   };
 
@@ -68,6 +77,11 @@ function Login(){
             <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
           )}
         </div>
+
+        {/* Erro geral do formulário */}
+        {errors.root && (
+          <p className="mb-4 text-sm text-red-500">{errors.root.message}</p>
+        )}
 
         {/* Submit */}
         <button

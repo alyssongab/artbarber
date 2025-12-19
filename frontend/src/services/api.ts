@@ -29,8 +29,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // invalid token, clean localstorage
+    const status = error.response?.status;
+    const url = error.config?.url;
+
+    if (status === 401 && url !== '/users/login') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';
