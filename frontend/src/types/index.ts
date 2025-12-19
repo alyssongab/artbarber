@@ -36,7 +36,7 @@ export interface AuthResponse {
 
 // Appointment types
 
-export interface Appointment {
+export interface AppointmentResponse {
     appointment_id: number;
     appointment_date: string;
     appointment_time: string;
@@ -53,6 +53,10 @@ export interface CreateAppointmentRequest {
     id_barber: number;
     id_client?: number;
     id_service: number;
+}
+export interface GetAvailabilityInput {
+    appointment_date: string; // YYYY-MM-DD
+    id_barber: number;
 }
 
 // Service types
@@ -74,9 +78,4 @@ export interface ApiResponse<T> {
 export interface ApiError {
   message: string;
   statusCode: number;
-}
-
-export interface GetAvailabilityInput {
-    appointment_date: string; // YYYY-MM-DD
-    id_barber: number;
 }

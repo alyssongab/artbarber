@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -89,24 +89,22 @@ export const appointmentService = {
 
   getServices: async () => {
       const response = await api.get("/services");
-      console.log(response)
       return response.data;
   },
 
   getBarbers: async () => {
       const response = await api.get("/users/barbers");
-      console.log(response.data)
       return response.data;
   },
 
   getAvailableHours: async (input: GetAvailabilityInput) => {
-      const response = await api.get("/appointments/availability", {
-          params: {
-              appointment_date: input.appointment_date,
-              id_barber: input.id_barber
-          }
-      });
+      const response = await api.post("/appointments/availability", input);
       return response.data;
+  },
+
+  createAppointment: async (data: CreateAppointmentRequest) => {
+    const response = await api.post("/appointments", data);
+    return response.data;
   }
 
 }
