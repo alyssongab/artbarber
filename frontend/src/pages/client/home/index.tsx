@@ -12,8 +12,8 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Fragment, useEffect, useState } from "react";
-import type { Service, User } from "../../../types";
-import { appointmentService } from "../../../services/api";
+import type { CreateAppointmentRequest, Service, User } from "../../../types";
+import { appointmentService, authService } from "../../../services/api";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -28,34 +28,21 @@ function LinkCard({ to, title, children }: { to: string; title: string; children
   );
 }
 
-// small reusable select field (keeps same uncontrolled behavior as before)
-function SelectField({ id, label, placeholder, items }: { id: string; label: string; placeholder: string; items: Array<{ value: string; label: string }> }){
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="pl-1">{label}</label>
-      <Select>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>{label}</SelectLabel>
-            {items.map((it) => (
-              <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 function ClientHomePage() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [barbers, setBarbers] = useState<User[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingTimes, setLoadingTimes] = useState(false);  
   const [error, setError] = useState<string | null>(null);
+
+  // wizard state
+  const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedBarber, setSelectedBarber] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
 
   // Services
   useEffect(() => {
@@ -94,10 +81,63 @@ function ClientHomePage() {
     }
 
     fetchBarbers();
-  }, [])
+  }, []);
 
-  const handleSubmit = () => {
-    alert("Ola");
+  // Available times
+  useEffect(() => {
+      if(!selectedBarber || !selectedDate){
+        setAvailableTimes([]);
+        return;
+      }
+
+      const fetchAvailableTimes = async () => {
+        try{
+          setLoadingTimes(true);
+          const times = await appointmentService.getAvailableHours({
+            appointment_date: selectedDate,
+            id_barber: Number(selectedBarber)
+          });
+          setAvailableTimes(times);
+        }
+        catch(err){
+          console.error("Erro ao buscar horários: ", err);
+          setError('Falha ao carregar horários disponíveis.');
+          setAvailableTimes([]);
+        }
+        finally{
+          setLoadingTimes(false);
+        }
+      }
+      fetchAvailableTimes();
+  }, [selectedBarber, selectedDate]);
+
+
+  const handleSubmit = async () => {
+    if (!selectedService || !selectedBarber || !selectedDate || !selectedTime) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    const currentUser = authService.getCurrentUser();
+
+    const appointmentRequest: CreateAppointmentRequest = {
+      appointment_date: selectedDate,
+      appointment_time: selectedTime,
+      id_barber: Number(selectedBarber),
+      id_service: Number(selectedService),
+      id_client: currentUser?.user_id
+    }
+
+    try{
+      const appointmentResponse = await appointmentService.createAppointment(appointmentRequest);
+      console.log(appointmentResponse);
+      alert("AGENDAMENTO CRIADO");
+    }
+    catch(err){
+      console.log("Erro ao criar agendamento: ", err);
+      alert('Erro ao realizar agendamento. Tente novamente');
+    }
+
   }
 
   // Transform services from api into SelectField format
@@ -138,15 +178,15 @@ function ClientHomePage() {
     return items;
   })();
 
-  const timeItems = [
-    { value: '09:00', label: '09:00' },
-    { value: '10:00', label: '10:00' },
-    { value: '14:00', label: '14:00' }
-  ];
+  // Transform available times into SelectField format
+  const timeItems = availableTimes.map(time => ({
+    value: time,
+    label: time
+  }));
 
   return (
     <Fragment>
-      <section id="cards-section" className="flex justify-between gap-4">
+      <section id="cards-section" className="flex flex-col xs:flex-row justify-between gap-4">
         <LinkCard to="/client/appointments" title="Histórico de agendamentos">
           <Calendar />
         </LinkCard>
@@ -176,10 +216,101 @@ function ClientHomePage() {
               <p className="text-center text-red-500">{error}</p>
             ) : (
               <>
-                <SelectField id="service" label="Serviço" placeholder="Selecione o serviço" items={serviceItems} />
-                <SelectField id="barber" label="Barbeiro" placeholder="Selecione o barbeiro" items={barberItems} />
-                <SelectField id="date" label="Data" placeholder="Selecione a data" items={dateItems} />
-                <SelectField id="time" label="Horário" placeholder="Selecione o horário" items={timeItems} />
+                {/* Step 1 - Service */}
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="service" className="pl-1">Serviço</label>
+                  <Select value={selectedService} onValueChange={setSelectedService}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o serviço" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Serviço</SelectLabel>
+                        {serviceItems.map((it) => (
+                          <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Step 2 - Barber */}
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="barber" className="pl-1">Barbeiro</label>
+                  <Select 
+                    value={selectedBarber} 
+                    onValueChange={setSelectedBarber}
+                    disabled={!selectedService}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={!selectedService ? "Selecione o serviço primeiro" : "Selecione o barbeiro"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Barbeiro</SelectLabel>
+                        {barberItems.map((it) => (
+                          <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Step 3 - Date */}
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="date" className="pl-1">Data</label>
+                  <Select 
+                    value={selectedDate} 
+                    onValueChange={setSelectedDate}
+                    disabled={!selectedBarber}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={!selectedBarber ? "Selecione o barbeiro primeiro" : "Selecione a data"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Data</SelectLabel>
+                        {dateItems.map((it) => (
+                          <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Step 4 - Time */}
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="time">Horário</label>
+                  <Select
+                    value={selectedTime} 
+                    onValueChange={setSelectedTime}
+                    disabled={!selectedDate || loadingTimes}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={
+                        !selectedDate 
+                          ? "Selecione a data primeiro" 
+                          : loadingTimes 
+                            ? "Carregando horários..." 
+                            : timeItems.length === 0
+                              ? "Sem horários disponíveis"
+                              : "Selecione o horário"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Horário</SelectLabel>
+                        {timeItems.length === 0 ? (
+                          <SelectItem value="none" disabled>Sem horários disponíveis</SelectItem>
+                        ) : (
+                          timeItems.map((it) => (
+                            <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+                          ))
+                        )}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             )}
 
@@ -188,7 +319,7 @@ function ClientHomePage() {
               <Button 
                 className="w-full font-bold cursor-pointer bg-green-700 hover:bg-green-500"
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || !selectedService || !selectedBarber || !selectedDate || !selectedTime}
               >
                 Confirmar agendamento
               </Button>
