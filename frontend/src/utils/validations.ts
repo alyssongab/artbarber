@@ -6,6 +6,47 @@ const phone11Schema = z
   .trim()
   .regex(/^\d{11}$/, 'Telefone deve ter 11 dígitos');
 
+// validates DD/MM/YYYY
+const isValidBirthday = (value?: string | null) => {
+  if (!value) return true;                 
+  const v = value.trim();
+  if (!v) return true;
+
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+    return false;
+  }
+
+  const [d, m, y] = v.split('/');
+  const di = Number(d);
+  const mi = Number(m);
+  const yi = Number(y);
+
+  const date = new Date(yi, mi - 1, di);
+
+  // data real
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== yi ||
+    date.getMonth() !== mi - 1 ||
+    date.getDate() !== di
+  ) {
+    return false;
+  }
+
+  // idade mínima: 10 anos
+  const today = new Date();
+  let age = today.getFullYear() - yi;
+  const hasNotHadBirthdayThisYear =
+    today.getMonth() + 1 < mi ||
+    (today.getMonth() + 1 === mi && today.getDate() < di);
+
+  if (hasNotHadBirthdayThisYear) {
+    age--;
+  }
+
+  return age >= 10;
+};
+
 const birthdayCoerceNullable = z.preprocess((v) => {
   if (v === '' || v === undefined || v === null) return null;
   const d = new Date(String(v));
@@ -30,20 +71,11 @@ export const registerClientSchema = z
     phone_number: phone11Schema,
     // Aceita string mascarada (DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD, AAAA/MM/DD) ou vazio/undefined
     birthday: z
-      .union([
-        z
-          .string()
-          .max(10)
-          .refine(
-            (v) =>
-              /^\d{2}[/-]\d{2}[/-]\d{4}$/.test(v) || // DD-MM-YYYY ou DD/MM/YYYY
-              /^\d{4}[/-]\d{2}[/-]\d{2}$/.test(v), // YYYY-MM-DD ou YYYY/MM/DD
-            'Data inválida'
-          ),
-        z.literal(''),
-        z.undefined(),
-      ])
-      .optional(),
+      .string()
+      .optional()
+      .refine(isValidBirthday, {
+        message: 'Data inválida',
+      }),
   })
   .strict();
 
