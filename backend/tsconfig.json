@@ -4,17 +4,13 @@
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
-    "baseUrl": "./src",
+    // "baseUrl": "./src",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "ESNext",
     "moduleResolution": "node",
     "target": "ES2023",
     "types": [],
-    "paths": {
-      "@/*": ["*"],
-      "@generated/*": ["generated/*"]
-    },
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
