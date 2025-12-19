@@ -4,6 +4,7 @@ import { Prisma } from "../../../generated/prisma/client.ts";
 import type { User } from "../../../generated/prisma/client.ts";
 import type { AppointmentWithRelations, AppointmentResponseDTO, UserPublicDTO } from "./appointment.types.ts";
 import type { AppointmentInputDTO, AppointmentStatusEnum } from "./appointment.schema.ts";
+import { appointmentUtils } from "../../shared/utils/appointment.utils.ts";
 
 export class AppointmentService {
     private appointmentRepository: AppointmentRepository;
@@ -11,42 +12,6 @@ export class AppointmentService {
     constructor(){
         this.appointmentRepository = new AppointmentRepository();
 
-    }
-
-    // Formatting helpers keep conversion logic in one place
-    private formatDate(date: Date): string {
-        // YYYY-MM-DD
-        return date.toISOString().slice(0, 10);
-    }
-    private formatTime(time: Date): string {
-        // HH:MM:SS
-        return time.toISOString().slice(11, 19);
-    }
-
-    private toUserDTO(u: User | null): UserPublicDTO | null {
-        if(!u) return null;
-        return {
-            full_name: u.full_name,
-            phone_number: u.phone_number,
-        };
-    }
-
-    /** Map Appointment (with relations) into Response DTO */
-    private toAppointmentResponseDTO(appointment: AppointmentWithRelations): AppointmentResponseDTO {
-        return {
-            appointment_id: appointment.appointment_id,
-            appointment_date: this.formatDate(appointment.appointment_date),
-            appointment_time: this.formatTime(appointment.appointment_time),
-            barber: this.toUserDTO(appointment.barber),
-            client: this.toUserDTO(appointment.client ?? null),
-            service: appointment.service ? {
-                name: appointment.service.name,
-                price: appointment.service.price.toString(),
-                duration: appointment.service.duration
-            } : null,
-            appointment_status: appointment.appointment_status,
-            notification_sent: appointment.notification_sent
-        }
     }
 
     /**
@@ -60,6 +25,7 @@ export class AppointmentService {
     async createAppointment(data: AppointmentInputDTO, userRole: string, userId: number) {
         // Date conversion
         // Z = UTC Time to keep date and time consistent in server and database
+        // iso format: YYYY-MM-DDTHH:mm:ss.sssZ
         const appointmentDate = new Date(`${data.appointment_date}T00:00:00.000Z`);
         const appointmentTime = new Date(`1970-01-01T${data.appointment_time}Z`);
 
@@ -102,7 +68,7 @@ export class AppointmentService {
         }
 
         const newAppointment = await this.appointmentRepository.create(createData);
-        return this.toAppointmentResponseDTO(newAppointment);
+        return appointmentUtils.toAppointmentResponseDTO(newAppointment);
     }
 
     /**
@@ -125,7 +91,7 @@ export class AppointmentService {
             appointments = [];
         }
         // const appointments = await this.appointmentRepository.findAll();
-        return appointments.map( ap => this.toAppointmentResponseDTO(ap));
+        return appointments.map( ap => appointmentUtils.toAppointmentResponseDTO(ap));
     }
 
     /**
@@ -139,7 +105,7 @@ export class AppointmentService {
         }
 
         const appointments = await this.appointmentRepository.findAll();
-        return appointments.map( ap => this.toAppointmentResponseDTO(ap));
+        return appointments.map( ap => appointmentUtils.toAppointmentResponseDTO(ap));
     }
 
     /**
@@ -171,6 +137,6 @@ export class AppointmentService {
         const appointmentExists = await this.appointmentRepository.findById(appointmentId);
         if(!appointmentExists) throw new NotFoundError("Agendamento informado não encontrado.");
         const updated = await this.appointmentRepository.updateStatus(appointmentId, newStatus.appointment_status);
-        return this.toAppointmentResponseDTO(updated);
+        return appointmentUtils.toAppointmentResponseDTO(updated);
     }
 }
