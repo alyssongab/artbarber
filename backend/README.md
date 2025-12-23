@@ -12,8 +12,9 @@
 2. [Endpoints - Users](#endpoints---users)
 3. [Endpoints - Services](#endpoints---services)
 4. [Endpoints - Appointments](#endpoints---appointments)
-5. [Banco de Dados](#banco-de-dados)
-6. [Códigos de Status HTTP](#códigos-de-status-http)
+5. [Endpoints - Notifications](#endpoints---notifications)
+6. [Banco de Dados](#banco-de-dados)
+7. [Códigos de Status HTTP](#códigos-de-status-http)
 
 ---
 
@@ -97,7 +98,7 @@ Autentica um usuário e retorna token JWT.
 ---
 
 ### **POST** `/api/users/barber` 🔒 ADMIN
-Cria uma conta de barbeiro (com upload de foto opcional).
+Cria uma conta de barbeiro (com upload de foto obrigatória).
 
 **Permissão:** ADMIN
 
@@ -109,7 +110,7 @@ full_name: string        // Obrigatório - Nome completo
 email: string            // Obrigatório - Email válido
 password: string         // Obrigatório - Mínimo 6 caracteres
 phone_number: string     // Obrigatório - Exatamente 11 dígitos
-photo: file              // Opcional - Arquivo de imagem
+photo: file              // Obrigatório - Arquivo de imagem (JPEG, JPG ou PNG)
 ```
 
 **Resposta de sucesso (201):**
@@ -121,8 +122,26 @@ photo: file              // Opcional - Arquivo de imagem
   "phone_number": "92987654321",
   "birthday": null,
   "role": "BARBER",
-  "photo_url": "/uploads/barber-photo-123456.jpg"
+  "photo_url": "uploads/barber-photo-123456.jpg"
 }
+```
+
+---
+
+### **GET** `/api/users/barbers` 🔒 Autenticado
+Lista todos os barbeiros cadastrados no sistema.
+
+**Permissão:** Qualquer usuário autenticado
+
+**Resposta de sucesso (200):**
+```json
+[
+  {
+    "user_id": 2,
+    "full_name": "Carlos Barbeiro",
+    "photo_url": "uploads/barber-photo-123456.jpg"
+  }
+]
 ```
 
 ---
@@ -404,6 +423,42 @@ Cria um novo agendamento.
 
 ---
 
+### **POST** `/api/appointments/availability` 🔒 Autenticado
+Retorna os horários disponíveis para um barbeiro em uma data específica, considerando o horário de funcionamento da barbearia e os agendamentos já existentes.
+
+**Permissão:** Qualquer usuário autenticado
+
+**Body (JSON):**
+```json
+{
+  "appointment_date": "string",  // Obrigatório - Data no formato ISO (YYYY-MM-DD)
+  "id_barber": number             // Obrigatório - ID do barbeiro
+}
+```
+
+**Exemplo:**
+```json
+{
+  "appointment_date": "2025-12-15",
+  "id_barber": 2
+}
+```
+
+**Resposta de sucesso (200):**
+```json
+[
+  "09:00",
+  "09:30",
+  "10:00"
+]
+```
+
+**Observações:**
+- Apenas horários dentro da janela de funcionamento configurada são retornados.
+- Horários já ocupados pelo barbeiro na data informada são automaticamente excluídos da lista.
+
+---
+
 ### **GET** `/api/appointments` 🔒 Autenticado
 Lista agendamentos relacionados ao usuário autenticado.
 
@@ -535,6 +590,70 @@ Sem conteúdo (No Content)
 
 ---
 
+## 📢 Endpoints - Notifications
+
+Endpoints responsáveis pela integração com o serviço de notificações via WhatsApp (Twilio). Em geral, não são consumidos diretamente pelo frontend, mas por webhooks/configuração externa.
+
+### **POST** `/api/notifications/status-webhook` 🔓 Público (Twilio → API)
+Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio (fila, enviado, entregue, lido, falha, etc).
+
+**Permissão:** Nenhuma (usado pelo Twilio)
+
+**Body (application/x-www-form-urlencoded ou JSON):**
+```json
+{
+  "MessageSid": "string",       // ID único da mensagem no Twilio
+  "MessageStatus": "string",    // Status atual (queued, sent, delivered, read, failed, ...)
+  "From": "string",             // Número de origem (WhatsApp)
+  "To": "string",               // Número de destino (WhatsApp)
+  "ErrorCode": "string|null",   // Código de erro (se houver)
+  "ErrorMessage": "string|null" // Mensagem de erro (se houver)
+}
+```
+
+**Resposta de sucesso (200):**
+- Sem corpo relevante (apenas confirmação para o Twilio).
+
+**Erros comuns:**
+- `400` se o corpo não contiver os campos mínimos necessários (`MessageSid` e `MessageStatus`).
+
+---
+
+### **GET** `/api/notifications/test` 🔓 Público (diagnóstico)
+Endpoint de diagnóstico para verificar se o serviço de notificações está em execução e como o webhook está configurado.
+
+**Permissão:** Nenhuma (uso interno/diagnóstico)
+
+**Resposta de sucesso (200):**
+```json
+{
+  "message": "Notification service is running",
+  "webhookUrl": "http://localhost:3030/api/notifications/status-webhook",
+  "enabled": true,
+  "apiUrl": "http://localhost:3030/api"
+}
+```
+
+> Obs.: Os valores reais de `webhookUrl`, `enabled` e `apiUrl` dependem das variáveis de ambiente da aplicação.
+
+---
+
+### **POST** `/api/notifications/test-webhook` 🔓 Público (diagnóstico)
+Permite testar manualmente o fluxo de processamento de webhook no serviço de notificações, gerando logs internos e marcando um status simulado.
+
+**Permissão:** Nenhuma (uso interno/diagnóstico)
+
+**Body (JSON):** Pode ser qualquer payload; o endpoint é usado apenas para teste e log.
+
+**Resposta de sucesso (200):**
+```json
+{
+  "message": "Webhook testado com sucesso"
+}
+```
+
+---
+
 ## 🗄️ Banco de Dados
 
 ### Tabela: `User`
@@ -634,6 +753,15 @@ Armazena os agendamentos realizados.
 - Notificações via WhatsApp são enviadas 15 minutos antes do horário agendado
 - Configurado via variáveis de ambiente (Twilio)
 
+#### Variáveis de ambiente usadas nas notificações
+
+- `NOTIFICATIONS_ENABLED`: `true` ou `false` – habilita ou desabilita o agendador (cron) que dispara as notificações.
+- `TWILIO_ACCOUNT_SID`: SID da conta Twilio usada para envio das mensagens.
+- `TWILIO_AUTH_TOKEN`: Token de autenticação da conta Twilio.
+- `TWILIO_WHATSAPP_NUMBER`: Número WhatsApp configurado no Twilio (formato `+55...`).
+- `TWILIO_TEMPLATE_SID`: ID do template de mensagem aprovado no Twilio.
+- `API_URL`: URL base pública da API (usada para montar o `status-webhook` enviado ao Twilio, por exemplo `http://localhost:3030/api`).
+
 <!-- ### Boas Práticas
 - Sempre use HTTPS em produção
 - Mantenha seu token JWT seguro
@@ -642,5 +770,5 @@ Armazena os agendamentos realizados.
 
 ---
 
-**Última atualização:** 12 de dezembro de 2025  
+**Última atualização:** 23 de dezembro de 2025  
 **Contato:** Equipe de desenvolvimento
