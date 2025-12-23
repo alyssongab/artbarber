@@ -1,6 +1,6 @@
 // import ClientLayout from "../../../components/layout/client";
 import { Link } from "react-router";
-import { Calendar, Clock8, ClockPlus } from "lucide-react";
+import { Calendar, ClockPlus } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
   Select,
@@ -20,7 +20,7 @@ function LinkCard({ to, title, children }: { to: string; title: string; children
   return (
     <Link
       to={to}
-      className="flex flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
+      className="flex text-lg font-medium w-full flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
     >
       {children}
       <h3 className="text-md text-gray-900">{title}</h3>
@@ -132,6 +132,14 @@ function ClientHomePage() {
       const appointmentResponse = await appointmentService.createAppointment(appointmentRequest);
       console.log(appointmentResponse);
       alert("AGENDAMENTO CRIADO");
+
+      // clean all inputs
+      setSelectedService('');
+      setSelectedBarber('');
+      setSelectedDate('');
+      setSelectedTime('');
+      setAvailableTimes([]);
+
     }
     catch(err){
       console.log("Erro ao criar agendamento: ", err);
@@ -186,13 +194,9 @@ function ClientHomePage() {
 
   return (
     <Fragment>
-      <section id="cards-section" className="flex flex-col xs:flex-row justify-between gap-4">
-        <LinkCard to="/client/appointments" title="Histórico de agendamentos">
+      <section id="cards-section">
+        <LinkCard to="/client/appointments" title="Seus agendamentos">
           <Calendar />
-        </LinkCard>
-
-        <LinkCard to="/client/history" title="Próximos agendamentos">
-          <Clock8 />
         </LinkCard>
       </section>
 
