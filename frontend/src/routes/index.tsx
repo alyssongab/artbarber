@@ -4,6 +4,7 @@ import AppRouter from '../components/AppRouter';
 import { RequireClient } from '../components/RouterGuard';
 import ClientLayout from '../components/layout/client';
 import ClientHomePage from '../pages/client/home';
+import ClientAppointmentsPage from '../pages/client/appointments';
 
 // Router v7
 export const router = createBrowserRouter([
@@ -27,8 +28,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="home" replace/> },
       { path: 'home', element: <ClientHomePage /> },
       // placeholders
-      { path: 'appointments', element: <div className="p-4">Agendamentos</div> },
-      { path: 'history', element: <div className="p-4">Histórico</div> },
+      { path: 'appointments', element: <ClientAppointmentsPage/> },
     ]
   },
 
