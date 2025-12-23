@@ -28,7 +28,7 @@ function Auth(){
                     <div className="flex items-center justify-center gap-3 mb-4">
                         {/* Scissor icon */}
                         <img 
-                            src="/SVGRepo_iconCarrier.svg" 
+                            src="/Frame.png" 
                             alt="Scissors" 
                             className="w-8 h-8 sm:w-12 sm:h-12"
                         />

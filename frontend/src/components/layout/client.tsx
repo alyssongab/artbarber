@@ -13,9 +13,9 @@ function ClientLayout(){
         <div className="min-h-screen bg-[#F1F1F1] p-5">
             <header id="client-header" className="flex w-full max-w-md sm:max-w-lg mx-auto pb-5 justify-between items-center border-b-2 border-gray-300">
                 <div className="flex flex-col gap-2">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         <img
-                            src="/SVGRepo_iconCarrier.svg" 
+                            src="/Frame.png" 
                             alt="Scissors" 
                             className="w-8 h-8"
                         />
