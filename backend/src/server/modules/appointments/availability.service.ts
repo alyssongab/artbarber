@@ -27,13 +27,18 @@ export class AvailabilityService {
             throw new ForbiddenError("O usuário informado não é um barbeiro.");
         }
 
-        // 1.Generate all possible time slots based on business hours
-        const allSlots = this.generateTimeSlots();
-
-        // 2. Fetch existing appointments for the barber on the given date
         // Parse date properly to Date object
         const dateObject = new Date(`${appointment_date}T00:00:00.000Z`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check if the requested date is today
+        const isToday = dateObject.getTime() === today.getTime();
 
+        // 1. Generate all possible time slots based on business hours
+        const allSlots = this.generateTimeSlots(isToday);
+
+        // 2. Fetch existing appointments for the barber on the given date
         const appointments = await this.appointmentRepository.findByDateAndBarber(
             dateObject,
             id_barber
@@ -53,9 +58,11 @@ export class AvailabilityService {
 
     /**
      * Generate all time slots between OPEN and CLOSE
+     * If isToday is true, only return slots starting from 30 minutes from now
+     * @param isToday - Whether the slots are for today
      * @returns Array of strings in the format "HH:mm"
      */
-    private generateTimeSlots(): string[] {
+    private generateTimeSlots(isToday: boolean = false): string[] {
         const slots: string[] = [];
         const [openHour, openMinute] = BUSINESS_HOURS.OPEN.split(':').map(Number) as [number, number];
         const [closeHour, closeMinute] = BUSINESS_HOURS.CLOSE.split(':').map(Number) as [number, number];
@@ -66,10 +73,31 @@ export class AvailabilityService {
         const endTime = new Date();
         endTime.setHours(closeHour, closeMinute, 0, 0);
 
+        // If it's today, calculate minimum start time (now + 30 minutes)
+        let minimumTime: Date | null = null;
+        if (isToday) {
+            minimumTime = new Date();
+            minimumTime.setMinutes(minimumTime.getMinutes() + 30);
+            
+            // If minimum time is after business closing, return empty array (no slots available today)
+            if (minimumTime >= endTime) {
+                return [];
+            }
+            
+            // If minimum time is before opening, start from opening
+            if (minimumTime < currentTime) {
+                minimumTime = null; // No need to filter, start from opening
+            }
+        }
+
         while (currentTime < endTime) {
             const hours = currentTime.getHours().toString().padStart(2, '0');
             const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-            slots.push(`${hours}:${minutes}`);
+            
+            // Only add slot if it's not today, or if it's after the minimum time
+            if (!minimumTime || currentTime >= minimumTime) {
+                slots.push(`${hours}:${minutes}`);
+            }
 
             currentTime.setMinutes(currentTime.getMinutes() + BUSINESS_HOURS.SLOT_INTERVAL);
         }

@@ -20,7 +20,7 @@ function LinkCard({ to, title, children }: { to: string; title: string; children
   return (
     <Link
       to={to}
-      className="flex text-lg font-medium w-full flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black"
+      className="flex text-lg font-medium w-full flex-col items-center justify-center gap-4 text-center rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md focus:outline-none"
     >
       {children}
       <h3 className="text-md text-gray-900">{title}</h3>
@@ -98,6 +98,33 @@ function ClientHomePage() {
             id_barber: Number(selectedBarber)
           });
           setAvailableTimes(times);
+          
+          // If no times available for today, automatically select next day
+          if (times.length === 0) {
+            const today = new Date();
+            const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+            
+            // Check if selected date is today
+            if (
+              today.getDate() === selectedDateObj.getDate() &&
+              today.getMonth() === selectedDateObj.getMonth() &&
+              today.getFullYear() === selectedDateObj.getFullYear()
+            ) {
+              // Find next available date (skip Sundays)
+              const nextDate = new Date(today);
+              nextDate.setDate(nextDate.getDate() + 1);
+              
+              while (nextDate.getDay() === 0) {
+                nextDate.setDate(nextDate.getDate() + 1);
+              }
+              
+              const day = nextDate.getDate().toString().padStart(2, '0');
+              const month = (nextDate.getMonth() + 1).toString().padStart(2, '0');
+              const year = nextDate.getFullYear();
+              
+              setSelectedDate(`${year}-${month}-${day}`);
+            }
+          }
         }
         catch(err){
           console.error("Erro ao buscar horários: ", err);
@@ -163,7 +190,17 @@ function ClientHomePage() {
   // Generate next 7 days dynamically, skipping Sundays
   const dateItems = (() => {
     const items: Array<{ value: string; label: string }> = [];
-    const date = new Date();
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinutes = now.getMinutes();
+    
+    // If it's after 19:30 (business closing time), start from tomorrow
+    const startDate = new Date();
+    if (currentHour > 19 || (currentHour === 19 && currentMinutes >= 30)) {
+      startDate.setDate(startDate.getDate() + 1);
+    }
+
+    const date = new Date(startDate);
 
     while (items.length < 7) {
       const weekdayIndex = date.getDay(); // 0 = Sunday
