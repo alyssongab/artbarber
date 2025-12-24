@@ -1,5 +1,6 @@
 import { useAuth } from '../contexts/auth.context';
 import { Navigate } from 'react-router';
+import { LoadingSpinner } from './LoadingSpinner';
 // import ClientHomePage from '../pages/client/home';
 
 // Dashboard components (mocked)
@@ -29,14 +30,7 @@ function AppRouter() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!user) {
