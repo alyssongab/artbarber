@@ -85,5 +85,29 @@ export class AppointmentController {
         catch(error) {
             next(error);
         }
-    }   
+    }
+
+    getUpcomingAppointments = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userId = req.user!.user_id;
+            const userRole = req.user!.role;
+            const appointments = await this.appointmentService.getUpcomingAppointments(userId, userRole);
+            return res.status(200).json(appointments);
+        }
+        catch(error) {
+            next(error);
+        }
+    }
+
+    getPastAppointments = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userId = req.user!.user_id;
+            const userRole = req.user!.role;
+            const appointments = await this.appointmentService.getPastAppointments(userId, userRole);
+            return res.status(200).json(appointments);
+        }
+        catch(error) {
+            next(error);
+        }
+    }
 }

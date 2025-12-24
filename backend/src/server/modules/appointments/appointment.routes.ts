@@ -16,6 +16,12 @@ appointmentsRouter.get('/all', authenticate, authorize('BARBER', 'ADMIN'), appoi
 // get appointments related to the user
 appointmentsRouter.get('/', authenticate, appointmentController.getRelatedAppointments);
 
+// get upcoming appointments for client
+appointmentsRouter.get('/upcoming', authenticate, authorize('CLIENT'), appointmentController.getUpcomingAppointments);
+
+// get past appointments for client
+appointmentsRouter.get('/past', authenticate, authorize('CLIENT'), appointmentController.getPastAppointments);
+
 appointmentsRouter.post('/availability', authenticate, appointmentController.getAvailableHours);
 
 // delete appointment endpoint

@@ -139,4 +139,32 @@ export class AppointmentService {
         const updated = await this.appointmentRepository.updateStatus(appointmentId, newStatus.appointment_status);
         return appointmentUtils.toAppointmentResponseDTO(updated);
     }
+
+    /**
+     * Get upcoming appointments for a client (future from now)
+     * @param userId Client ID
+     * @returns List of upcoming appointments in DTO format
+     */
+    async getUpcomingAppointments(userId: number, userRole: string) {
+        if(userRole !== 'CLIENT'){
+            throw new ForbiddenError("Apenas clientes podem acessar esta funcionalidade.");
+        }
+
+        const appointments = await this.appointmentRepository.findUpcomingByClientId(userId);
+        return appointments.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
+    }
+
+    /**
+     * Get past appointments for a client (past from now)
+     * @param userId Client ID
+     * @returns List of past appointments in DTO format
+     */
+    async getPastAppointments(userId: number, userRole: string) {
+        if(userRole !== 'CLIENT'){
+            throw new ForbiddenError("Apenas clientes podem acessar esta funcionalidade.");
+        }
+        
+        const appointments = await this.appointmentRepository.findPastByClientId(userId);
+        return appointments.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
+    }
 }

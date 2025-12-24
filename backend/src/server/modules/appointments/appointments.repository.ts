@@ -174,4 +174,76 @@ export class AppointmentRepository {
             data: { notification_sent: status }
         });
     }
+
+    /**
+     * Find upcoming appointments for a client (future appointments from now)
+     * @param clientId 
+     * @returns Appointments with date >= today and time >= now (if today)
+     */
+    async findUpcomingByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        return await prismaClient.appointment.findMany({
+            where: {
+                id_client: clientId,
+                OR: [
+                    // Future dates
+                    {
+                        appointment_date: {
+                            gt: today
+                        }
+                    },
+                    // Today but future time
+                    {
+                        AND: [
+                            { appointment_date: today },
+                            { appointment_time: { gte: now } }
+                        ]
+                    }
+                ]
+            },
+            include: INCLUDE_RELATIONS,
+            orderBy: [
+                { appointment_date: 'asc' },
+                { appointment_time: 'asc' }
+            ]
+        });
+    }
+
+    /**
+     * Find past appointments for a client (past appointments from now)
+     * @param clientId 
+     * @returns Appointments with date < today or (date = today and time < now)
+     */
+    async findPastByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        return await prismaClient.appointment.findMany({
+            where: {
+                id_client: clientId,
+                OR: [
+                    // Past dates
+                    {
+                        appointment_date: {
+                            lt: today
+                        }
+                    },
+                    // Today but past time
+                    {
+                        AND: [
+                            { appointment_date: today },
+                            { appointment_time: { lt: now } }
+                        ]
+                    }
+                ]
+            },
+            include: INCLUDE_RELATIONS,
+            orderBy: [
+                { appointment_date: 'desc' },
+                { appointment_time: 'desc' }
+            ]
+        });
+    }
 }
