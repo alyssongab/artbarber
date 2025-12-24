@@ -2,12 +2,13 @@
 import { LogOut } from 'lucide-react';
 import { useAuth } from "../../contexts/auth.context";
 import { Outlet } from "react-router";
+import { getFirstName } from '../../utils/users';
 
 
 function ClientLayout(){
     const { logout, user } = useAuth()
-    const splittedName: string[] | undefined = user?.full_name.split(' ');
-    const firstName = splittedName ? splittedName[0] : user?.full_name;
+    const name = user?.full_name;
+    const firstName = getFirstName(name);
 
     return (
         <div className="min-h-screen bg-[#F1F1F1] p-5">
@@ -21,7 +22,7 @@ function ClientLayout(){
                         />
                         <h1 className="text-3xl">Barbearia</h1>
                     </div>
-                    <span className="text-gray-700">Olá, {firstName ?? 'Cliente'}!</span>
+                    <span className="text-gray-700">Olá, {firstName}!</span>
                 </div>
                 <div>
                     <button onClick={logout} className='cursor-pointer'>

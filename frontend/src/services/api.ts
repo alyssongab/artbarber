@@ -107,6 +107,11 @@ export const appointmentService = {
   createAppointment: async (data: CreateAppointmentRequest) => {
     const response = await api.post("/appointments", data);
     return response.data;
+  },
+
+  getRelatedAppointments: async() => {
+    const myAppointments = await api.get("/appointments");
+    return myAppointments.data;
   }
 
 }

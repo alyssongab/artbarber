@@ -9,6 +9,11 @@ export interface User {
   photo_url?: string | null;
 }
 
+export interface UserResponseDTO {
+  full_name: string,
+  phone_number: string
+}
+
 export interface LoginRequest {
     email: string;
     password: string;
@@ -37,14 +42,14 @@ export interface AuthResponse {
 // Appointment types
 
 export interface AppointmentResponse {
-    appointment_id: number;
-    appointment_date: string;
-    appointment_time: string;
-    id_barber: number;
-    id_client?: number;
-    id_service: number;
-    appointment_status: 'PENDENTE' | 'CANCELADO' | 'CONCLUIDO';
-    notification_sent: boolean;
+  appointment_id: number,
+  appointment_date: string,
+  appointment_time: string,
+  barber: UserResponseDTO,
+  client?: UserResponseDTO,
+  service: ServiceResponseDTO,
+  appointment_status: 'PENDENTE' | 'CONCLUIDO' | 'CANCELADO',
+  notification_sent: boolean
 }
 
 export interface CreateAppointmentRequest {
@@ -66,6 +71,12 @@ export interface Service {
     name: string;
     price: number;
     duration: number;
+}
+
+export interface ServiceResponseDTO {
+  name: string,
+  price: string,
+  duration: number
 }
 
 // API Response types
