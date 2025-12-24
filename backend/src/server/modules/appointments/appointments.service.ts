@@ -127,15 +127,39 @@ export class AppointmentService {
 
     /**
      * Update appointment status with role based authorization
-     * - only BARBER can do it
+     * - CLIENT: Can only cancel their own appointments (change status to CANCELADO)
+     * - BARBER: Can update any appointment status (associated with them)
      * @param appointmentId 
      * @param newStatus 
      * @param userRole Current user's role
+     * @param userId Current user's ID
      * @returns 
      */
-    async updateAppointmentStatus(appointmentId: number, newStatus: AppointmentStatusEnum, userRole: string){
+    async updateAppointmentStatus(appointmentId: number, newStatus: AppointmentStatusEnum, userRole: string, userId: number){
         const appointmentExists = await this.appointmentRepository.findById(appointmentId);
         if(!appointmentExists) throw new NotFoundError("Agendamento informado não encontrado.");
+
+        // CLIENT validation
+        if(userRole === 'CLIENT'){
+            // Check if appointment belongs to the client
+            if(appointmentExists.id_client !== userId){
+                throw new ForbiddenError("Você não pode alterar um agendamento que não é seu.");
+            }
+
+            // Client can only cancel (status = CANCELADO)
+            if(newStatus.appointment_status !== 'CANCELADO'){
+                throw new ForbiddenError("Clientes só podem cancelar seus agendamentos.");
+            }
+        }
+
+        // BARBER validation
+        if(userRole === 'BARBER'){
+            // Check if appointment is associated with the barber
+            if(appointmentExists.id_barber !== userId){
+                throw new ForbiddenError("Você não pode alterar um agendamento que não está associado a você.");
+            }
+        }
+
         const updated = await this.appointmentRepository.updateStatus(appointmentId, newStatus.appointment_status);
         return appointmentUtils.toAppointmentResponseDTO(updated);
     }
@@ -163,7 +187,7 @@ export class AppointmentService {
         if(userRole !== 'CLIENT'){
             throw new ForbiddenError("Apenas clientes podem acessar esta funcionalidade.");
         }
-        
+
         const appointments = await this.appointmentRepository.findPastByClientId(userId);
         return appointments.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
     }

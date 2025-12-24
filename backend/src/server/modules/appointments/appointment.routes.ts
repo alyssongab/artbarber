@@ -25,9 +25,10 @@ appointmentsRouter.get('/past', authenticate, authorize('CLIENT'), appointmentCo
 appointmentsRouter.post('/availability', authenticate, appointmentController.getAvailableHours);
 
 // delete appointment endpoint
+// delete appointment endpoint
 appointmentsRouter.delete('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.deleteAppointment);
 
-// update the status of an appointment
-appointmentsRouter.patch('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.updateAppointmentStatus);
+// update the status of an appointment (CLIENT can only cancel their own, BARBER can update any status)
+appointmentsRouter.patch('/:id', validateId, authenticate, authorize('CLIENT', 'BARBER'), appointmentController.updateAppointmentStatus);
 
 export default appointmentsRouter;

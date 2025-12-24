@@ -65,8 +65,9 @@ export class AppointmentController {
         try{
             const id = parseInt(req.params.id!);
             const userRole = req.user!.role;
+            const userId = req.user!.user_id;
             const parsedStatus = updateAppointmentStatusSchema.parse(req.body);
-            const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus, userRole);
+            const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus, userRole, userId);
             return res.status(200).json(updatedAppointment);
         }
         catch(error) {
