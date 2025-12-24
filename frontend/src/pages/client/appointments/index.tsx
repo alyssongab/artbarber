@@ -3,8 +3,8 @@ import { ArrowLeft, Calendar } from 'lucide-react';
 import { Link } from 'react-router';
 import { appointmentService } from '../../../services/api';
 import { AppointmentResponse } from '../../../types';
-import { getFirstName } from '../../../utils/users';
 import { formatDate, formatTime, capitalizeStatus } from '../../../utils/helpers';
+import ClientAppointmentsCard from '../../../components/ClientAppointmentsCard';
 
 function ClientAppointmentsPage(){
 
@@ -80,24 +80,18 @@ function ClientAppointmentsPage(){
                         <div id='next-appointments' className='space-y-5'>
                             <h2 className='text-xl border-b-2'>Seus agendamentos</h2>
                             <div className='flex flex-col items-center justify-center gap-3'>
-                                {
-                                    (appointmentDetails.map(a => 
-                                        <div key={a.id} className='flex flex-col bg-white gap-3 justify-center border-[1px] border-black/20 p-3 rounded-lg w-3/4'>
-                                            <h3 className='font-medium text-lg'>{a.service}</h3>
-                                            <div className='flex justify-between'>
-                                                <p className='opacity-50'>Barbeiro {getFirstName(a.barber)}</p>
-                                                <p className='bg-gray-300 rounded-lg py-1 px-4 text-[12px]'>{a.status}</p>
-                                            </div>
-                                            <div className='flex justify-between'>
-                                                <div className='flex justify-center items-center gap-1'>
-                                                    <Calendar size={20} className='opacity-50' />
-                                                    <p className='opacity-70'> {a.date} às {a.time}</p>
-                                                </div>
-                                                <p className='text-yellow-600' >R$ {a.price.concat(",00")}</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                } 
+                                {appointmentDetails.map(a => 
+                                    <ClientAppointmentsCard
+                                        key={a.id}
+                                        id={a.id}
+                                        service={a.service}
+                                        barber={a.barber}
+                                        status={a.status}
+                                        date={a.date}
+                                        time={a.time}
+                                        price={a.price}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>                    

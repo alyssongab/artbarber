@@ -7,10 +7,11 @@
     return timeStr.slice(0, 5); // HH:MM
   };
 
-  export const capitalizeStatus = (stts: string) => {
+  export const capitalizeStatus = (stts: string): string => {
     switch(stts){
         case "PENDENTE": return "Agendado";
         case "CONCLUIDO": return "Concluído";
-        case "CANCELADO": return "Cancelado"
+        case "CANCELADO": return "Cancelado";
+        default: return stts;
     }
   }
