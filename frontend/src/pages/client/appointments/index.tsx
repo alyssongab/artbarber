@@ -76,23 +76,21 @@ function ClientAppointmentsPage(){
                 ?
                     (<p className='bg-gray-300 p-5 text-lg rounded-md'> Você não possui agendamentos ainda. </p>)
                 :
-                    <div id='my-appointments' className='mt-6 flex flex-col gap-5'>
-                        <div id='next-appointments' className='space-y-5'>
-                            <h2 className='text-xl border-b-2'>Seus agendamentos</h2>
-                            <div className='flex flex-col items-center justify-center gap-3'>
-                                {appointmentDetails.map(a => 
-                                    <ClientAppointmentsCard
-                                        key={a.id}
-                                        id={a.id}
-                                        service={a.service}
-                                        barber={a.barber}
-                                        status={a.status}
-                                        date={a.date}
-                                        time={a.time}
-                                        price={a.price}
-                                    />
-                                )}
-                            </div>
+                    <div id='my-appointments'>
+                        {/* <h2 className='text-xl border-b-2'>Seus agendamentos</h2> */}
+                        <div className='flex flex-col items-center justify-center gap-6 mt-6'>
+                            {appointmentDetails.map(a => 
+                                <ClientAppointmentsCard
+                                    key={a.id}
+                                    id={a.id}
+                                    service={a.service}
+                                    barber={a.barber}
+                                    status={a.status}
+                                    date={a.date}
+                                    time={a.time}
+                                    price={a.price}
+                                />
+                            )}
                         </div>
                     </div>                    
                 }
