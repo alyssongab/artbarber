@@ -8,6 +8,7 @@ function Auth(){
     const location = useLocation();
     const navigate = useNavigate();
     const currentTab = location.pathname.includes('register') ? 'register' : 'login';
+    const BARBERSHOP_NAME = import.meta.env.VITE_BARBERSHOP;
 
     return(
         <div className="min-h-screen bg-[#F1F1F1]">
@@ -33,7 +34,7 @@ function Auth(){
                             className="w-8 h-8 sm:w-12 sm:h-12"
                         />
                         <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-bold">
-                            Barbearia
+                            {BARBERSHOP_NAME || "Barbearia"}
                         </h1>
                     </div>
                     <p className="text-white/70 text-sm sm:text-base md:text-lg max-w-md mx-auto">
