@@ -13,13 +13,13 @@ function ClientAppointmentsPage(){
     const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
     const [pagination, setPagination] = useState<PaginationInfo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 5;
+    const PAGE_SIZE = import.meta.env.VITE_CLIENT_PAGINATION;
 
     useEffect(() => {
         const fetchAppointments = async () =>{
             try{
                 setLoading(true);
-                const myAppointments = await appointmentService.getRelatedAppointments(currentPage, pageSize);
+                const myAppointments = await appointmentService.getRelatedAppointments(currentPage, PAGE_SIZE);
                 setAppointments(myAppointments.data);
                 setPagination(myAppointments.pagination);
             }
@@ -81,9 +81,9 @@ function ClientAppointmentsPage(){
                 >
                     <ArrowLeft color='white'/>
                 </Link>
-                <div className='flex gap-1 items-center'>
-                    <h1 className='text-2xl'>Agendamentos</h1>
-                    <Calendar size={25} />
+                <div className='flex gap-2 items-center justify-center'>
+                    <h1 className='text-xl md:text-2xl'>Agendamentos</h1>
+                    <Calendar size={24} />
                 </div>
             </div>
                 {appointmentDetails.length === 0
@@ -111,7 +111,7 @@ function ClientAppointmentsPage(){
                             <button
                                 onClick={handlePreviousPage}
                                 disabled={currentPage <= 1 || loading}
-                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                                className="cursor-pointer bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Anterior
                             </button>
@@ -123,7 +123,7 @@ function ClientAppointmentsPage(){
                             <button
                                 onClick={handleNextPage}
                                 disabled={currentPage >= pagination.totalPages || loading}
-                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                                className="cursor-pointer bg-blue-600 text-white px-3 py-1 round disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Próxima
                             </button>

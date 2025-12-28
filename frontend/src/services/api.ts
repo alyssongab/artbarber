@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, ServiceResponseDTO, UserResponseDTO, AppointmentResponse } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -100,13 +100,13 @@ export const authService = {
 
 export const appointmentService = {
 
-  getServices: async (): Promise<ServiceResponseDTO> => {
-      const response = await api.get<ServiceResponseDTO>("/services");
+  getServices: async (): Promise<Service[]> => {
+      const response = await api.get<Service[]>("/services");
       return response.data;
   },
 
-  getBarbers: async (): Promise<UserResponseDTO> => {
-      const response = await api.get<UserResponseDTO>("/users/barbers");
+  getBarbers: async (): Promise<User[]> => {
+      const response = await api.get<User[]>("/users/barbers");
       return response.data;
   },
 
@@ -128,6 +128,14 @@ export const appointmentService = {
 
     const myAppointments = await api.get<RelatedAppointmentsResponse>(`/appointments?${params.toString()}`);
     return myAppointments.data;
-  }
+  },
+
+    cancelAppointment: async (appointmentId: number): Promise<AppointmentResponse> => {
+    const response = await api.patch<AppointmentResponse>(
+      `/appointments/${appointmentId}`,
+      { appointment_status: 'CANCELADO' }
+    );
+    return response.data;
+  },
 
 }
