@@ -44,42 +44,88 @@ function ClientHomePage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
 
-  // Services
-  useEffect(() => {
-    const fetchServices = async () => {
-      try{
-        setLoading(true);
-        const data = await appointmentService.getServices();
-        setServices(data);
-      }
-      catch(err) {
-        console.error('Erro ao buscar serviços:', err);
-        setError('Falha ao carregar serviços.');
-      }
-      finally {
-        setLoading(false);
+  const fetchServices = async () => {
+    try{
+      setLoading(true);
+      const data = await appointmentService.getServices();
+      setServices(data);
+    }
+    catch(err) {
+      console.error('Erro ao buscar serviços:', err);
+      setError('Falha ao carregar serviços.');
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchBarbers = async () => {
+    try{
+      const data = await appointmentService.getBarbers();
+      setBarbers(data);
+    }
+    catch(err){
+      console.error('Erro ao buscar barbeiros:', err);
+      setError('Falha ao carregar barbeiros.');
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchAvailableTimes = async () => {
+    try{
+      setLoadingTimes(true);
+      const times = await appointmentService.getAvailableHours({
+        appointment_date: selectedDate,
+        id_barber: Number(selectedBarber)
+      });
+      setAvailableTimes(times);
+      
+      // If no times available for today, automatically select next day
+      if (times.length === 0) {
+        const today = new Date();
+        const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+        
+        // Check if selected date is today
+        if (
+          today.getDate() === selectedDateObj.getDate() &&
+          today.getMonth() === selectedDateObj.getMonth() &&
+          today.getFullYear() === selectedDateObj.getFullYear()
+        ) {
+          // Find next available date (skip Sundays)
+          const nextDate = new Date(today);
+          nextDate.setDate(nextDate.getDate() + 1);
+          
+          while (nextDate.getDay() === 0) {
+            nextDate.setDate(nextDate.getDate() + 1);
+          }
+          
+          const day = nextDate.getDate().toString().padStart(2, '0');
+          const month = (nextDate.getMonth() + 1).toString().padStart(2, '0');
+          const year = nextDate.getFullYear();
+          
+          setSelectedDate(`${year}-${month}-${day}`);
+        }
       }
     }
+    catch(err){
+      console.error("Erro ao buscar horários: ", err);
+      setError('Falha ao carregar horários disponíveis.');
+      setAvailableTimes([]);
+    }
+    finally{
+      setLoadingTimes(false);
+    }
+  }
 
+  // Services
+  useEffect(() => {
     fetchServices();
   }, []);
 
   // Barbers
   useEffect(() => {
-    const fetchBarbers = async () => {
-      try{
-        const data = await appointmentService.getBarbers();
-        setBarbers(data);
-      }
-      catch(err){
-        console.error('Erro ao buscar barbeiros:', err);
-        setError('Falha ao carregar barbeiros.');
-      }
-      finally {
-        setLoading(false);
-      }
-    }
-
     fetchBarbers();
   }, []);
 
@@ -88,52 +134,6 @@ function ClientHomePage() {
       if(!selectedBarber || !selectedDate){
         setAvailableTimes([]);
         return;
-      }
-
-      const fetchAvailableTimes = async () => {
-        try{
-          setLoadingTimes(true);
-          const times = await appointmentService.getAvailableHours({
-            appointment_date: selectedDate,
-            id_barber: Number(selectedBarber)
-          });
-          setAvailableTimes(times);
-          
-          // If no times available for today, automatically select next day
-          if (times.length === 0) {
-            const today = new Date();
-            const selectedDateObj = new Date(selectedDate + 'T00:00:00');
-            
-            // Check if selected date is today
-            if (
-              today.getDate() === selectedDateObj.getDate() &&
-              today.getMonth() === selectedDateObj.getMonth() &&
-              today.getFullYear() === selectedDateObj.getFullYear()
-            ) {
-              // Find next available date (skip Sundays)
-              const nextDate = new Date(today);
-              nextDate.setDate(nextDate.getDate() + 1);
-              
-              while (nextDate.getDay() === 0) {
-                nextDate.setDate(nextDate.getDate() + 1);
-              }
-              
-              const day = nextDate.getDate().toString().padStart(2, '0');
-              const month = (nextDate.getMonth() + 1).toString().padStart(2, '0');
-              const year = nextDate.getFullYear();
-              
-              setSelectedDate(`${year}-${month}-${day}`);
-            }
-          }
-        }
-        catch(err){
-          console.error("Erro ao buscar horários: ", err);
-          setError('Falha ao carregar horários disponíveis.');
-          setAvailableTimes([]);
-        }
-        finally{
-          setLoadingTimes(false);
-        }
       }
       fetchAvailableTimes();
   }, [selectedBarber, selectedDate]);
