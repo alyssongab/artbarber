@@ -15,23 +15,24 @@ function ClientAppointmentsPage(){
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = import.meta.env.VITE_CLIENT_PAGINATION;
 
-    useEffect(() => {
-        const fetchAppointments = async () =>{
-            try{
-                setLoading(true);
-                const myAppointments = await appointmentService.getRelatedAppointments(currentPage, PAGE_SIZE);
-                setAppointments(myAppointments.data);
-                setPagination(myAppointments.pagination);
-            }
-            catch(err: any){
-                setLoading(false);
-                console.log("Erro ao carregar agendamentos: ", err);
-                setError("Houve um erro ao carregar os agendamentos.");
-            }
-            finally{
-                setLoading(false);
-            }
+    const fetchAppointments = async () =>{
+        try{
+            setLoading(true);
+            const myAppointments = await appointmentService.getRelatedAppointments(currentPage, PAGE_SIZE);
+            setAppointments(myAppointments.data);
+            setPagination(myAppointments.pagination);
         }
+        catch(err: any){
+            setLoading(false);
+            console.log("Erro ao carregar agendamentos: ", err);
+            setError("Houve um erro ao carregar os agendamentos.");
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
         fetchAppointments();
     }, [currentPage]);
 
@@ -103,6 +104,7 @@ function ClientAppointmentsPage(){
                                     date={a.date}
                                     time={a.time}
                                     price={a.price}
+                                    onCancelled={fetchAppointments}
                                 />
                             )}
                         </div>
