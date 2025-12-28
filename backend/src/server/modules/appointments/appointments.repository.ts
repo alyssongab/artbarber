@@ -260,8 +260,8 @@ export class AppointmentRepository {
                 where: { id_client: clientId },
                 include: INCLUDE_RELATIONS,
                 orderBy: [
-                    { appointment_date: 'asc' },
-                    { appointment_time: 'asc' }
+                    { appointment_date: 'desc' },
+                    { appointment_time: 'desc' }
                 ],
                 skip,
                 take: limit
@@ -286,8 +286,8 @@ export class AppointmentRepository {
                 where: { id_barber: barberId },
                 include: INCLUDE_RELATIONS,
                 orderBy: [
-                    { appointment_date: 'asc' },
-                    { appointment_time: 'asc' }
+                    { appointment_date: 'desc' },
+                    { appointment_time: 'desc' }
                 ],
                 skip,
                 take: limit
