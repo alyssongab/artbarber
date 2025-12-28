@@ -41,8 +41,21 @@ export class AppointmentController {
         try{
             const userRole = req.user!.role;
             const userId = req.user!.user_id;
-            const appointments = await this.appointmentService.getRelatedAppointments(userRole, userId);
-            return res.status(200).json(appointments); 
+
+            const page = req.query._page ? parseInt(req.query._page as string, 10) : 1;
+            const limit = req.query._limit ? parseInt(req.query._limit as string, 10) : 10;
+
+            const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+            const safeLimit = Number.isNaN(limit) || limit < 1 ? 10 : limit;
+
+            const result = await this.appointmentService.getRelatedAppointments(
+                userRole,
+                userId,
+                safePage,
+                safeLimit
+            );
+
+            return res.status(200).json(result); 
         }
         catch(error) {
             next(error);

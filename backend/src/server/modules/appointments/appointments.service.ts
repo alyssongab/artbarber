@@ -75,23 +75,50 @@ export class AppointmentService {
      * Get related appointments based on user role
      * - CLIENT: Only their appointments
      * - BARBER: Both their appointments and all appointments
-     * @returns List of appointments in DTO Response format
+     * @returns List of appointments in DTO Response format + pagination
      */
-    async getRelatedAppointments(userRole: string, userId: number) {
+    async getRelatedAppointments(
+        userRole: string,
+        userId: number,
+        page = 1,
+        limit = 10
+    ) {
+        let data: AppointmentWithRelations[] = [];
+        let total = 0;
 
-        let appointments: AppointmentWithRelations[];
+        if (userRole === 'CLIENT') {
+            const result = await this.appointmentRepository.findAllByClientIdPaginated(
+                userId,
+                page,
+                limit
+            );
+            data = result.data;
+            total = result.total;
+        } else if (userRole === 'BARBER') {
+            const result = await this.appointmentRepository.findAllByBarberIdPaginated(
+                userId,
+                page,
+                limit
+            );
+            data = result.data;
+            total = result.total;
+        } else {
+            data = [];
+            total = 0;
+        }
 
-        if(userRole === 'CLIENT'){
-            appointments = await this.appointmentRepository.findAllByClientId(userId);
-        }
-        else if(userRole === 'BARBER'){
-            appointments = await this.appointmentRepository.findAllByBarberId(userId);
-        }
-        else{
-            appointments = [];
-        }
-        // const appointments = await this.appointmentRepository.findAll();
-        return appointments.map( ap => appointmentUtils.toAppointmentResponseDTO(ap));
+        const items = data.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
+        const totalPages = Math.ceil(total / limit) || 1;
+
+        return {
+            data: items,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages
+            }
+        };
     }
 
     /**

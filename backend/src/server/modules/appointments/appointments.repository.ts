@@ -246,4 +246,57 @@ export class AppointmentRepository {
             ]
         });
     }
+
+    
+    async findAllByClientIdPaginated(
+        clientId: number,
+        page: number,
+        limit: number
+    ): Promise<{ data: AppointmentWithRelations[]; total: number }> {
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            prismaClient.appointment.findMany({
+                where: { id_client: clientId },
+                include: INCLUDE_RELATIONS,
+                orderBy: [
+                    { appointment_date: 'asc' },
+                    { appointment_time: 'asc' }
+                ],
+                skip,
+                take: limit
+            }),
+            prismaClient.appointment.count({
+                where: { id_client: clientId }
+            })
+        ]);
+
+        return { data, total };
+    }
+
+    async findAllByBarberIdPaginated(
+        barberId: number,
+        page: number,
+        limit: number
+    ): Promise<{ data: AppointmentWithRelations[]; total: number }> {
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            prismaClient.appointment.findMany({
+                where: { id_barber: barberId },
+                include: INCLUDE_RELATIONS,
+                orderBy: [
+                    { appointment_date: 'asc' },
+                    { appointment_time: 'asc' }
+                ],
+                skip,
+                take: limit
+            }),
+            prismaClient.appointment.count({
+                where: { id_barber: barberId }
+            })
+        ]);
+
+        return { data, total };
+    }
 }

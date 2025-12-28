@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, ServiceResponseDTO, UserResponseDTO, AppointmentResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -100,28 +100,33 @@ export const authService = {
 
 export const appointmentService = {
 
-  getServices: async () => {
-      const response = await api.get("/services");
+  getServices: async (): Promise<ServiceResponseDTO> => {
+      const response = await api.get<ServiceResponseDTO>("/services");
       return response.data;
   },
 
-  getBarbers: async () => {
-      const response = await api.get("/users/barbers");
+  getBarbers: async (): Promise<UserResponseDTO> => {
+      const response = await api.get<UserResponseDTO>("/users/barbers");
       return response.data;
   },
 
-  getAvailableHours: async (input: GetAvailabilityInput) => {
-      const response = await api.post("/appointments/availability", input);
+  getAvailableHours: async (input: GetAvailabilityInput): Promise<string[]> => {
+      const response = await api.post<string[]>("/appointments/availability", input);
       return response.data;
   },
 
-  createAppointment: async (data: CreateAppointmentRequest) => {
-    const response = await api.post("/appointments", data);
+  createAppointment: async (data: CreateAppointmentRequest): Promise<AppointmentResponse> => {
+    const response = await api.post<AppointmentResponse>("/appointments", data);
     return response.data;
   },
 
-  getRelatedAppointments: async() => {
-    const myAppointments = await api.get("/appointments");
+  getRelatedAppointments: async(page = 1, limit = 10): Promise<RelatedAppointmentsResponse> => {
+    const params = new URLSearchParams({
+      _page: String(page),
+      _limit: String(limit),
+    });
+
+    const myAppointments = await api.get<RelatedAppointmentsResponse>(`/appointments?${params.toString()}`);
     return myAppointments.data;
   }
 

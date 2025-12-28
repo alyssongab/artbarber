@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Link } from 'react-router';
 import { appointmentService } from '../../../services/api';
-import { AppointmentResponse } from '../../../types';
+import { AppointmentResponse, PaginationInfo } from '../../../types';
 import { formatDate, formatTime, capitalizeStatus } from '../../../utils/helpers';
 import ClientAppointmentsCard from '../../../components/ClientAppointmentsCard';
 
@@ -11,13 +11,17 @@ function ClientAppointmentsPage(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>();
     const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
 
     useEffect(() => {
         const fetchAppointments = async () =>{
             try{
                 setLoading(true);
-                const myAppointments = await appointmentService.getRelatedAppointments();
-                setAppointments(myAppointments);
+                const myAppointments = await appointmentService.getRelatedAppointments(currentPage, pageSize);
+                setAppointments(myAppointments.data);
+                setPagination(myAppointments.pagination);
             }
             catch(err: any){
                 setLoading(false);
@@ -29,7 +33,17 @@ function ClientAppointmentsPage(){
             }
         }
         fetchAppointments();
-    }, []);
+    }, [currentPage]);
+
+    const handlePreviousPage = () => {
+        if (!pagination || currentPage <= 1) return;
+        setCurrentPage((prev) => prev - 1);
+    };
+
+    const handleNextPage = () => {
+        if (!pagination || currentPage >= pagination.totalPages) return;
+        setCurrentPage((prev) => prev + 1);
+    };
 
     if (loading) {
         return (
@@ -92,6 +106,29 @@ function ClientAppointmentsPage(){
                                 />
                             )}
                         </div>
+                        {pagination && pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-4 mt-8">
+                            <button
+                                onClick={handlePreviousPage}
+                                disabled={currentPage <= 1 || loading}
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Anterior
+                            </button>
+
+                            <span className="text-sm text-gray-700">
+                                Página {currentPage} de {pagination.totalPages}
+                            </span>
+
+                            <button
+                                onClick={handleNextPage}
+                                disabled={currentPage >= pagination.totalPages || loading}
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Próxima
+                            </button>
+                        </div>
+                    )}
                     </div>                    
                 }
         </Fragment>

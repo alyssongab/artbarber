@@ -90,3 +90,16 @@ export interface ApiError {
   message: string;
   statusCode: number;
 }
+
+// Pagination
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export type RelatedAppointmentsResponse = {
+  data: AppointmentResponse[];
+  pagination: PaginationInfo;
+};
