@@ -177,6 +177,20 @@ export class AppointmentService {
             if(newStatus.appointment_status !== 'CANCELADO'){
                 throw new ForbiddenError("Clientes só podem cancelar seus agendamentos.");
             }
+
+            // Check if appointment time has not passed
+            const now = new Date();
+            const appointmentDateTime = new Date(appointmentExists.appointment_date);
+            appointmentDateTime.setUTCHours(
+                appointmentExists.appointment_time.getUTCHours(),
+                appointmentExists.appointment_time.getUTCMinutes(),
+                0,
+                0
+            );
+
+            if (appointmentDateTime <= now) {
+                throw new ForbiddenError("Você não pode cancelar um agendamento que já começou ou passou.");
+            }
         }
 
         // BARBER validation
