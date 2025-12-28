@@ -106,11 +106,51 @@ export class UserService {
             role: user.role
         };
 
-        const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-            expiresIn: "1d"
-        });
+        const signOptions: jwt.SignOptions = {
+            expiresIn: "7d",
+            algorithm: "HS256"
+        }
+
+        const accessToken = jwt.sign(
+            payload,
+            process.env.JWT_SECRET as jwt.Secret,
+            signOptions
+        );
 
         return { 
+            accessToken,
+            user: this.toUserResponseDTO(user)
+        };
+    }
+
+    /**
+     * Refreshes jwt token
+     * @param actor 
+     * @returns refreshed jwt token and user data
+     */
+    async refreshToken(actor: Actor): Promise<{ accessToken: string; user: UserResponseDTO }> {
+        const user = await this.userRepository.findById(actor.user_id);
+        if (!user) {
+            throw new UnauthorizedError("Usuário não encontrado.");
+        }
+
+        const payload = {
+            sub: user.user_id,
+            role: user.role
+        };
+
+        const signOptions: jwt.SignOptions = {
+            expiresIn: "7d",
+            algorithm: "HS256"
+        }
+
+        const accessToken = jwt.sign(
+            payload,
+            process.env.JWT_SECRET as jwt.Secret,
+            signOptions
+        );
+
+        return {
             accessToken,
             user: this.toUserResponseDTO(user)
         };

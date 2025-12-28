@@ -22,6 +22,6 @@ usersRouter.get('/', authenticate, authorize('ADMIN'), userController.getAllUser
 usersRouter.get('/:id', validateId, authenticate, userController.getUser);
 usersRouter.put('/:id', validateId, authenticate, userController.updateUser);
 usersRouter.delete('/:id', validateId, authenticate, authorize('ADMIN'), userController.deleteUser);
-
+usersRouter.post("/refresh-token", authenticate, userController.refreshToken);
 
 export default usersRouter;

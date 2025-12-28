@@ -86,6 +86,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     }, [initialized]);
 
+    useEffect(() => {
+        if (!initialized) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // tenta refresh na abertura
+        authService.refreshToken()
+            .then((resp) => {
+                localStorage.setItem('token', resp.accessToken);
+                localStorage.setItem('user', JSON.stringify(resp.user));
+                setUser(resp.user);
+            })
+            .catch(() => {
+                logout();
+            });
+
+        const intervalId = window.setInterval(() => {
+            authService.refreshToken()
+                .then((resp) => {
+                    localStorage.setItem('token', resp.accessToken);
+                    localStorage.setItem('user', JSON.stringify(resp.user));
+                    setUser(resp.user);
+                })
+                .catch(() => {
+                    logout();
+                });
+        }, 60 * 60 * 1000); // 1h
+
+        return () => window.clearInterval(intervalId);
+    }, [initialized]);
+
     const login = async (data: LoginRequest): Promise<void> => {
         try {
             setLoading(true);

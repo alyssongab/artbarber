@@ -47,6 +47,17 @@ export const authService = {
     return response.data;
   },
 
+  refreshToken: async() => {
+      const response = await api.post("/users/refresh-token");
+      const { accessToken, user } = response.data;
+
+      // refreshes token on localstorage
+      localStorage.setItem("accessToken", accessToken);
+      api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+      return { accessToken, user };
+  },
+
   // Backend returns created user DTO (no token)
   register: async (data: RegisterClientRequest): Promise<{
     user_id: number;

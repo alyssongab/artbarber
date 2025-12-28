@@ -104,6 +104,21 @@ export class UserController{
         }
     }
 
+    refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // token already validated by 'authenticate' and put on req.user
+            const actor = {
+                user_id: req.user!.user_id,
+                role: req.user!.role
+            };
+
+            const result = await this.userService.refreshToken(actor);
+            return res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     /**
      * Update user
      * @param req 
