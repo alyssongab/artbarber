@@ -246,6 +246,42 @@ Sem conteúdo (No Content)
 
 ---
 
+### **POST** `/api/users/refresh-token` 🔒 Autenticado
+Renova o token JWT de um usuário autenticado, gerando um novo token com data de expiração atualizada.
+
+**Permissão:** Qualquer usuário autenticado (token ainda válido)
+
+**Headers:**
+```
+Authorization: Bearer <seu_token_jwt_válido>
+```
+
+**Body:** Não requer body (token extraído do header)
+
+**Resposta de sucesso (200):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "user_id": 1,
+    "full_name": "João Silva",
+    "email": "joao@email.com",
+    "phone_number": "92912345678",
+    "birthday": "1990-01-15",
+    "role": "CLIENT",
+    "photo_url": null
+  }
+}
+```
+
+**Observações:**
+- O token antigo deve estar **válido** (não expirado) para realizar o refresh.
+- Se o token estiver expirado, será retornado erro 401 e o usuário deve fazer login novamente.
+- Tokens têm validade de 7 dias (configurável via `JWT_EXPIRES_IN`).
+- Recomenda-se chamar este endpoint ao abrir a aplicação e periodicamente (ex: a cada 1 hora) para manter o usuário autenticado.
+
+---
+
 ## 🛠️ Endpoints - Services
 
 ### **POST** `/api/services` 🔒 ADMIN
@@ -460,7 +496,7 @@ Retorna os horários disponíveis para um barbeiro em uma data específica, cons
 ---
 
 ### **GET** `/api/appointments` 🔒 Autenticado
-Lista agendamentos relacionados ao usuário autenticado.
+Lista agendamentos relacionados ao usuário autenticado com suporte a paginação server-side.
 
 **Permissão:** Qualquer usuário autenticado
 
@@ -468,31 +504,52 @@ Lista agendamentos relacionados ao usuário autenticado.
 - **CLIENT**: Retorna apenas seus próprios agendamentos
 - **BARBER**: Retorna agendamentos onde ele é o barbeiro
 
+**Query Parameters (opcionais):**
+- `_page` (número): Número da página (padrão: 1)
+- `_limit` (número): Quantidade de itens por página (padrão: 10)
+
+**Exemplo de requisição:**
+```
+GET /api/appointments?_page=2&_limit=5
+```
+
 **Resposta de sucesso (200):**
 ```json
-[
-  {
-    "appointment_id": 1,
-    "appointment_date": "2025-12-15",
-    "appointment_time": "14:30:00",
-    "barber": {
-      "full_name": "Carlos Barbeiro",
-      "phone_number": "92987654321"
-    },
-    "client": {
-      "full_name": "João Silva",
-      "phone_number": "92912345678"
-    },
-    "service": {
-      "name": "Corte de cabelo",
-      "price": "50.00",
-      "duration": 45
-    },
-    "appointment_status": "PENDENTE",
-    "notification_sent": false
+{
+  "data": [
+    {
+      "appointment_id": 1,
+      "appointment_date": "2025-12-15",
+      "appointment_time": "14:30:00",
+      "barber": {
+        "full_name": "Carlos Barbeiro",
+        "phone_number": "92987654321"
+      },
+      "client": {
+        "full_name": "João Silva",
+        "phone_number": "92912345678"
+      },
+      "service": {
+        "name": "Corte de cabelo",
+        "price": "50.00",
+        "duration": 45
+      },
+      "appointment_status": "PENDENTE",
+      "notification_sent": false
+    }
+  ],
+  "pagination": {
+    "page": 2,
+    "limit": 5,
+    "total": 23,
+    "totalPages": 5
   }
-]
+}
 ```
+
+**Observações:**
+- A resposta inclui metadados de paginação (`pagination`) para facilitar a navegação.
+- Valores inválidos para `_page` ou `_limit` são tratados com valores padrão seguros.
 
 ---
 
@@ -529,10 +586,85 @@ Lista todos os agendamentos do sistema.
 
 ---
 
-### **PATCH** `/api/appointments/:id` 🔒 BARBER
-Atualiza o status de um agendamento.
+### **GET** `/api/appointments/upcoming` 🔒 CLIENT
+Lista agendamentos futuros do cliente autenticado (a partir do momento atual).
 
-**Permissão:** BARBER
+**Permissão:** CLIENT
+
+**Resposta de sucesso (200):**
+```json
+[
+  {
+    "appointment_id": 5,
+    "appointment_date": "2025-12-30",
+    "appointment_time": "10:00:00",
+    "barber": {
+      "full_name": "Carlos Barbeiro",
+      "phone_number": "92987654321"
+    },
+    "client": {
+      "full_name": "João Silva",
+      "phone_number": "92912345678"
+    },
+    "service": {
+      "name": "Corte de cabelo",
+      "price": "50.00",
+      "duration": 45
+    },
+    "appointment_status": "PENDENTE",
+    "notification_sent": false
+  }
+]
+```
+
+**Observações:**
+- Retorna apenas agendamentos com data/hora **futura** em relação ao momento da requisição.
+- Ordenados por data e hora crescente (próximos primeiro).
+
+---
+
+### **GET** `/api/appointments/past` 🔒 CLIENT
+Lista agendamentos passados do cliente autenticado (anteriores ao momento atual).
+
+**Permissão:** CLIENT
+
+**Resposta de sucesso (200):**
+```json
+[
+  {
+    "appointment_id": 2,
+    "appointment_date": "2025-12-10",
+    "appointment_time": "14:00:00",
+    "barber": {
+      "full_name": "Carlos Barbeiro",
+      "phone_number": "92987654321"
+    },
+    "client": {
+      "full_name": "João Silva",
+      "phone_number": "92912345678"
+    },
+    "service": {
+      "name": "Barba completa",
+      "price": "35.00",
+      "duration": 30
+    },
+    "appointment_status": "CONCLUIDO",
+    "notification_sent": true
+  }
+]
+```
+
+**Observações:**
+- Retorna apenas agendamentos com data/hora **passada** em relação ao momento da requisição.
+- Ordenados por data e hora decrescente (mais recentes primeiro).
+- Útil para exibir histórico de agendamentos do cliente.
+
+---
+
+### **PATCH** `/api/appointments/:id` 🔒 CLIENT ou BARBER
+Atualiza o status de um agendamento com regras de autorização baseadas no role do usuário.
+
+**Permissão:** CLIENT ou BARBER (com restrições específicas)
 
 **Parâmetros de rota:**
 - `id` (número): ID do agendamento
@@ -543,6 +675,17 @@ Atualiza o status de um agendamento.
   "appointment_status": "string"  // Obrigatório - Valores: "PENDENTE" | "CONCLUIDO" | "CANCELADO"
 }
 ```
+
+**Regras de autorização:**
+
+**CLIENT:**
+- Pode alterar **apenas seus próprios agendamentos** (verifica `id_client`).
+- Pode **apenas cancelar** (status → `CANCELADO`).
+- Não pode alterar para `PENDENTE` ou `CONCLUIDO`.
+
+**BARBER:**
+- Pode alterar **apenas agendamentos associados a ele** (verifica `id_barber`).
+- Pode alterar para **qualquer status** (`PENDENTE`, `CONCLUIDO`, `CANCELADO`).
 
 **Resposta de sucesso (200):**
 ```json
@@ -567,6 +710,11 @@ Atualiza o status de um agendamento.
   "notification_sent": false
 }
 ```
+
+**Erros comuns:**
+- `403` se CLIENT tentar alterar agendamento de outro cliente.
+- `403` se CLIENT tentar alterar para status diferente de `CANCELADO`.
+- `403` se BARBER tentar alterar agendamento de outro barbeiro.
 
 ---
 
@@ -739,9 +887,11 @@ Armazena os agendamentos realizados.
 ## 📝 Notas Importantes
 
 ### Autenticação JWT
-- O token JWT expira após determinado período (configurado no servidor)
-- Inclua o token no header `Authorization: Bearer <token>` em todas as requisições protegidas
-- O token é retornado no endpoint `/api/users/login`
+- O token JWT expira após **7 dias** (configurável via variável de ambiente `JWT_EXPIRES_IN`).
+- Inclua o token no header `Authorization: Bearer <token>` em todas as requisições protegidas.
+- O token é retornado nos endpoints `/api/users/login` e `/api/users/refresh-token`.
+- **Renovação automática**: Recomenda-se usar o endpoint `/api/users/refresh-token` ao abrir a aplicação e periodicamente (ex: a cada 1 hora) para manter o usuário autenticado sem precisar fazer login novamente.
+- Se o token expirar (após 7 dias sem renovação), o usuário deve fazer login novamente.
 
 ### Validações
 - Todos os endpoints validam os dados de entrada usando Zod schemas
@@ -762,13 +912,7 @@ Armazena os agendamentos realizados.
 - `TWILIO_TEMPLATE_SID`: ID do template de mensagem aprovado no Twilio.
 - `API_URL`: URL base pública da API (usada para montar o `status-webhook` enviado ao Twilio, por exemplo `http://localhost:3030/api`).
 
-<!-- ### Boas Práticas
-- Sempre use HTTPS em produção
-- Mantenha seu token JWT seguro
-- Não compartilhe credenciais de ADMIN
-- Valide dados no frontend antes de enviar para a API -->
-
 ---
 
-**Última atualização:** 23 de dezembro de 2025  
+**Última atualização:** 28 de dezembro de 2025  
 **Contato:** Equipe de desenvolvimento
