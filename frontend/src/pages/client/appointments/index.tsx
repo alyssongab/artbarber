@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { appointmentService } from '../../../services/api';
 import { AppointmentResponse, PaginationInfo } from '../../../types';
 import { formatDate, formatTime, capitalizeStatus } from '../../../utils/helpers';
-import ClientAppointmentsCard from '../../../components/ClientAppointmentsCard';
+import ClientAppointmentsCard from '../../../components/features/appointments/AppointmentCard';
 
 function ClientAppointmentsPage(){
 

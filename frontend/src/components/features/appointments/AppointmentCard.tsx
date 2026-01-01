@@ -1,9 +1,9 @@
 import { Calendar } from 'lucide-react';
-import { getFirstName } from '../utils/users';
+import { getFirstName } from '../../../utils/users';
 import { Ellipsis } from 'lucide-react';
 import { useState } from 'react';
-import { canCancelAppointment } from '../utils/helpers';
-import { appointmentService } from '../services/api';
+import { canCancelAppointment } from '../../../utils/helpers';
+import { appointmentService } from '../../../services/api';
 import { X } from 'lucide-react';
 import {
   Dialog,
@@ -12,8 +12,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from './ui/dialog';
-import { Button } from './ui/button';
+} from '../../ui/dialog';
+import { Button } from '../../ui/button';
 
 interface ClientAppointmentsCardProps {
   id: number;

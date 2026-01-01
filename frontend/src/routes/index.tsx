@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router';
-import Auth from '../components/layout/auth';
-import AppRouter from '../components/AppRouter';
-import { RequireClient } from '../components/RouterGuard';
-import ClientLayout from '../components/layout/client';
+import Auth from '../components/layout/AuthLayout';
+import AppRouter from '../components/routing/AppRouter';
+import { RequireClient } from '../components/routing/RouterGuard';
+import ClientLayout from '../components/layout/ClientLayout';
 import ClientHomePage from '../pages/client/home';
 import ClientAppointmentsPage from '../pages/client/appointments';
 

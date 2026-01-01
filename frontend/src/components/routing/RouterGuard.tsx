@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
-import { useAuth } from "../contexts/auth.context";
+import { useAuth } from "../../contexts/auth.context";
 import { Navigate } from "react-router";
-import { useIsClient } from "../hooks/useAuth";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { useIsClient } from "../../hooks/useAuth";
+import { LoadingSpinner } from "../common/LoadingSpinner";
 
 type ChildrenProps = {
     children: ReactNode

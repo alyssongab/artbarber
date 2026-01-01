@@ -1,6 +1,6 @@
-import { useAuth } from '../contexts/auth.context';
+import { useAuth } from '../../contexts/auth.context';
 import { Navigate } from 'react-router';
-import { LoadingSpinner } from './LoadingSpinner';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 // import ClientHomePage from '../pages/client/home';
 
 // Dashboard components (mocked)
