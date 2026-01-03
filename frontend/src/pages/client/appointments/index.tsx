@@ -89,7 +89,7 @@ function ClientAppointmentsPage(){
             </div>
                 {appointmentDetails.length === 0
                 ?
-                    (<p className='bg-gray-300 p-5 text-lg rounded-md'> Você não possui agendamentos ainda. </p>)
+                    (<p className='mt-6 bg-gray-300 p-5 text-lg text-center font-medium rounded-md'> Você não possui agendamentos ainda. </p>)
                 :
                     <div id='my-appointments'>
                         {/* <h2 className='text-xl border-b-2'>Seus agendamentos</h2> */}
