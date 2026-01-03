@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '../../ui/dialog';
 import { Button } from '../../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 
 interface ClientAppointmentsCardProps {
   id: number;
@@ -42,7 +43,6 @@ function ClientAppointmentsCard({
 
   const getStatusStyles = (status: string) => {
     const upperStatus = status.toUpperCase();
-    console.log(upperStatus);
     if (upperStatus === 'AGENDADO') {
       return 'bg-gray-300 text-black font-medium';
     }
@@ -57,14 +57,7 @@ function ClientAppointmentsCard({
   };
 
   const canCancel = status.toUpperCase() === 'AGENDADO' && canCancelAppointment(date, time);
-  console.log('Card Debug:', {
-    id,
-    status: status.toUpperCase(),
-    date,
-    time,
-    canCancelResult: canCancelAppointment(date, time),
-    canCancel
-  });
+
   const handleOpenConfirmDialog = () => {
     setShowPopover(false);
     setShowConfirmDialog(true);
@@ -94,27 +87,23 @@ function ClientAppointmentsCard({
       <div className='flex justify-between'>
         <h3 className='font-medium text-lg'>{service}</h3>
         {canCancel && (
-          <div className='relative'>
-            <button
-              onClick={() => setShowPopover(!showPopover)}
-              className='cursor-pointer rounded-xl hover:bg-gray-200 p-1'
-            >
-              <Ellipsis />
-            </button>
-
-            {showPopover && (
-              <div className='absolute right-0 top-8 bg-white border border-gray-300 rounded-lg shadow-lg p-2 z-10 min-w-[150px]'>
-                <button
-                  onClick={handleOpenConfirmDialog}
-                  disabled={loading}
-                  className='cursor-pointer flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-red-50 text-red-600 rounded disabled:opacity-50'
-                >
-                  <X size={16} />
-                  Cancelar
-                </button>
-              </div>
-            )}
-          </div>
+          <Popover open={showPopover} onOpenChange={setShowPopover}>
+            <PopoverTrigger asChild>
+              <button className='cursor-pointer rounded-xl hover:bg-gray-200 p-1'>
+                <Ellipsis />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[150px] p-2">
+              <button
+                onClick={handleOpenConfirmDialog}
+                disabled={loading}
+                className='cursor-pointer flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-red-50 text-red-600 rounded disabled:opacity-50'
+              >
+                <X size={16} />
+                Cancelar
+              </button>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
       {/* mobile: custom breakpoint */}
