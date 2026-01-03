@@ -4,16 +4,16 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 // import ClientHomePage from '../pages/client/home';
 
 // Dashboard components (mocked)
-const BarberDashboard = () => {
-  const { logout } = useAuth();
-  return (
-    <div className="min-h-screen bg-blue-100 p-8">
-      <h1 className="text-3xl font-bold text-blue-800">Dashboard do Barbeiro</h1>
-      <p className="mt-4">Bem-vindo ao seu painel de barbeiro!</p>
-      <button onClick={logout} className='bg-black text-white px-3 py-1 rounded-md mt-4'>Logout</button>
-    </div>
-  );
-};
+// const BarberDashboard = () => {
+//   const { logout } = useAuth();
+//   return (
+//     <div className="min-h-screen bg-blue-100 p-8">
+//       <h1 className="text-3xl font-bold text-blue-800">Dashboard do Barbeiro</h1>
+//       <p className="mt-4">Bem-vindo ao seu painel de barbeiro!</p>
+//       <button onClick={logout} className='bg-black text-white px-3 py-1 rounded-md mt-4'>Logout</button>
+//     </div>
+//   );
+// };
 
 const AdminDashboard = () => {
   const { logout } = useAuth();
@@ -43,7 +43,7 @@ function AppRouter() {
     case 'CLIENT':
       return <Navigate to="/client/home" replace />;
     case 'BARBER':
-      return <BarberDashboard />;
+      return <Navigate to="/barber/home" replace/>;
     case 'ADMIN':
       return <AdminDashboard />;
     default:

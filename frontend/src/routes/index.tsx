@@ -1,10 +1,11 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import Auth from '../components/layout/AuthLayout';
 import AppRouter from '../components/routing/AppRouter';
-import { RequireClient } from '../components/routing/RouterGuard';
-import ClientLayout from '../components/layout/ClientLayout';
+import { RequireBarber, RequireClient } from '../components/routing/RouterGuard';
+import AppLayout from '../components/layout/AppLayout';
 import ClientHomePage from '../pages/client/home';
 import ClientAppointmentsPage from '../pages/client/appointments';
+import BarberHomePage from '../pages/barber/home';
 
 // Router v7
 export const router = createBrowserRouter([
@@ -21,7 +22,7 @@ export const router = createBrowserRouter([
     path: '/client',
     element: (
       <RequireClient>
-        <ClientLayout />
+        <AppLayout />
       </RequireClient>
     ),
     children: [
@@ -29,6 +30,19 @@ export const router = createBrowserRouter([
       { path: 'home', element: <ClientHomePage /> },
       // placeholders
       { path: 'appointments', element: <ClientAppointmentsPage/> },
+    ]
+  },
+
+  {
+    path: '/barber',
+    element: (
+      <RequireBarber>
+        <AppLayout />
+      </RequireBarber>
+    ),
+    children: [
+      { index: true, element: <Navigate to="home" replace/> },
+      { path: 'home', element: <BarberHomePage/> },
     ]
   },
 

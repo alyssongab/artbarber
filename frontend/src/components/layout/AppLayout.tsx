@@ -5,7 +5,7 @@ import { Outlet } from "react-router";
 import { getFirstName } from '../../utils/users';
 
 
-function ClientLayout(){
+function AppLayout(){
     const { logout, user } = useAuth()
     const name = user?.full_name;
     const firstName = getFirstName(name);
@@ -41,4 +41,4 @@ function ClientLayout(){
     )
 }
 
-export default ClientLayout;
+export default AppLayout;
