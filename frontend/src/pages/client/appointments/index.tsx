@@ -93,7 +93,7 @@ function ClientAppointmentsPage(){
                 :
                     <div id='my-appointments'>
                         {/* <h2 className='text-xl border-b-2'>Seus agendamentos</h2> */}
-                        <div className='flex flex-col items-center justify-center gap-6 mt-6'>
+                        <div className='flex flex-col items-center justify-start gap-6 mt-6 min-h-[480px]'>
                             {appointmentDetails.map(a => 
                                 <ClientAppointmentsCard
                                     key={a.id}
@@ -118,7 +118,7 @@ function ClientAppointmentsPage(){
                                 Anterior
                             </button>
 
-                            <span className="text-sm text-gray-700">
+                            <span className="text-sm text-gray-700 font-medium">
                                 Página {currentPage} de {pagination.totalPages}
                             </span>
 

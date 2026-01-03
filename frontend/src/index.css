@@ -121,4 +121,5 @@
 
 @theme {
   --breakpoint-xs: 370px;
+  --breakpoint-mobile: 450px;
 }
