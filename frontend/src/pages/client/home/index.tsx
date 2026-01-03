@@ -12,8 +12,10 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Fragment, useEffect, useState } from "react";
-import type { CreateAppointmentRequest, Service, User } from "../../../types";
+import type { CreateAppointmentRequest, Service, User, AppointmentResponse } from "../../../types";
 import { appointmentService, authService } from "../../../services/api";
+import AppointmentSuccessDialog from "../../../components/features/appointments/AppointmentSuccessDialog";
+import AppointmentErrorDialog from "../../../components/features/appointments/AppointmentErrorDialog";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -37,12 +39,20 @@ function ClientHomePage() {
   const [loading, setLoading] = useState(true);
   const [loadingTimes, setLoadingTimes] = useState(false);  
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // wizard state
   const [selectedService, setSelectedService] = useState<string>('');
   const [selectedBarber, setSelectedBarber] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
+
+  // Dialogs
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [createdAppointment, setCreatedAppointment] = useState<AppointmentResponse | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   const fetchServices = async () => {
     try{
@@ -64,7 +74,7 @@ function ClientHomePage() {
       const data = await appointmentService.getBarbers();
       setBarbers(data);
     }
-    catch(err){
+    catch(err: any){
       console.error('Erro ao buscar barbeiros:', err);
       setError('Falha ao carregar barbeiros.');
     }
@@ -109,7 +119,7 @@ function ClientHomePage() {
         }
       }
     }
-    catch(err){
+    catch(err: any){
       console.error("Erro ao buscar horários: ", err);
       setError('Falha ao carregar horários disponíveis.');
       setAvailableTimes([]);
@@ -141,7 +151,8 @@ function ClientHomePage() {
 
   const handleSubmit = async () => {
     if (!selectedService || !selectedBarber || !selectedDate || !selectedTime) {
-      alert('Preencha todos os campos!');
+      setErrorMessage('Por favor, preencha todos os campos.');
+      setShowErrorDialog(true);
       return;
     }
 
@@ -156,9 +167,12 @@ function ClientHomePage() {
     }
 
     try{
+      setIsSubmitting(true);
       const appointmentResponse = await appointmentService.createAppointment(appointmentRequest);
-      console.log(appointmentResponse);
-      alert("AGENDAMENTO CRIADO");
+
+      // dialog success
+      setCreatedAppointment(appointmentResponse);
+      setShowSuccessDialog(true);
 
       // clean all inputs
       setSelectedService('');
@@ -168,9 +182,15 @@ function ClientHomePage() {
       setAvailableTimes([]);
 
     }
-    catch(err){
+    catch(err: any){
       console.log("Erro ao criar agendamento: ", err);
-      alert('Erro ao realizar agendamento. Tente novamente');
+      
+      const message = err.response?.data?.message || 'Erro ao realizar agendamento. Tente novamente.';
+      setErrorMessage(message);
+      setShowErrorDialog(true);
+    }
+    finally{
+      setIsSubmitting(false);
     }
 
   }
@@ -362,12 +382,26 @@ function ClientHomePage() {
                 onClick={handleSubmit}
                 disabled={loading || !selectedService || !selectedBarber || !selectedDate || !selectedTime}
               >
-                Confirmar agendamento
+                {isSubmitting ? 'Confirmando...' : 'Confirmar agendamento'}
               </Button>
             </div>
           </div>
         </div>
       </section>
+
+      {/* info dialogs */}
+      <AppointmentSuccessDialog
+        open={showSuccessDialog}
+        onClose={() => setShowSuccessDialog(false)}
+        appointment={createdAppointment}
+      />
+
+      <AppointmentErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        message={errorMessage}
+      />   
+
     </Fragment>
   );
 }
