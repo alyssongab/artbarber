@@ -45,7 +45,7 @@ export class AppointmentService {
         );
 
         if(appointmentExists){
-            throw new ConflictError("Este horário já está ocupado para o barbeiro selecionado.");
+            throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
         }
 
         const createData: Prisma.AppointmentCreateInput = {
@@ -80,8 +80,8 @@ export class AppointmentService {
     async getRelatedAppointments(
         userRole: string,
         userId: number,
-        page = 1,
-        limit = 10
+        page: number,
+        limit: number
     ) {
         let data: AppointmentWithRelations[] = [];
         let total = 0;
@@ -145,9 +145,9 @@ export class AppointmentService {
         const appointmentExists = await this.appointmentRepository.findById(appointmentId);
         if(!appointmentExists) throw new NotFoundError("Agendamento não encontrado");
         
-        // if(userRole === 'CLIENT') throw new ForbiddenError("Você não tem permissão para realizar essa ação.");
+        if(userRole === 'CLIENT') throw new ForbiddenError("Você não tem permissão para realizar essa ação.");
         
-    if(appointmentExists.appointment_status === 'PENDENTE') throw new ConflictError("Você não pode deletar um agendamento com status 'Pendente'.");
+        if(appointmentExists.appointment_status === 'PENDENTE') throw new ConflictError("Você não pode deletar um agendamento com status 'Pendente'.");
 
         return await this.appointmentRepository.delete(appointmentId);
     }
@@ -231,5 +231,27 @@ export class AppointmentService {
 
         const appointments = await this.appointmentRepository.findPastByClientId(userId);
         return appointments.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
+    }
+
+    /**
+     * Count all appointments of a specific barber in a specific date
+     * @param userRole 
+     * @param selectedDate 
+     * @param userId 
+     * @returns 
+     */
+    async countAllAppointments(userRole: string, selectedDate: Date, paramId: number, reqId: number){
+        if(userRole !== 'BARBER'){
+            throw new Error("Funcionalidade apenas para barbeiros.");
+        }
+        
+        if(paramId !== reqId){
+            throw new ForbiddenError("Você não pode consultar agendamentos de outro barbeiro.");
+        }
+
+        // Parse date properly to Date object
+        const dateObject = new Date(`${selectedDate}T00:00:00.000Z`);
+        const totalAppointments = await this.appointmentRepository.countAllByBarberAndDate(dateObject, paramId);
+        return totalAppointments !== null ? totalAppointments : 0;
     }
 }

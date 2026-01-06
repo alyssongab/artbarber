@@ -22,9 +22,12 @@ appointmentsRouter.get('/upcoming', authenticate, authorize('CLIENT'), appointme
 // get past appointments for client
 appointmentsRouter.get('/past', authenticate, authorize('CLIENT'), appointmentController.getPastAppointments);
 
+// get available hours to schedule
 appointmentsRouter.post('/availability', authenticate, appointmentController.getAvailableHours);
 
-// delete appointment endpoint
+// get total appointments for a barber
+appointmentsRouter.post('/total/:id', authenticate, authorize('BARBER'), appointmentController.getTotalAppointmentsForBarber);
+
 // delete appointment endpoint
 appointmentsRouter.delete('/:id', validateId, authenticate, authorize('BARBER'), appointmentController.deleteAppointment);
 

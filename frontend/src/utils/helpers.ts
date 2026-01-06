@@ -23,13 +23,13 @@
     const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
     const now = new Date();
 
-    console.log('canCancelAppointment:', {
-    date,
-    time,
-    appointmentDateTime: appointmentDateTime.toLocaleString(),
-    now: now.toLocaleString(),
-    canCancel: appointmentDateTime > now
-  });
+  //   console.log('canCancelAppointment:', {
+  //   date,
+  //   time,
+  //   appointmentDateTime: appointmentDateTime.toLocaleString(),
+  //   now: now.toLocaleString(),
+  //   canCancel: appointmentDateTime > now
+  // });
     
     return appointmentDateTime > now;
 }

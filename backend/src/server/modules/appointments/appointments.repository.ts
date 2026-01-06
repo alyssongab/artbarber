@@ -60,6 +60,12 @@ export class AppointmentRepository {
         });
     }
 
+    /**
+     * Finds all appointments for a specific barber on a given date.
+     * @param appointmentDate - The date to search for appointments
+     * @param barberId - The unique identifier of the barber
+     * @returns Appointments sorted by appointment time in ascending order          
+     */
     async findByDateAndBarber(appointmentDate: Date, barberId: number): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: {
@@ -247,7 +253,13 @@ export class AppointmentRepository {
         });
     }
 
-    
+    /**
+     * Find all client appointment paginated by Id
+     * @param clientId 
+     * @param page which page at
+     * @param limit how many results per page
+     * @returns Appointment data and total appointments
+     */
     async findAllByClientIdPaginated(
         clientId: number,
         page: number,
@@ -274,6 +286,13 @@ export class AppointmentRepository {
         return { data, total };
     }
 
+    /**
+     * Find all client appointment paginated by Id
+     * @param barberId 
+     * @param page which page at
+     * @param limit how many results per page
+     * @returns Appointment data and total appointments
+     */
     async findAllByBarberIdPaginated(
         barberId: number,
         page: number,
@@ -298,5 +317,21 @@ export class AppointmentRepository {
         ]);
 
         return { data, total };
+    }
+
+    /**
+     * Count all the appointments for a specific barber in a given date
+     * @param selectedDate 
+     * @param barberId 
+     * @returns Total appointments or null
+     */
+    async countAllByBarberAndDate(selectedDate: Date, barberId: number): Promise<number | null> {
+        const total = await prismaClient.appointment.count({
+            where: {
+                id_barber: barberId,
+                appointment_date: selectedDate
+            }
+        });
+        return total;
     }
 }

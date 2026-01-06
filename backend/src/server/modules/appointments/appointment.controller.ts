@@ -21,7 +21,7 @@ export class AppointmentController {
             const appointment = await this.appointmentService.createAppointment(parsedData, userRole, userId);
             return res.status(201).json(appointment);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
@@ -32,7 +32,7 @@ export class AppointmentController {
             const appointments = await this.appointmentService.getAllAppointments(userRole);
             res.status(200).json(appointments);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
@@ -57,7 +57,7 @@ export class AppointmentController {
 
             return res.status(200).json(result); 
         }
-        catch(error) {
+        catch(error: any) {
             next(error);
         }
     }
@@ -69,7 +69,7 @@ export class AppointmentController {
             await this.appointmentService.deleteAppointment(id, userRole);
             return res.status(204).send();
         }
-        catch(error) {
+        catch(error: any) {
             next(error);
         }
     }
@@ -83,7 +83,7 @@ export class AppointmentController {
             const updatedAppointment = await this.appointmentService.updateAppointmentStatus(id, parsedStatus, userRole, userId);
             return res.status(200).json(updatedAppointment);
         }
-        catch(error) {
+        catch(error: any) {
             next(error);
         }
     }
@@ -96,7 +96,7 @@ export class AppointmentController {
             const availableHours = await this.availabilityService.getAvailableHours({ id_barber: barberId, appointment_date: date });
             return res.status(200).json(availableHours);
         }
-        catch(error) {
+        catch(error: any) {
             next(error);
         }
     }
@@ -108,7 +108,7 @@ export class AppointmentController {
             const appointments = await this.appointmentService.getUpcomingAppointments(userId, userRole);
             return res.status(200).json(appointments);
         }
-        catch(error) {
+        catch(error: any) {
             next(error);
         }
     }
@@ -120,7 +120,21 @@ export class AppointmentController {
             const appointments = await this.appointmentService.getPastAppointments(userId, userRole);
             return res.status(200).json(appointments);
         }
-        catch(error) {
+        catch(error: any) {
+            next(error);
+        }
+    }
+
+    getTotalAppointmentsForBarber = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userRole = req.user!.role;
+            const userId = req.user!.user_id;
+            const paramUserId = parseInt(req.params.id!);
+            const dt = req.body.selected_date!;
+            const total = await this.appointmentService.countAllAppointments(userRole, dt, paramUserId, userId);
+            return res.status(200).json({ total_appoinments: total });
+        }
+        catch(error: any){
             next(error);
         }
     }
