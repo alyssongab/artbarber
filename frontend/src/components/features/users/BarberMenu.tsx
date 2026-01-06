@@ -1,5 +1,5 @@
 import { Calendar } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent } from "../../ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "../../ui/dialog";
 import { Calendar as CalendarUI } from "../../ui/calendar";
 import { useState } from "react";
 import { pt } from "date-fns/locale";
@@ -14,6 +14,7 @@ export default function BarberMenu(){
         setDate(selectedDate);
         setIsCalendarOpen(false);
     };
+    
     return(
         <div className="flex flex-col bg-white border-1 border-black/20 rounded-sm p-3 gap-3">
             <div className="flex items-center gap-3">
@@ -26,13 +27,16 @@ export default function BarberMenu(){
                         <p className="text-base">Data Selecionada: {dateSelected}</p>
                     </DialogTrigger>
                     <DialogContent className="flex justify-center w-fit p-10">
+                        <DialogTitle>
                           <CalendarUI
                                 mode="single"
+                                aria-label="calendario"
                                 locale={pt}
                                 selected={date}
                                 onSelect={handleDateSelect}
                                 className="rounded-lg border"
                             />
+                        </DialogTitle>
                     </DialogContent>
                 </Dialog>
             </div>
