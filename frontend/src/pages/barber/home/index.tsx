@@ -20,10 +20,10 @@ export default function BarberHomePage(){
                 </div>
             </section>
             <section id="barber-buttons" className="mt-4 flex flex-col gap-2">
-                <Button className="w-full bg-[#2B964F]">
+                <Button className="w-full bg-[#2B964F] hover:bg-[#35b15e]">
                     <Calendar /> Ver agenda
                 </Button>
-                <Button className="w-full bg-[#C3880A]">
+                <Button className="w-full bg-[#C3880A] hover:bg-[#ecb02e]">
                     <Plus /> Agendamento manual
                 </Button>
             </section>
