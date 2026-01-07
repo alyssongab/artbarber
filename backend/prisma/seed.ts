@@ -37,8 +37,8 @@ async function seed() {
         });
         console.log(`   ✓ Admin criado: ${admin.full_name} (${admin.email})`);
 
-        // Barbeiro
-        const barber = await prismaClient.user.create({
+        // Barbeiro 1
+        const barber1 = await prismaClient.user.create({
             data: {
                 full_name: "Carlos Barbeiro",
                 email: "carlos@barbearia.com",
@@ -48,7 +48,19 @@ async function seed() {
                 birthday: new Date("1985-05-15"),
             }
         });
-        console.log(`   ✓ Barbeiro criado: ${barber.full_name} (${barber.email})`);
+        console.log(`   ✓ Barbeiro criado: ${barber1.full_name} (${barber1.email})`);
+
+        const barber2 = await prismaClient.user.create({
+            data: {
+                full_name: "Lucas Barbeiro",
+                email: "lucas@barbearia.com",
+                password: defaultPasswordHash,
+                phone_number: "92955555555",
+                role: "BARBER",
+                birthday: new Date("1995-05-30"),
+            }
+        });
+        console.log(`   ✓ Barbeiro criado: ${barber2.full_name} (${barber2.email})`);
 
         // Cliente 1
         const client1 = await prismaClient.user.create({
@@ -124,7 +136,7 @@ async function seed() {
                 appointment_date: new Date("2026-01-15"),
                 appointment_time: new Date("1970-01-01T14:30:00Z"),
                 appointment_status: "PENDENTE",
-                id_barber: barber.user_id,
+                id_barber: barber1.user_id,
                 id_client: client1.user_id,
                 id_service: serviceCabelo.service_id,
                 notification_sent: false,
@@ -138,7 +150,7 @@ async function seed() {
                 appointment_date: new Date("2026-01-15"),
                 appointment_time: new Date("1970-01-01T15:30:00Z"),
                 appointment_status: "PENDENTE",
-                id_barber: barber.user_id,
+                id_barber: barber1.user_id,
                 id_client: client2.user_id,
                 id_service: serviceCombo.service_id,
                 notification_sent: false,
@@ -152,7 +164,7 @@ async function seed() {
                 appointment_date: new Date("2026-01-10"),
                 appointment_time: new Date("1970-01-01T10:00:00Z"),
                 appointment_status: "CONCLUIDO",
-                id_barber: barber.user_id,
+                id_barber: barber2.user_id,
                 id_client: client1.user_id,
                 id_service: serviceBarba.service_id,
                 notification_sent: true,
@@ -166,7 +178,7 @@ async function seed() {
                 appointment_date: new Date("2025-12-12"),
                 appointment_time: new Date("1970-01-01T16:00:00Z"),
                 appointment_status: "CONCLUIDO",
-                id_barber: barber.user_id,
+                id_barber: barber2.user_id,
                 id_client: client2.user_id,
                 id_service: serviceSobrancelha.service_id,
                 notification_sent: true,
@@ -180,7 +192,7 @@ async function seed() {
                 appointment_date: new Date("2025-12-16"),
                 appointment_time: new Date("1970-01-01T09:00:00Z"),
                 appointment_status: "PENDENTE",
-                id_barber: barber.user_id,
+                id_barber: barber1.user_id,
                 id_client: null, // Agendamento presencial
                 id_service: serviceCabelo.service_id,
                 notification_sent: false,
@@ -191,12 +203,13 @@ async function seed() {
         // ==================== RESUMO ====================
         console.log("✅ Seed concluído com sucesso!\n");
         console.log("📊 Resumo:");
-        console.log(`   • 4 usuários criados (1 admin, 1 barbeiro, 2 clientes)`);
+        console.log(`   • 5 usuários criados (1 admin, 2 barbeiros, 2 clientes)`);
         console.log(`   • 4 serviços criados`);
         console.log(`   • 5 agendamentos criados\n`);
         console.log("🔑 Credenciais de acesso (senha para todos: 123456):");
         console.log(`   • Admin: admin@barbearia.com`);
-        console.log(`   • Barbeiro: carlos@barbearia.com`);
+        console.log(`   • Barbeiro 1: carlos@barbearia.com`);
+        console.log(`   • Barbeiro 2: lucass@barbearia.com`);
         console.log(`   • Cliente 1: joao@cliente.com`);
         console.log(`   • Cliente 2: maria@cliente.com\n`);
 

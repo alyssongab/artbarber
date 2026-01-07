@@ -52,13 +52,15 @@ export default function BarberHomePage(){
             </section>
             <section id="barber-cards" className="mt-4 flex min-w-full gap-4">
                 <div id="total-appoints" className="bg-white flex-1 p-2 border border-black/50 rounded-md text-center">
+                {/* total appointments */}
                     <span className="font-bold text-lg">
                         {loading ?  'Carregando...' : totalAppointments}
                     </span>
                     <p className="text-sm font-medium opacity-50">Total agendamentos</p>
                 </div>
+                {/* earn $$ */}
                 <div id="total-earned" className="bg-white flex-1 p-2 border border-black/50 rounded-md text-center">
-                    <span className="font-bold text-lg">
+                    <span className="font-bold text-lg text-green-800">
                         {loading ? 'Carregando...' : totalRevenue}
                     </span>
                     <p className="text-sm font-medium opacity-50">Receita</p>
