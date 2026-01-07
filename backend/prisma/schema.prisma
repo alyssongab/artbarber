@@ -38,13 +38,17 @@ model User {
   photo_url                 String?           
   appointmentsAsBarber      Appointment[]     @relation("BarberAppointments")
   appointmentsAsClient      Appointment[]     @relation("ClientAppointments")
+
+  @@map("usuarios")
 }
 model Service {
   service_id      Int       @id @default(autoincrement())
   name            String    
-  price           Decimal
+  price           Decimal   @db.Decimal(10,2)
   duration        Int
   appointments    Appointment[]
+
+  @@map("servicos")
 }
 
 model Appointment {
@@ -63,5 +67,7 @@ model Appointment {
   id_service            Int
   service               Service            @relation(fields: [id_service], references: [service_id])
   
-  notification_sent      Boolean            @default(false)
+  notification_sent      Boolean           @default(false)
+
+  @@map("agendamentos")
 }
