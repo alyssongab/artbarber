@@ -2,20 +2,65 @@ import { Fragment } from "react/jsx-runtime";
 import BarberMenu from "../../../components/features/users/BarberMenu";
 import { Button } from "../../../components/ui/button";
 import { Calendar, Plus } from "lucide-react";
+import { authService, appointmentService } from "../../../services/api";
+import { useEffect, useState } from "react";
+import { formatToISOString } from "../../../utils/helpers";
 
 export default function BarberHomePage(){
+
+    const userId = authService.getCurrentUser()?.user_id;
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [totalAppointments, setTotalAppointments] = useState<number>(0);
+    const [totalRevenue, setTotalRevenue] = useState<string>("0.00");
+    const [loading, setLoading] = useState<boolean>(false);
+
+    if(!userId) return;
+
+    const fetchRevenueData = async () => {
+        try{
+            setLoading(true);
+            console.log(selectedDate);
+            const dt = formatToISOString(selectedDate);
+            console.log(dt);
+            const data = await appointmentService.getBarberRevenue(
+                userId,
+                dt
+            );
+
+            setTotalAppointments(data.totalAppointments);
+            setTotalRevenue(data.totalRevenue);
+        }
+        catch(error: any){
+            console.log("Erro ao buscar receita: ", error);
+        }
+        finally{
+            setLoading(false);
+        }
+    } 
+
+    useEffect(() => {
+        fetchRevenueData();
+    }, [userId, selectedDate]);
+
     return(
         <Fragment>
             <section id="barber-menu">
-                <BarberMenu />
+                <BarberMenu  
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
+                />
             </section>
             <section id="barber-cards" className="mt-4 flex min-w-full gap-4">
                 <div id="total-appoints" className="bg-white flex-1 p-2 border border-black/50 rounded-md text-center">
-                    <span className="font-bold text-lg">4</span>
+                    <span className="font-bold text-lg">
+                        {loading ?  'Carregando...' : totalAppointments}
+                    </span>
                     <p className="text-sm font-medium opacity-50">Total agendamentos</p>
                 </div>
                 <div id="total-earned" className="bg-white flex-1 p-2 border border-black/50 rounded-md text-center">
-                    <span className="font-bold text-lg">R$ 150</span>
+                    <span className="font-bold text-lg">
+                        {loading ? 'Carregando...' : totalRevenue}
+                    </span>
                     <p className="text-sm font-medium opacity-50">Receita</p>
                 </div>
             </section>

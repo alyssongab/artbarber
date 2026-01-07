@@ -2,17 +2,23 @@ import { Calendar } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "../../ui/dialog";
 import { Calendar as CalendarUI } from "../../ui/calendar";
 import { useState } from "react";
-import { pt } from "date-fns/locale";
+import { ptBR } from "date-fns/locale";
 
-export default function BarberMenu(){
-    const [date, setDate] = useState<Date | undefined>(new Date());
+interface BarberMenuProps {
+    selectedDate: Date;
+    onDateChange: (date: Date) => void;
+}
+
+export default function BarberMenu({ selectedDate, onDateChange }: BarberMenuProps){
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    const dateSelected = date?.toLocaleDateString('pt-BR');
+    const dateSelected = selectedDate.toLocaleDateString('pt-BR');
 
-    const handleDateSelect = (selectedDate: Date | undefined) => {
-        setDate(selectedDate);
-        setIsCalendarOpen(false);
+    const handleDateSelect = (date: Date | undefined) => {
+        if(date) {
+            onDateChange(date);
+            setIsCalendarOpen(false);
+        }
     };
     
     return(
@@ -31,8 +37,8 @@ export default function BarberMenu(){
                           <CalendarUI
                                 mode="single"
                                 aria-label="calendario"
-                                locale={pt}
-                                selected={date}
+                                locale={ptBR}
+                                selected={selectedDate}
                                 onSelect={handleDateSelect}
                                 className="rounded-lg border"
                             />
