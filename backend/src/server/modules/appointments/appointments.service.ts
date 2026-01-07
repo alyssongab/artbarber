@@ -262,7 +262,7 @@ export class AppointmentService {
         }
         
         if(userRole === 'BARBER' && paramId !== reqId){
-            throw new ForbiddenError("Você não pode consultar agendamentos de outro barbeiro.");
+            throw new ForbiddenError("Você não pode consultar o faturamento de outro barbeiro.");
         }
 
         const dateObject = new Date(`${selectedDate}T00:00:00.000Z`);
