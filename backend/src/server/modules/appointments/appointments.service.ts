@@ -278,7 +278,10 @@ export class AppointmentService {
 
         return {
             date: appointmentUtils.formatDate(dateObject),
-            totalRevenue: totalRevenue.toFixed(2),
+            totalRevenue: totalRevenue.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }),
             totalAppointments: appointmentsAll.length,
             completedAppointments: completedAppointments.length
         };

@@ -39,7 +39,7 @@ export class AvailabilityService {
         const allSlots = this.generateTimeSlots(isToday);
 
         // 2. Fetch existing appointments for the barber on the given date
-        const appointments = await this.appointmentRepository.findByDateAndBarber(
+        const appointments = await this.appointmentRepository.findAllByDateAndBarber(
             dateObject,
             id_barber
         );
