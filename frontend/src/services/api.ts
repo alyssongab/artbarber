@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service, BarberMenuResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -120,7 +120,7 @@ export const appointmentService = {
     return response.data;
   },
 
-  getRelatedAppointments: async(page = 1, limit = 10): Promise<RelatedAppointmentsResponse> => {
+  getRelatedAppointments: async(page: number, limit: number): Promise<RelatedAppointmentsResponse> => {
     const params = new URLSearchParams({
       _page: String(page),
       _limit: String(limit),
@@ -130,12 +130,21 @@ export const appointmentService = {
     return myAppointments.data;
   },
 
-    cancelAppointment: async (appointmentId: number): Promise<AppointmentResponse> => {
+  cancelAppointment: async (appointmentId: number): Promise<AppointmentResponse> => {
     const response = await api.patch<AppointmentResponse>(
       `/appointments/${appointmentId}`,
       { appointment_status: 'CANCELADO' }
     );
     return response.data;
   },
+
+  getBarberRevenue: async (userId: number, selectedDate: string): Promise<BarberMenuResponse> => {
+    const response = await api.post<BarberMenuResponse>(
+      `/appointments/barber/revenue/${userId}`,
+      { selected_date: selectedDate }
+    );
+
+    return response.data;
+  }
 
 }
