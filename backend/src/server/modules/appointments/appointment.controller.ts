@@ -138,4 +138,19 @@ export class AppointmentController {
             next(error);
         }
     }
+
+    getRevenue = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userRole = req.user!.role;
+            const userId = req.user!.user_id;
+            const paramUserId = parseInt(req.params.id!);
+            const dt = req.body.selected_date!;
+            const revenueDate = await this.appointmentService.calculateRevenue(userRole, dt, paramUserId, userId);
+            
+            return res.status(200).json(revenueDate);
+        }
+        catch(error: any){
+            next(error);
+        }
+    }
 }

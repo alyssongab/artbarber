@@ -254,4 +254,33 @@ export class AppointmentService {
         const totalAppointments = await this.appointmentRepository.countAllByBarberAndDate(dateObject, paramId);
         return totalAppointments !== null ? totalAppointments : 0;
     }
+
+    async calculateRevenue(userRole: string, selectedDate: Date, paramId: number, reqId: number) {
+        
+        if(userRole !== 'BARBER' && userRole !== 'ADMIN'){
+            throw new Error("Funcionalidade apenas para barbeiros e administradores.");
+        }
+        
+        if(userRole === 'BARBER' && paramId !== reqId){
+            throw new ForbiddenError("Você não pode consultar agendamentos de outro barbeiro.");
+        }
+
+        const dateObject = new Date(`${selectedDate}T00:00:00.000Z`);
+        const appointmentsAll = await this.appointmentRepository.findAllByDateAndBarber(dateObject, paramId);
+
+        // Only the ones with status 'CONCLUIDO'
+        const completedAppointments = appointmentsAll.filter(ap => ap.appointment_status === 'CONCLUIDO');
+    
+        const totalRevenue = completedAppointments.reduce(
+            (total, ap) => total + ap.service.price.toNumber(),
+            0
+        );
+
+        return {
+            date: appointmentUtils.formatDate(dateObject),
+            totalRevenue: totalRevenue.toFixed(2),
+            totalAppointments: appointmentsAll.length,
+            completedAppointments: completedAppointments.length
+        };
+    }
 }

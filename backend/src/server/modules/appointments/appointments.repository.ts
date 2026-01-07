@@ -66,16 +66,13 @@ export class AppointmentRepository {
      * @param barberId - The unique identifier of the barber
      * @returns Appointments sorted by appointment time in ascending order          
      */
-    async findByDateAndBarber(appointmentDate: Date, barberId: number): Promise<AppointmentWithRelations[]> {
+    async findAllByDateAndBarber(appointmentDate: Date, barberId: number): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: {
-                AND: [
-                    { appointment_date: appointmentDate },
-                    { id_barber: barberId }
-                ]
+                appointment_date: appointmentDate ,
+                id_barber: barberId 
             },
             include: INCLUDE_RELATIONS,
-            orderBy: { appointment_time: 'asc' }
         });
     }
 

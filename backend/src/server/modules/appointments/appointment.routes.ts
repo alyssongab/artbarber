@@ -34,4 +34,7 @@ appointmentsRouter.delete('/:id', validateId, authenticate, authorize('BARBER'),
 // update the status of an appointment (CLIENT can only cancel their own, BARBER can update any status)
 appointmentsRouter.patch('/:id', validateId, authenticate, authorize('CLIENT', 'BARBER'), appointmentController.updateAppointmentStatus);
 
+// get revenue total of all appointments from a barber
+appointmentsRouter.post('/barber/revenue/:id', authenticate, authorize('BARBER', 'ADMIN'), appointmentController.getRevenue);
+
 export default appointmentsRouter;
