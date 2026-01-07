@@ -64,6 +64,13 @@ export interface GetAvailabilityInput {
     id_barber: number;
 }
 
+export interface BarberMenuResponse {
+    date: string,
+    totalRevenue: string,
+    totalAppointments: number,
+    completedAppointments: number
+}
+
 // Service types
 
 export interface Service {
