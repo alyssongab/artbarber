@@ -5,6 +5,7 @@ import { Calendar, Plus } from "lucide-react";
 import { authService, appointmentService } from "../../../services/api";
 import { useEffect, useState } from "react";
 import { formatToISOString } from "../../../utils/helpers";
+import { Link } from "react-router";
 
 export default function BarberHomePage(){
 
@@ -67,9 +68,11 @@ export default function BarberHomePage(){
                 </div>
             </section>
             <section id="barber-buttons" className="mt-4 flex flex-col gap-2">
-                <Button className="w-full bg-[#2B964F] hover:bg-[#35b15e]">
-                    <Calendar /> Ver agenda
-                </Button>
+                <Link to="/barber/agenda">
+                    <Button className="w-full bg-[#2B964F] hover:bg-[#35b15e]">
+                        <Calendar /> Ver agenda
+                    </Button>
+                </Link>
                 <Button className="w-full bg-[#C3880A] hover:bg-[#ecb02e]">
                     <Plus /> Agendamento manual
                 </Button>
