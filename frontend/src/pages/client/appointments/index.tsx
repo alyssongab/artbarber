@@ -83,7 +83,7 @@ function ClientAppointmentsPage(){
                     <ArrowLeft color='white'/>
                 </Link>
                 <div className='flex gap-2 items-center justify-center'>
-                    <h1 className='text-xl md:text-2xl'>Agendamentos</h1>
+                    <h1 className='text-xl md:text-2xl font-medium'>Agendamentos</h1>
                     <Calendar size={24} />
                 </div>
             </div>
@@ -93,7 +93,7 @@ function ClientAppointmentsPage(){
                 :
                     <div id='my-appointments'>
                         {/* <h2 className='text-xl border-b-2'>Seus agendamentos</h2> */}
-                        <div className='flex flex-col items-center justify-start gap-6 mt-6 min-h-[480px]'>
+                        <div className='flex flex-col items-center justify-start gap-6 mt-10 min-h-[480px]'>
                             {appointmentDetails.map(a => 
                                 <ClientAppointmentsCard
                                     key={a.id}
