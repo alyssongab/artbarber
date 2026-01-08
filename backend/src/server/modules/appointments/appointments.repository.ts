@@ -331,4 +331,46 @@ export class AppointmentRepository {
         });
         return total;
     }
+
+    /**
+     * Find expired pending appointments (today + time passed + status PENDENTE)
+     * @param date Today's date
+     * @param fullDateTime Time converted to prisma format
+     * @returns List of expired appointments
+     */
+    async findExpiredPendingAppointments(date: Date, fullDateTime: Date): Promise<AppointmentWithRelations[]> {
+        return await prismaClient.appointment.findMany({
+            where: {
+                appointment_date: date,
+                appointment_status: 'PENDENTE',
+                appointment_time: {
+                    lt: fullDateTime 
+                }
+            },
+            include: INCLUDE_RELATIONS
+        });
+    }
+
+    /**
+     * Cancel expired pending appointments
+     * @param date Today's date
+     * @param fullDateTime Time converted to prisma format
+     * @returns Number of cancelled appointments
+     */
+    async cancelExpiredAppointments(date: Date, fullDateTime: Date): Promise<number> {
+        const result = await prismaClient.appointment.updateMany({
+            where: {
+                appointment_date: date,
+                appointment_status: 'PENDENTE',
+                appointment_time: {
+                    lt: fullDateTime
+                }
+            },
+            data: {
+                appointment_status: 'CANCELADO' 
+            }
+        });
+
+        return result.count;
+    }
 }

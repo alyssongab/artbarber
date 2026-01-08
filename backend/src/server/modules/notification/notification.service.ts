@@ -30,18 +30,18 @@ export class NotificationService {
 
   /**
    * Cron job to automatic execution
-   * Runs every 15 sec
+   * Runs every 20 sec
    */
   private setupCronJob() {
     if(process.env.NOTIFICATIONS_ENABLED === 'true') {
       const job = CronJob.from({
-        // runs every 30sec
+        // runs every 20sec
         cronTime: '*/20 * * * * *',
         onTick: async () => await this.checkUpcomingAppointments()
       });
 
       job.start();
-      console.log("========== Notification service started (every 15s) ==========");
+      console.log("========== Notification service started (every 20s) ==========");
     }
   }
 
