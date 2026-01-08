@@ -252,7 +252,7 @@ function ClientHomePage() {
   return (
     <Fragment>
       <section id="cards-section">
-        <LinkCard to="/client/appointments" title="Seus agendamentos">
+        <LinkCard to="/client/appointments" title="Meus agendamentos">
           <Calendar />
         </LinkCard>
       </section>
