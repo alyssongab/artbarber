@@ -293,23 +293,32 @@ export class AppointmentRepository {
     async findAllByBarberIdPaginated(
         barberId: number,
         page: number,
-        limit: number
+        limit: number,
+        filterDate?: Date
     ): Promise<{ data: AppointmentWithRelations[]; total: number }> {
         const skip = (page - 1) * limit;
+        const whereClause: any = {
+            id_barber: barberId
+        }
 
+        console.log(filterDate)
+        if(filterDate) {
+            whereClause.appointment_date = filterDate;
+        }
+        console.log(whereClause);
         const [data, total] = await Promise.all([
             prismaClient.appointment.findMany({
-                where: { id_barber: barberId },
-                include: INCLUDE_RELATIONS,
+                where: whereClause,
+                skip,
+                take: limit,
                 orderBy: [
                     { appointment_date: 'desc' },
                     { appointment_time: 'desc' }
                 ],
-                skip,
-                take: limit
+                include: INCLUDE_RELATIONS,
             }),
             prismaClient.appointment.count({
-                where: { id_barber: barberId }
+                where: whereClause
             })
         ]);
 

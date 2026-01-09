@@ -81,10 +81,12 @@ export class AppointmentService {
         userRole: string,
         userId: number,
         page: number,
-        limit: number
+        limit: number,
+        date?: string
     ) {
         let data: AppointmentWithRelations[] = [];
         let total = 0;
+        let dt = undefined;
 
         if (userRole === 'CLIENT') {
             const result = await this.appointmentRepository.findAllByClientIdPaginated(
@@ -95,10 +97,14 @@ export class AppointmentService {
             data = result.data;
             total = result.total;
         } else if (userRole === 'BARBER') {
+        
+            if(date) dt = new Date(`${date}T00:00:00.000Z`);
+
             const result = await this.appointmentRepository.findAllByBarberIdPaginated(
                 userId,
                 page,
-                limit
+                limit,
+                dt
             );
             data = result.data;
             total = result.total;
