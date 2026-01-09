@@ -120,11 +120,13 @@ export const appointmentService = {
     return response.data;
   },
 
-  getRelatedAppointments: async(page: number, limit: number): Promise<RelatedAppointmentsResponse> => {
+  getRelatedAppointments: async(page: number, limit: number, date?: string): Promise<RelatedAppointmentsResponse> => {
     const params = new URLSearchParams({
       _page: String(page),
       _limit: String(limit),
     });
+
+    if(date) params.append('_date', date); // yyyy-mm-dd
 
     const myAppointments = await api.get<RelatedAppointmentsResponse>(`/appointments?${params.toString()}`);
     return myAppointments.data;
@@ -134,6 +136,14 @@ export const appointmentService = {
     const response = await api.patch<AppointmentResponse>(
       `/appointments/${appointmentId}`,
       { appointment_status: 'CANCELADO' }
+    );
+    return response.data;
+  },
+
+  updateAppointmentStatus: async (appointmentId: number, status: string): Promise<AppointmentResponse> => {
+    const response = await api.patch<AppointmentResponse>(
+      `/appointments/${appointmentId}`,
+      { appointment_status: status }
     );
     return response.data;
   },
