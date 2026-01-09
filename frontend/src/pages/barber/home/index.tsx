@@ -4,13 +4,18 @@ import { Button } from "../../../components/ui/button";
 import { Calendar, Plus } from "lucide-react";
 import { authService, appointmentService } from "../../../services/api";
 import { useEffect, useState } from "react";
-import { formatToISOString } from "../../../utils/helpers";
-import { Link } from "react-router";
+import { formatToISOStandard } from "../../../utils/helpers";
+import { useNavigate, useLocation } from "react-router";
 
 export default function BarberHomePage(){
 
+    const navigate = useNavigate();
+    const location = useLocation();
+    let locationDate = location.state?.selectedDate;
     const userId = authService.getCurrentUser()?.user_id;
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    
+    // get selected date from state or creates new date
+    const [selectedDate, setSelectedDate] = useState<Date>(() => locationDate ? locationDate : new Date() );
     const [totalAppointments, setTotalAppointments] = useState<number>(0);
     const [totalRevenue, setTotalRevenue] = useState<string>("0.00");
     const [loading, setLoading] = useState<boolean>(false);
@@ -20,9 +25,7 @@ export default function BarberHomePage(){
     const fetchRevenueData = async () => {
         try{
             setLoading(true);
-            console.log(selectedDate);
-            const dt = formatToISOString(selectedDate);
-            console.log(dt);
+            const dt = formatToISOStandard(selectedDate);
             const data = await appointmentService.getBarberRevenue(
                 userId,
                 dt
@@ -32,7 +35,7 @@ export default function BarberHomePage(){
             setTotalRevenue(data.totalRevenue);
         }
         catch(error: any){
-            console.log("Erro ao buscar receita: ", error);
+            console.error("Erro ao buscar receita: ", error);
         }
         finally{
             setLoading(false);
@@ -68,11 +71,14 @@ export default function BarberHomePage(){
                 </div>
             </section>
             <section id="barber-buttons" className="mt-4 flex flex-col gap-2">
-                <Link to="/barber/agenda">
-                    <Button className="w-full bg-[#2B964F] hover:bg-[#35b15e]">
-                        <Calendar /> Ver agenda
-                    </Button>
-                </Link>
+                <Button 
+                    onClick={() => navigate('/barber/agenda', { 
+                        state: { selectedDate: selectedDate } 
+                    })}
+                    className="w-full bg-[#2B964F] hover:bg-[#35b15e]"
+                >
+                    <Calendar /> Ver agenda
+                </Button>
                 <Button className="w-full bg-[#C3880A] hover:bg-[#ecb02e]">
                     <Plus /> Agendamento manual
                 </Button>
