@@ -183,7 +183,7 @@ function ClientHomePage() {
 
     }
     catch(err: any){
-      console.log("Erro ao criar agendamento: ", err);
+      console.error("Erro ao criar agendamento: ", err);
       
       const message = err.response?.data?.message || 'Erro ao realizar agendamento. Tente novamente.';
       setErrorMessage(message);

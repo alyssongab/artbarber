@@ -45,7 +45,6 @@ export class AppointmentController {
             const page = req.query._page ? parseInt(req.query._page as string, 10) : 1;
             const limit = req.query._limit ? parseInt(req.query._limit as string, 10) : 10;
             const date = req.query._date as string;
-            console.log("cotroller: ",date);
 
             const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
             const safeLimit = Number.isNaN(limit) || limit < 1 ? 10 : limit;

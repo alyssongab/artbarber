@@ -38,15 +38,12 @@ export default function BarberAgenda() {
             const response = await appointmentService.getRelatedAppointments(
                 currentPage, PAGE_SIZE, dateStr);
             
-            // Filter appointments on selected date
-            const filtered = response.data.filter(apt => 
-                apt.appointment_date === dateStr
-            );
             
-            setAppointments(filtered);
+            setAppointments(response.data);
             setPagination(response.pagination);
-            console.log(response.pagination);
-            
+            console.log('response: ', response);
+
+
         } catch (err: any) {
             console.error('Erro ao buscar agendamentos:', err);
             setError('Erro ao carregar agendamentos');

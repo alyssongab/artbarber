@@ -3,7 +3,7 @@ import { ZodError, z } from "zod";
 import { HttpError } from "../errors/http.errors.ts";
 
 export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction){
-    console.log(error);
+    console.error(error);
 
     // zod validation error
     if(error instanceof ZodError){

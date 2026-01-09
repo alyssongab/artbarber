@@ -301,11 +301,9 @@ export class AppointmentRepository {
             id_barber: barberId
         }
 
-        console.log(filterDate)
         if(filterDate) {
             whereClause.appointment_date = filterDate;
         }
-        console.log(whereClause);
         const [data, total] = await Promise.all([
             prismaClient.appointment.findMany({
                 where: whereClause,
