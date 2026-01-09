@@ -23,8 +23,16 @@ export const appointmentUtils = {
         };
     },
 
+    formatPrice: (value: number) => {
+        return value.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+        });
+    },
+
     /** Map Appointment (with relations) into Response DTO */
     toAppointmentResponseDTO: (appointment: AppointmentWithRelations): AppointmentResponseDTO => {
+        const priceNumber = appointment.service.price.toNumber();
         return {
             appointment_id: appointment.appointment_id,
             appointment_date: appointmentUtils.formatDate(appointment.appointment_date),
@@ -33,7 +41,7 @@ export const appointmentUtils = {
             client: appointmentUtils.toUserDTO(appointment.client ?? null),
             service: appointment.service ? {
                 name: appointment.service.name,
-                price: appointment.service.price.toString(),
+                price: appointmentUtils.formatPrice(priceNumber),
                 duration: appointment.service.duration
             } : null,
             appointment_status: appointment.appointment_status,
