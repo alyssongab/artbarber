@@ -5,17 +5,24 @@ import { appointmentService } from '../../../services/api';
 import { AppointmentResponse, PaginationInfo } from '../../../types';
 import { formatDate, formatTime, capitalizeStatus } from '../../../utils/helpers';
 import ClientAppointmentsCard from '../../../components/features/appointments/AppointmentCard';
+import { authService } from '../../../services/api';
 
 function ClientAppointmentsPage(){
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>();
     const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
+    
+    // pagination
     const [pagination, setPagination] = useState<PaginationInfo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const PAGE_SIZE = import.meta.env.VITE_CLIENT_PAGINATION;
+    const PAGE_SIZE = import.meta.env.VITE_CLIENT_PAGINATION || 3;
+    
+    const userId = authService.getCurrentUser()?.user_id;
 
     const fetchAppointments = async () =>{
+        if (!userId) return;
+
         try{
             setLoading(true);
             const myAppointments = await appointmentService.getRelatedAppointments(currentPage, PAGE_SIZE);
@@ -78,7 +85,7 @@ function ClientAppointmentsPage(){
                 <Link 
                     to="/client/home" 
                     id='return-client' 
-                    className='bg-blue-700 absolute left-0  p-1 rounded-md'
+                    className='bg-black absolute left-0  p-1 rounded-md'
                 >
                     <ArrowLeft color='white'/>
                 </Link>
@@ -91,9 +98,9 @@ function ClientAppointmentsPage(){
                 ?
                     (<p className='mt-6 bg-gray-300 p-5 text-lg text-center font-medium rounded-md'> Você não possui agendamentos ainda. </p>)
                 :
-                    <div id='my-appointments'>
+                    <div id='my-appointments' className='mt-4'>
                         {/* <h2 className='text-xl border-b-2'>Seus agendamentos</h2> */}
-                        <div className='flex flex-col items-center justify-start gap-6 mt-10 min-h-[480px]'>
+                        <div className='flex flex-col gap-3 min-h-[480px]'>
                             {appointmentDetails.map(a => 
                                 <ClientAppointmentsCard
                                     key={a.id}
@@ -125,7 +132,7 @@ function ClientAppointmentsPage(){
                             <button
                                 onClick={handleNextPage}
                                 disabled={currentPage >= pagination.totalPages || loading}
-                                className="cursor-pointer bg-blue-600 text-white px-3 py-1 round disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="cursor-pointer bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Próxima
                             </button>
