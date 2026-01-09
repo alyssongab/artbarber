@@ -1,7 +1,7 @@
 import { getFirstName } from '../../../utils/users';
 import { Ellipsis, Calendar, X, User } from 'lucide-react';
 import { useState } from 'react';
-import { canCancelAppointment } from '../../../utils/helpers';
+import { canCancelAppointment, getStatusStyles } from '../../../utils/helpers';
 import { appointmentService } from '../../../services/api';
 import {
   Dialog,
@@ -41,21 +41,6 @@ function ClientAppointmentsCard({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-  const getStatusStyles = (status: string) => {
-    const upperStatus = status.toUpperCase();
-    if (upperStatus === 'AGENDADO') {
-      return 'bg-gray-300 text-black font-medium';
-    }
-    if (upperStatus === 'CANCELADO') {
-      return 'bg-red-700 text-white font-medium';
-    }
-    if (upperStatus === 'CONCLUÍDO' || upperStatus === 'CONCLUIDO') {
-      return 'bg-green-700 text-white font-medium';
-    }
-    
-    return 'bg-gray-300 text-gray-900 font-medium';
-  };
-
   const canCancel = status.toUpperCase() === 'AGENDADO' && canCancelAppointment(date, time);
 
   const handleOpenConfirmDialog = () => {
@@ -83,7 +68,7 @@ function ClientAppointmentsCard({
   };
 
   return (
-    <div className='hover:shadow-lg transition duration-300 ease-in-out flex flex-col bg-white gap-3 justify-center border-[1px] border-black/20 hover:border-black/50 p-3 rounded-lg min-w-3/5'>
+    <div className='hover:shadow-lg transition duration-300 ease-in-out flex flex-col bg-white gap-3 justify-center border-[1px] border-black/20 hover:border-black/50 p-3 rounded-lg'>
       <div className='flex justify-between'>
         <h3 className='font-medium text-lg'>{service}</h3>
         {canCancel && (
@@ -107,21 +92,21 @@ function ClientAppointmentsCard({
         )}
       </div>
       {/* mobile: custom breakpoint */}
-      <div className='flex flex-col-reverse gap-2 mobile:flex-row items-start mobile:justify-between'>
+      <div className='flex flex-row items-start justify-between'>
         <div className='flex justify-center items-center gap-1'>
           <User size={20} className='opacity-50'/>
           <p className='opacity-60'>Barbeiro {getFirstName(barber)}</p>
         </div>
-        <p className={`${getStatusStyles(status)} rounded-lg py-1 px-4 text-[11px] md:text-sm max-w-[100px] text-center`}>
+        <p className={`${getStatusStyles(status)} rounded-lg py-1 px-4 text-[11px] md:text-sm max-w-[120px] text-center`}>
           {status}
         </p>
       </div>
-      <div className='flex flex-col mobile:flex-row mobile:justify-between items-start gap-2'>
+      <div className='flex flex-row justify-between items-start gap-2'>
         <div className='flex justify-center items-center gap-1'>
           <Calendar size={20} className='opacity-50' />
           <p className='opacity-70 text-sm sm:text-base'> {date} às {time}</p>
         </div>
-        <p className='text-yellow-600 font-medium'>R$ {price.concat(",00")}</p>
+        <p className='text-emerald-700 font-medium'>{price}</p>
       </div>
 
       {/* Confirmation Dialog */}
