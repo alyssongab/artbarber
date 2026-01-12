@@ -16,6 +16,7 @@ import type { CreateAppointmentRequest, Service, User, AppointmentResponse } fro
 import { appointmentService, authService } from "../../../services/api";
 import AppointmentSuccessDialog from "../../../components/features/appointments/AppointmentSuccessDialog";
 import AppointmentErrorDialog from "../../../components/features/appointments/AppointmentErrorDialog";
+import { filterValidTimes } from "../../../utils/filters";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -90,10 +91,11 @@ function ClientHomePage() {
         appointment_date: selectedDate,
         id_barber: Number(selectedBarber)
       });
-      setAvailableTimes(times);
+      const validTimes = filterValidTimes(times, selectedDate);
+      setAvailableTimes(validTimes);
       
       // If no times available for today, automatically select next day
-      if (times.length === 0) {
+      if (validTimes.length === 0) {
         const today = new Date();
         const selectedDateObj = new Date(selectedDate + 'T00:00:00');
         
@@ -103,11 +105,11 @@ function ClientHomePage() {
           today.getMonth() === selectedDateObj.getMonth() &&
           today.getFullYear() === selectedDateObj.getFullYear()
         ) {
-          // Find next available date (skip Sundays)
+          // find next available day (skip sundays)
           const nextDate = new Date(today);
           nextDate.setDate(nextDate.getDate() + 1);
           
-          while (nextDate.getDay() === 0) {
+          if (nextDate.getDay() === 0) {
             nextDate.setDate(nextDate.getDate() + 1);
           }
           

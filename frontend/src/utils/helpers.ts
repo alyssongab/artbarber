@@ -1,12 +1,37 @@
+  /**
+   * Convert from usa standard to ptBR
+   * @param dateStr yyyy-mm-dd
+   * @returns date in pt-BR format (dd/mm/yyyy)
+   */
   export const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
   };
 
+  /**
+   * 
+   * @param dateStr yyyy-mm-dd
+   * @returns Date in iso format (YYYY-MM-DDTHH:mm:ss)
+   */
+  export const formatDateStringToISO = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  /**
+   * 
+   * @param timeStr HH:mm:ss
+   * @returns HH:MM format
+   */
   export const formatTime = (timeStr: string) => {
-    return timeStr.slice(0, 5); // HH:MM
+    return timeStr.slice(0, 5); // HH:mm
   };
 
+  /**
+   * Converts datetime into date string
+   * @param date in format datetime (YYYY-MM-DDTHH:mm:ss)
+   * @returns date in string format yyyy-mm-dd
+   */
   export const formatToISOStandard = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
