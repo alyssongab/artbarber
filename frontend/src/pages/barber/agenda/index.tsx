@@ -38,11 +38,8 @@ export default function BarberAgenda() {
             const response = await appointmentService.getRelatedAppointments(
                 currentPage, PAGE_SIZE, dateStr);
             
-            
             setAppointments(response.data);
             setPagination(response.pagination);
-            console.log('response: ', response);
-
 
         } catch (err: any) {
             console.error('Erro ao buscar agendamentos:', err);
@@ -78,7 +75,7 @@ export default function BarberAgenda() {
                         state: { selectedDate: selectedDate } 
                     })}
                     id='return-barber' 
-                    className='bg-black absolute left-0 p-1 rounded-md'
+                    className='cursor-pointer bg-black absolute left-0 p-1 rounded-md'
                 >
                     <ArrowLeft color='white'/>
                 </button>

@@ -36,13 +36,13 @@
   export const getStatusStyles = (status: string) => {
     const upperStatus = status.toUpperCase();
     if (upperStatus === 'AGENDADO' || upperStatus === 'PENDENTE') {
-      return 'bg-yellow-100 text-yellow-950 font-semibold border border-yellow-300';
+      return 'bg-yellow-100 text-yellow-950 font-semibold border border-yellow-500';
     }
     if (upperStatus === 'CANCELADO') {
-      return 'bg-red-100 text-red-950 font-semibold border border-red-300';
+      return 'bg-red-100 text-red-950 font-semibold border border-red-500';
     }
     if (upperStatus === 'CONCLUÍDO' || upperStatus === 'CONCLUIDO') {
-      return 'bg-green-100 text-emerald-950 font-semibold border border-green-300';
+      return 'bg-green-100 text-emerald-950 font-semibold border border-green-500';
     }
     
     return 'bg-gray-300 text-gray-900 font-medium';
