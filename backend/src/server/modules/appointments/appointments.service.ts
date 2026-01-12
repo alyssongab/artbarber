@@ -28,7 +28,7 @@ export class AppointmentService {
         // iso format: YYYY-MM-DDTHH:mm:ss.sssZ
         const appointmentDate = new Date(`${data.appointment_date}T00:00:00.000Z`);
         const appointmentTime = new Date(`1970-01-01T${data.appointment_time}Z`);
-
+        const todayAndNow = new Date();
         // Role based verification
         if(userRole === 'CLIENT'){
             if(data.id_client && data.id_client !== userId){
@@ -46,6 +46,10 @@ export class AppointmentService {
 
         if(appointmentExists){
             throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
+        }
+
+        if(appointmentDate < todayAndNow && appointmentTime < todayAndNow) {
+            throw new ConflictError("Você não pode fazer um agendamento no passado.");
         }
 
         const createData: Prisma.AppointmentCreateInput = {
