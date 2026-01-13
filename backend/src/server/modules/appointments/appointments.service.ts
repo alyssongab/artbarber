@@ -28,7 +28,7 @@ export class AppointmentService {
         // iso format: YYYY-MM-DDTHH:mm:ss.sssZ
         const appointmentDate = new Date(`${data.appointment_date}T00:00:00.000Z`);
         const appointmentTime = new Date(`1970-01-01T${data.appointment_time}Z`);
-        const todayAndNow = new Date();
+        
         // Role based verification
         if(userRole === 'CLIENT'){
             if(data.id_client && data.id_client !== userId){
@@ -36,7 +36,11 @@ export class AppointmentService {
             }
             data.id_client = userId;
         }
-        else if(userRole === 'BARBER'){}
+        else if(userRole === 'BARBER'){
+            if(data.id_barber != userId){
+                throw new ForbiddenError("Você não pode fazer agendamento para outro barbeiro.");
+            }
+        }
 
         const appointmentExists = await this.appointmentRepository.findByDatetimeAndBarber(
             appointmentDate,
@@ -48,7 +52,18 @@ export class AppointmentService {
             throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
         }
 
-        if(appointmentDate < todayAndNow && appointmentTime < todayAndNow) {
+        // Combine date and time for proper comparison
+        const appointmentDateTime = new Date(appointmentDate);
+        appointmentDateTime.setUTCHours(
+            appointmentTime.getUTCHours(),
+            appointmentTime.getUTCMinutes(),
+            0,
+            0
+        );
+        
+        const now = new Date();
+        
+        if(appointmentDateTime <= now) {
             throw new ConflictError("Você não pode fazer um agendamento no passado.");
         }
 
