@@ -79,7 +79,9 @@ export default function BarberHomePage(){
                 >
                     <Calendar /> Ver agenda
                 </Button>
-                <Button className="w-full bg-[#C3880A] hover:bg-[#ecb02e]">
+                <Button 
+                    onClick={() => navigate('/barber/appointment')}
+                    className="w-full bg-[#C3880A] hover:bg-[#ecb02e]">
                     <Plus /> Agendamento manual
                 </Button>
             </section>

@@ -7,6 +7,7 @@ import ClientHomePage from '../pages/client/home';
 import ClientAppointmentsPage from '../pages/client/appointments';
 import BarberHomePage from '../pages/barber/home';
 import BarberAgenda from '../pages/barber/agenda';
+import BarberManualAppointmentPage from '../pages/barber/appointment';
 
 // Router v7
 export const router = createBrowserRouter([
@@ -44,7 +45,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="home" replace/> },
       { path: 'home', element: <BarberHomePage/> },
-      { path: 'agenda', element: <BarberAgenda /> }
+      { path: 'agenda', element: <BarberAgenda /> },
+      { path: 'appointment', element: <BarberManualAppointmentPage /> }
     ]
   },
 
