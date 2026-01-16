@@ -27,30 +27,29 @@ export class AvailabilityService {
             throw new ForbiddenError("O usuário informado não é um barbeiro.");
         }
 
-        // Parse date properly to Date object
+        // Input date comes in "YYYY-MM-DD" format.
         const dateObject = new Date(`${appointment_date}T00:00:00.000Z`);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         
-        // Check if the requested date is today
-        const isToday = dateObject.getTime() === today.getTime();
+        // Gets today date to compare.
+        const now = new Date();
+        const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-        // 1. Generate all possible time slots based on business hours
+        const isToday = dateObject.getTime() === todayUTC.getTime();
+
         const allSlots = this.generateTimeSlots(isToday);
 
-        // 2. Fetch existing appointments for the barber on the given date
         const appointments = await this.appointmentRepository.findAllByDateAndBarber(
             dateObject,
             id_barber
         );
 
-        // 3. Extract booked times using UTC methods (not local timezone)
+        // Get the busy times using UTC methods
         const bookedTimes = appointments.map(apt => {
-            const time = new Date(apt.appointment_time);
+            const time = new Date(apt.appointment_datetime);
             return `${time.getUTCHours().toString().padStart(2, '0')}:${time.getUTCMinutes().toString().padStart(2, '0')}`;
         });
 
-        // 4. Remove booked times from all slots to get available slots
+        // Remove busy times to get only the available ones
         const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot));
 
         return availableSlots;
@@ -66,40 +65,45 @@ export class AvailabilityService {
         const slots: string[] = [];
         const [openHour, openMinute] = BUSINESS_HOURS.OPEN.split(':').map(Number) as [number, number];
         const [closeHour, closeMinute] = BUSINESS_HOURS.CLOSE.split(':').map(Number) as [number, number];
+        const [lunchStartHour, lunchStartMinute] = BUSINESS_HOURS.LUNCH_TIME.split(':').map(Number) as [number, number];
+        const [lunchEndHour, lunchEndMinute] = BUSINESS_HOURS.BACK_TO_WORK_TIME.split(':').map(Number) as [number, number];
 
-        let currentTime = new Date();
-        currentTime.setHours(openHour, openMinute, 0, 0);
+        // UTC
+        const now = new Date();
+        const currentTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), openHour, openMinute));
+        const endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), closeHour, closeMinute));
+        
+        // Lunch break times
+        const lunchStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), lunchStartHour, lunchStartMinute));
+        const lunchEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), lunchEndHour, lunchEndMinute));
 
-        const endTime = new Date();
-        endTime.setHours(closeHour, closeMinute, 0, 0);
-
-        // If it's today, calculate minimum start time (now + 30 minutes)
         let minimumTime: Date | null = null;
         if (isToday) {
-            minimumTime = new Date();
-            minimumTime.setMinutes(minimumTime.getMinutes() + 30);
+            minimumTime = new Date(now.getTime() + 30 * 60 * 1000);
             
-            // If minimum time is after business closing, return empty array (no slots available today)
             if (minimumTime >= endTime) {
                 return [];
             }
             
-            // If minimum time is before opening, start from opening
             if (minimumTime < currentTime) {
-                minimumTime = null; // No need to filter, start from opening
+                minimumTime = null; 
             }
         }
 
         while (currentTime < endTime) {
-            const hours = currentTime.getHours().toString().padStart(2, '0');
-            const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+            // Skip lunch break hours
+            const isLunchTime = currentTime >= lunchStart && currentTime < lunchEnd;
             
-            // Only add slot if it's not today, or if it's after the minimum time
-            if (!minimumTime || currentTime >= minimumTime) {
-                slots.push(`${hours}:${minutes}`);
+            if (!isLunchTime) {
+                const hours = currentTime.getUTCHours().toString().padStart(2, '0');
+                const minutes = currentTime.getUTCMinutes().toString().padStart(2, '0');
+                
+                if (!minimumTime || currentTime >= minimumTime) {
+                    slots.push(`${hours}:${minutes}`);
+                }
             }
 
-            currentTime.setMinutes(currentTime.getMinutes() + BUSINESS_HOURS.SLOT_INTERVAL);
+            currentTime.setUTCMinutes(currentTime.getUTCMinutes() + BUSINESS_HOURS.SLOT_INTERVAL);
         }
 
         return slots;
