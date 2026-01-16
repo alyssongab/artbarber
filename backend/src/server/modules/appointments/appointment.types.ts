@@ -19,8 +19,7 @@ export interface ServicePublicDTO {
 
 export interface AppointmentResponseDTO {
   appointment_id: number;
-  appointment_date: string; // YYYY-MM-DD
-  appointment_time: string; // HH:MM:SS
+  appointment_datetime: string; // ISO 8601 format
   barber: UserPublicDTO | null;
   client: UserPublicDTO | null;
   service: ServicePublicDTO | null;

@@ -23,11 +23,8 @@ export class AppointmentService {
      * @returns Created appointment
      */
     async createAppointment(data: AppointmentInputDTO, userRole: string, userId: number) {
-        // Date conversion
-        // Z = UTC Time to keep date and time consistent in server and database
-        // iso format: YYYY-MM-DDTHH:mm:ss.sssZ
-        const appointmentDate = new Date(`${data.appointment_date}T00:00:00.000Z`);
-        const appointmentTime = new Date(`1970-01-01T${data.appointment_time}Z`);
+        // O appointment_datetime já vem como uma string ISO 8601 (UTC por padrão no Zod)
+        const appointmentDateTime = new Date(data.appointment_datetime);
         
         // Role based verification
         if(userRole === 'CLIENT'){
@@ -43,23 +40,13 @@ export class AppointmentService {
         }
 
         const appointmentExists = await this.appointmentRepository.findByDatetimeAndBarber(
-            appointmentDate,
-            appointmentTime,
+            appointmentDateTime,
             data.id_barber
         );
 
         if(appointmentExists){
             throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
         }
-
-        // Combine date and time for proper comparison
-        const appointmentDateTime = new Date(appointmentDate);
-        appointmentDateTime.setUTCHours(
-            appointmentTime.getUTCHours(),
-            appointmentTime.getUTCMinutes(),
-            0,
-            0
-        );
         
         const now = new Date();
         
@@ -68,8 +55,7 @@ export class AppointmentService {
         }
 
         const createData: Prisma.AppointmentCreateInput = {
-            appointment_date: appointmentDate,
-            appointment_time: appointmentTime,
+            appointment_datetime: appointmentDateTime,
             barber: { 
                 connect: { 
                     user_id: data.id_barber 
@@ -105,7 +91,7 @@ export class AppointmentService {
     ) {
         let data: AppointmentWithRelations[] = [];
         let total = 0;
-        let dt = undefined;
+        let filterDate = undefined;
 
         if (userRole === 'CLIENT') {
             const result = await this.appointmentRepository.findAllByClientIdPaginated(
@@ -117,13 +103,16 @@ export class AppointmentService {
             total = result.total;
         } else if (userRole === 'BARBER') {
         
-            if(date) dt = new Date(`${date}T00:00:00.000Z`);
+            if(date) {
+                // date comes in "YYYY-MM-DD" and is converted into UTC.
+                filterDate = new Date(`${date}T00:00:00.000Z`);
+            }
 
             const result = await this.appointmentRepository.findAllByBarberIdPaginated(
                 userId,
                 page,
                 limit,
-                dt
+                filterDate
             );
             data = result.data;
             total = result.total;
@@ -205,13 +194,7 @@ export class AppointmentService {
 
             // Check if appointment time has not passed
             const now = new Date();
-            const appointmentDateTime = new Date(appointmentExists.appointment_date);
-            appointmentDateTime.setUTCHours(
-                appointmentExists.appointment_time.getUTCHours(),
-                appointmentExists.appointment_time.getUTCMinutes(),
-                0,
-                0
-            );
+            const appointmentDateTime = new Date(appointmentExists.appointment_datetime);
 
             if (appointmentDateTime <= now) {
                 throw new ForbiddenError("Você não pode cancelar um agendamento que já começou ou passou.");
@@ -274,12 +257,19 @@ export class AppointmentService {
             throw new ForbiddenError("Você não pode consultar agendamentos de outro barbeiro.");
         }
 
-        // Parse date properly to Date object
-        const dateObject = new Date(`${selectedDate}T00:00:00.000Z`);
+        const dateObject = new Date(selectedDate);
         const totalAppointments = await this.appointmentRepository.countAllByBarberAndDate(dateObject, paramId);
         return totalAppointments !== null ? totalAppointments : 0;
     }
 
+    /**
+     * Calculates the total revenue (only finished appointments) from a barber on the selected date.
+     * @param userRole logged user role
+     * @param selectedDate date to calculate the revenue
+     * @param paramId id passed as parameter
+     * @param reqId logged user id
+     * @returns 
+     */
     async calculateRevenue(userRole: string, selectedDate: Date, paramId: number, reqId: number) {
         
         if(userRole !== 'BARBER' && userRole !== 'ADMIN'){
@@ -290,7 +280,7 @@ export class AppointmentService {
             throw new ForbiddenError("Você não pode consultar o faturamento de outro barbeiro.");
         }
 
-        const dateObject = new Date(`${selectedDate}T00:00:00.000Z`);
+        const dateObject = new Date(selectedDate);
         const appointmentsAll = await this.appointmentRepository.findAllByDateAndBarber(dateObject, paramId);
 
         // Only the ones with status 'CONCLUIDO'

@@ -48,14 +48,11 @@ export class AppointmentRepository {
      * @param barberId 
      * @returns An appointment if exists or nulls
      */
-    async findByDatetimeAndBarber(appointmentDate: Date, appointmentTime: Date, barberId: number): Promise<Appointment | null> {
+    async findByDatetimeAndBarber(appointmentDateTime: Date, barberId: number): Promise<Appointment | null> {
         return await prismaClient.appointment.findFirst({
             where: {
-                AND: [
-                    { appointment_date: appointmentDate },
-                    { appointment_time: appointmentTime },
-                    { id_barber: barberId }
-                ]
+                appointment_datetime: appointmentDateTime,
+                id_barber: barberId
             }
         });
     }
@@ -67,12 +64,24 @@ export class AppointmentRepository {
      * @returns Appointments sorted by appointment time in ascending order          
      */
     async findAllByDateAndBarber(appointmentDate: Date, barberId: number): Promise<AppointmentWithRelations[]> {
+        const startOfDay = new Date(appointmentDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(appointmentDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
         return await prismaClient.appointment.findMany({
             where: {
-                appointment_date: appointmentDate ,
-                id_barber: barberId 
+                id_barber: barberId,
+                appointment_datetime: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
             },
             include: INCLUDE_RELATIONS,
+            orderBy: {
+                appointment_datetime: 'asc'
+            }
         });
     }
 
@@ -80,10 +89,9 @@ export class AppointmentRepository {
         return await prismaClient.appointment.findMany({
             where: { id_client: clientId },
             include: INCLUDE_RELATIONS,
-            orderBy: [
-                { appointment_date: 'asc' },
-                { appointment_time: 'asc' }
-            ]
+            orderBy: {
+                appointment_datetime: 'asc'
+            }
         });
     }
 
@@ -91,10 +99,9 @@ export class AppointmentRepository {
         return await prismaClient.appointment.findMany({
             where: { id_barber: barberId },
             include: INCLUDE_RELATIONS,
-            orderBy: [
-                { appointment_date: 'asc' },
-                { appointment_time: 'asc' }
-            ]
+            orderBy: {
+                appointment_datetime: 'asc'
+            }
         });
     }
 
@@ -146,16 +153,12 @@ export class AppointmentRepository {
     async findByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]> {
         return await prismaClient.appointment.findMany({
             where: {
-                AND: [
-                    {
-                        appointment_date: {
-                            gte: startDate,
-                            lte: endDate
-                        }
-                    },
-                    { appointment_status: 'PENDENTE' },
-                    { notification_sent: false }
-                ]
+                appointment_datetime: {
+                    gte: startDate,
+                    lte: endDate
+                },
+                appointment_status: 'PENDENTE',
+                notification_sent: false
             },
             include: {
                 client: true,
@@ -185,32 +188,18 @@ export class AppointmentRepository {
      */
     async findUpcomingByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         return await prismaClient.appointment.findMany({
             where: {
                 id_client: clientId,
-                OR: [
-                    // Future dates
-                    {
-                        appointment_date: {
-                            gt: today
-                        }
-                    },
-                    // Today but future time
-                    {
-                        AND: [
-                            { appointment_date: today },
-                            { appointment_time: { gte: now } }
-                        ]
-                    }
-                ]
+                appointment_datetime: {
+                    gte: now
+                }
             },
             include: INCLUDE_RELATIONS,
-            orderBy: [
-                { appointment_date: 'asc' },
-                { appointment_time: 'asc' }
-            ]
+            orderBy: {
+                appointment_datetime: 'asc'
+            }
         });
     }
 
@@ -221,32 +210,18 @@ export class AppointmentRepository {
      */
     async findPastByClientId(clientId: number): Promise<AppointmentWithRelations[]> {
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         return await prismaClient.appointment.findMany({
             where: {
                 id_client: clientId,
-                OR: [
-                    // Past dates
-                    {
-                        appointment_date: {
-                            lt: today
-                        }
-                    },
-                    // Today but past time
-                    {
-                        AND: [
-                            { appointment_date: today },
-                            { appointment_time: { lt: now } }
-                        ]
-                    }
-                ]
+                appointment_datetime: {
+                    lt: now
+                }
             },
             include: INCLUDE_RELATIONS,
-            orderBy: [
-                { appointment_date: 'desc' },
-                { appointment_time: 'desc' }
-            ]
+            orderBy: {
+                appointment_datetime: 'desc'
+            }
         });
     }
 
@@ -268,10 +243,9 @@ export class AppointmentRepository {
             prismaClient.appointment.findMany({
                 where: { id_client: clientId },
                 include: INCLUDE_RELATIONS,
-                orderBy: [
-                    { appointment_date: 'desc' },
-                    { appointment_time: 'desc' }
-                ],
+                orderBy: {
+                    appointment_datetime: 'desc'
+                },
                 skip,
                 take: limit
             }),
@@ -297,22 +271,30 @@ export class AppointmentRepository {
         filterDate?: Date
     ): Promise<{ data: AppointmentWithRelations[]; total: number }> {
         const skip = (page - 1) * limit;
-        const whereClause: any = {
+        const whereClause: Prisma.AppointmentWhereInput = {
             id_barber: barberId
         }
 
         if(filterDate) {
-            whereClause.appointment_date = filterDate;
+            const startOfDay = new Date(filterDate);
+            startOfDay.setUTCHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(filterDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+            
+            whereClause.appointment_datetime = {
+                gte: startOfDay,
+                lte: endOfDay
+            };
         }
         const [data, total] = await Promise.all([
             prismaClient.appointment.findMany({
                 where: whereClause,
                 skip,
                 take: limit,
-                orderBy: [
-                    { appointment_date: 'desc' },
-                    { appointment_time: 'desc' }
-                ],
+                orderBy: {
+                    appointment_datetime: 'desc'
+                },
                 include: INCLUDE_RELATIONS,
             }),
             prismaClient.appointment.count({
@@ -330,10 +312,19 @@ export class AppointmentRepository {
      * @returns Total appointments or null
      */
     async countAllByBarberAndDate(selectedDate: Date, barberId: number): Promise<number | null> {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
         const total = await prismaClient.appointment.count({
             where: {
                 id_barber: barberId,
-                appointment_date: selectedDate
+                appointment_datetime: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
             }
         });
         return total;
@@ -345,13 +336,12 @@ export class AppointmentRepository {
      * @param fullDateTime Time converted to prisma format
      * @returns List of expired appointments
      */
-    async findExpiredPendingAppointments(date: Date, fullDateTime: Date): Promise<AppointmentWithRelations[]> {
+    async findExpiredPendingAppointments(now: Date): Promise<AppointmentWithRelations[]> {
         return await prismaClient.appointment.findMany({
             where: {
-                appointment_date: date,
                 appointment_status: 'PENDENTE',
-                appointment_time: {
-                    lt: fullDateTime 
+                appointment_datetime: {
+                    lt: now
                 }
             },
             include: INCLUDE_RELATIONS
@@ -364,13 +354,12 @@ export class AppointmentRepository {
      * @param fullDateTime Time converted to prisma format
      * @returns Number of cancelled appointments
      */
-    async cancelExpiredAppointments(date: Date, fullDateTime: Date): Promise<number> {
+    async cancelExpiredAppointments(now: Date): Promise<number> {
         const result = await prismaClient.appointment.updateMany({
             where: {
-                appointment_date: date,
                 appointment_status: 'PENDENTE',
-                appointment_time: {
-                    lt: fullDateTime
+                appointment_datetime: {
+                    lt: now
                 }
             },
             data: {

@@ -15,6 +15,10 @@ export const appointmentUtils = {
         // 09:00:00
     },
 
+    formatDateTime: (dateTime: Date): string => {
+        return dateTime.toISOString();
+    },
+
     toUserDTO: (u: User | null): UserPublicDTO | null => {
         if(!u) return null;
         return {
@@ -35,8 +39,7 @@ export const appointmentUtils = {
         const priceNumber = appointment.service.price.toNumber();
         return {
             appointment_id: appointment.appointment_id,
-            appointment_date: appointmentUtils.formatDate(appointment.appointment_date),
-            appointment_time: appointmentUtils.formatTime(appointment.appointment_time),
+            appointment_datetime: appointmentUtils.formatDateTime(appointment.appointment_datetime),
             barber: appointmentUtils.toUserDTO(appointment.barber),
             client: appointmentUtils.toUserDTO(appointment.client ?? null),
             service: appointment.service ? {

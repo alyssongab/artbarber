@@ -53,8 +53,7 @@ model Service {
 
 model Appointment {
   appointment_id        Int                @id @default(autoincrement())
-  appointment_date      DateTime           @db.Date
-  appointment_time      DateTime           @db.Time
+  appointment_datetime  DateTime
   appointment_status    AppointmentStatus  @default(PENDENTE)
 
   id_barber             Int

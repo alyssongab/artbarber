@@ -95,7 +95,11 @@ export class AppointmentController {
             const barberId = req.body.id_barber!;
             const date = req.body.appointment_date!;
 
-            const availableHours = await this.availabilityService.getAvailableHours({ id_barber: barberId, appointment_date: date });
+            const availableHours = await this.availabilityService.getAvailableHours(
+                { 
+                    id_barber: barberId, 
+                    appointment_date: date 
+                });
             return res.status(200).json(availableHours);
         }
         catch(error: any) {
