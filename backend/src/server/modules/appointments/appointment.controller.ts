@@ -159,4 +159,29 @@ export class AppointmentController {
             next(error);
         }
     }
+
+    searchAppointmentsByClientName = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const userRole = req.user!.role;
+            const userId = req.user!.user_id;
+            const barberId = parseInt(req.params.barberId!);
+            const clientName = req.query.clientName as string;
+
+            if (!clientName || clientName.trim().length === 0) {
+                return res.status(400).json({ message: 'Nome do cliente é obrigatório.' });
+            }
+
+            const appointments = await this.appointmentService.searchAppointmentsByClientName(
+                barberId,
+                clientName,
+                userRole,
+                userId
+            );
+            
+            return res.status(200).json(appointments);
+        }
+        catch(error: any){
+            next(error);
+        }
+    }
 }

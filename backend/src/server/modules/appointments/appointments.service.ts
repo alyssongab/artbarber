@@ -301,4 +301,25 @@ export class AppointmentService {
             completedAppointments: completedAppointments.length
         };
     }
+
+    /**
+     * Search appointments by client name for a barber
+     * @param barberId The barber ID
+     * @param clientName Client name to search
+     * @param userRole Current user's role
+     * @param userId Current user's ID
+     * @returns List of appointments
+     */
+    async searchAppointmentsByClientName(barberId: number, clientName: string, userRole: string, userId: number) {
+        if(userRole !== 'BARBER' && userRole !== 'ADMIN'){
+            throw new ForbiddenError("Apenas barbeiros podem buscar agendamentos por nome.");
+        }
+        
+        if(userRole === 'BARBER' && barberId !== userId){
+            throw new ForbiddenError("Você não pode buscar agendamentos de outro barbeiro.");
+        }
+
+        const appointments = await this.appointmentRepository.searchByClientName(barberId, clientName);
+        return appointments.map(ap => appointmentUtils.toAppointmentResponseDTO(ap));
+    }
 }

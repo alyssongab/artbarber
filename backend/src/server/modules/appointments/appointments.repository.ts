@@ -369,4 +369,28 @@ export class AppointmentRepository {
 
         return result.count;
     }
+
+    /**
+     * Search appointments by client name for a specific barber
+     * @param barberId The barber ID
+     * @param clientName Client name to search (partial match)
+     * @returns List of appointments matching the search
+     */
+    async searchByClientName(barberId: number, clientName: string): Promise<AppointmentWithRelations[]> {
+        return await prismaClient.appointment.findMany({
+            where: {
+                id_barber: barberId,
+                client: {
+                    full_name: {
+                        contains: clientName,
+                        mode: 'insensitive'
+                    }
+                }
+            },
+            include: INCLUDE_RELATIONS,
+            orderBy: {
+                appointment_datetime: 'desc'
+            }
+        });
+    }
 }

@@ -37,4 +37,7 @@ appointmentsRouter.patch('/:id', validateId, authenticate, authorize('CLIENT', '
 // get revenue total of all appointments from a barber
 appointmentsRouter.post('/barber/revenue/:id', authenticate, authorize('BARBER', 'ADMIN'), appointmentController.getRevenue);
 
+// search appointments by client name
+appointmentsRouter.get('/barber/:barberId/search', authenticate, authorize('BARBER', 'ADMIN'), appointmentController.searchAppointmentsByClientName);
+
 export default appointmentsRouter;
