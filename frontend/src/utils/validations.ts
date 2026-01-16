@@ -33,7 +33,7 @@ const isValidBirthday = (value?: string | null) => {
     return false;
   }
 
-  // idade mínima: 10 anos
+  // min age - 10
   const today = new Date();
   let age = today.getFullYear() - yi;
   const hasNotHadBirthdayThisYear =
@@ -69,7 +69,6 @@ export const registerClientSchema = z
     email: z.email('Email inválido'),
     password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
     phone_number: phone11Schema,
-    // Aceita string mascarada (DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD, AAAA/MM/DD) ou vazio/undefined
     birthday: z
       .string()
       .optional()
@@ -100,8 +99,7 @@ export const updateUserSchema = z
   .partial()
   .strict();
 
-// Compat: manter o nome antigo registerSchema usado nas telas atuais
-// Dica: adapte a tela para usar registerClientSchema e campo full_name assim que possível.
+
 export const registerSchema = registerClientSchema;
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -138,8 +136,7 @@ export const AppointmentStatusEnum = z.enum(['PENDENTE', 'CONCLUIDO', 'CANCELADO
 // Backend: createAppointmentSchema
 export const appointmentCreateSchema = z
   .object({
-    appointment_date: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Data inválida'),
-    appointment_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Hora inválida'),
+    appointment_datetime: z.iso.datetime({ message: 'Data e hora em formato inválido' }),
     id_client: z.coerce.number().nullable().optional().default(null),
     id_barber: z.coerce.number(),
     id_service: z.coerce.number(),

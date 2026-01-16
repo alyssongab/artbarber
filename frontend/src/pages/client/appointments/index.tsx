@@ -74,9 +74,10 @@ function ClientAppointmentsPage(){
         service: a.service.name,
         barber: a.barber.full_name,
         status: capitalizeStatus(a.appointment_status),
-        date: formatDate(a.appointment_date),
-        time: formatTime(a.appointment_time),
-        price: a.service.price
+        date: formatDate(a.appointment_datetime),
+        time: formatTime(a.appointment_datetime),
+        price: a.service.price,
+        datetime: a.appointment_datetime
     }));
 
     return(
@@ -111,6 +112,7 @@ function ClientAppointmentsPage(){
                                     date={a.date}
                                     time={a.time}
                                     price={a.price}
+                                    datetime={a.datetime}
                                     onCancelled={fetchAppointments}
                                 />
                             )}

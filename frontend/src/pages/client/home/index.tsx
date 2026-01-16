@@ -17,6 +17,7 @@ import { appointmentService, authService } from "../../../services/api";
 import AppointmentSuccessDialog from "../../../components/features/appointments/AppointmentSuccessDialog";
 import AppointmentErrorDialog from "../../../components/features/appointments/AppointmentErrorDialog";
 import { filterValidTimes } from "../../../utils/filters";
+import { combineDateTimeToISO } from "../../../utils/helpers";
 
 // small reusable Link card
 function LinkCard({ to, title, children }: { to: string; title: string; children: React.ReactNode }){
@@ -160,9 +161,10 @@ function ClientHomePage() {
 
     const currentUser = authService.getCurrentUser();
 
+    const appointmentDatetime = combineDateTimeToISO(selectedDate, selectedTime);
+
     const appointmentRequest: CreateAppointmentRequest = {
-      appointment_date: selectedDate,
-      appointment_time: selectedTime,
+      appointment_datetime: appointmentDatetime,
       id_barber: Number(selectedBarber),
       id_service: Number(selectedService),
       id_client: currentUser?.user_id

@@ -43,8 +43,7 @@ export interface AuthResponse {
 
 export interface AppointmentResponse {
   appointment_id: number,
-  appointment_date: string,
-  appointment_time: string,
+  appointment_datetime: string, // ISO 8601 format (UTC)
   barber: UserResponseDTO,
   client?: UserResponseDTO,
   service: ServiceResponseDTO,
@@ -53,8 +52,7 @@ export interface AppointmentResponse {
 }
 
 export interface CreateAppointmentRequest {
-    appointment_date: string;
-    appointment_time: string;
+    appointment_datetime: string; // ISO 8601 format (UTC)
     id_barber: number;
     id_client?: number;
     id_service: number;

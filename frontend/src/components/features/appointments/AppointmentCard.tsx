@@ -22,6 +22,7 @@ interface ClientAppointmentsCardProps {
   date: string;
   time: string;
   price: string;
+  datetime: string; // ISO 8601 datetime
   onCancelled?: () => void;
 }
 
@@ -33,6 +34,7 @@ function ClientAppointmentsCard({
   date,
   time,
   price,
+  datetime,
   onCancelled
 }: ClientAppointmentsCardProps) {
 
@@ -41,7 +43,7 @@ function ClientAppointmentsCard({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-  const canCancel = status.toUpperCase() === 'AGENDADO' && canCancelAppointment(date, time);
+  const canCancel = status.toUpperCase() === 'AGENDADO' && canCancelAppointment(datetime);
 
   const handleOpenConfirmDialog = () => {
     setShowPopover(false);

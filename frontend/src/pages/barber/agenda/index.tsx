@@ -109,8 +109,8 @@ export default function BarberAgenda() {
                                 client={apt.client?.full_name || 'Cliente não informado'}
                                 clientPhone={apt.client?.phone_number || 'N/A'}
                                 status={capitalizeStatus(apt.appointment_status)}
-                                date={formatDate(apt.appointment_date)}
-                                time={formatTime(apt.appointment_time)}
+                                date={formatDate(apt.appointment_datetime)}
+                                time={formatTime(apt.appointment_datetime)}
                                 price={apt.service.price}
                                 onStatusChanged={handleStatusChanged}
                             />

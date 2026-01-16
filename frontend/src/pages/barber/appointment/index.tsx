@@ -23,6 +23,7 @@ import { appointmentService, authService } from "../../../services/api";
 import AppointmentSuccessDialog from "../../../components/features/appointments/AppointmentSuccessDialog";
 import AppointmentErrorDialog from "../../../components/features/appointments/AppointmentErrorDialog";
 import { filterValidTimes } from "../../../utils/filters";
+import { combineDateTimeToISO } from "../../../utils/helpers";
 
 function BarberManualAppointmentPage() {
   const navigate = useNavigate();
@@ -115,8 +116,7 @@ function BarberManualAppointmentPage() {
     }
 
     const appointmentRequest: CreateAppointmentRequest = {
-      appointment_date: currentDate,
-      appointment_time: selectedTime,
+      appointment_datetime: combineDateTimeToISO(currentDate, selectedTime),
       id_barber: currentUser.user_id,
       id_service: Number(selectedService),
       // id_client is optional for manual appointments

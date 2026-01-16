@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "../../ui/button";
 import { Check } from "lucide-react";
 import type { AppointmentResponse } from "../../../types";
+import { formatDate, formatTime } from "../../../utils/helpers";
 
 interface AppointmentSuccessDialogProps {
   open: boolean;
@@ -12,8 +13,8 @@ interface AppointmentSuccessDialogProps {
 function AppointmentSuccessDialog({ open, onClose, appointment }: AppointmentSuccessDialogProps) {
   if (!appointment) return null;
 
-  const formattedDate = new Date(appointment.appointment_date).toLocaleDateString('pt-BR');
-  const formattedTime = appointment.appointment_time.slice(0, 5);
+  const formattedDate = formatDate(appointment.appointment_datetime);
+  const formattedTime = formatTime(appointment.appointment_datetime);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -55,7 +56,7 @@ function AppointmentSuccessDialog({ open, onClose, appointment }: AppointmentSuc
           
           <div className="flex justify-between border-b pb-2">
             <span className="text-gray-600">Valor:</span>
-            <span className="font-medium text-green-600">R$ {appointment.service.price}</span>
+            <span className="font-medium text-green-600">{appointment.service.price}</span>
           </div>
         </div>
 
