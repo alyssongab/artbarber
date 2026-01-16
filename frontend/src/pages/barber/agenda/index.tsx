@@ -1,4 +1,5 @@
 import BarberAppointmentCard from "../../../components/features/appointments/BarberAppointmentCard";
+import AppointmentSearchBar from "../../../components/features/appointments/AppointmentSearchBar";
 import { useState, Fragment, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { ArrowLeft, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,6 +18,8 @@ export default function BarberAgenda() {
     const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchActive, setSearchActive] = useState(false);
     
     // Pagination
     const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -66,6 +69,33 @@ export default function BarberAgenda() {
         if (!pagination || currentPage >= pagination.totalPages) return;
         setCurrentPage((prev) => prev + 1);
     };
+
+    const handleSearch = async (clientName: string) => {
+        if (!userId) return;
+
+        try {
+            setIsSearching(true);
+            setError(null);
+            setSearchActive(true);
+
+            const results = await appointmentService.searchAppointmentsByClientName(userId, clientName);
+            setAppointments(results);
+            setPagination(null); // Disable pagination during search
+
+        } catch (err: any) {
+            console.error('Erro ao buscar agendamentos:', err);
+            setError('Erro ao buscar agendamentos por nome');
+            setAppointments([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchActive(false);
+        setCurrentPage(1);
+        fetchAppointments();
+    };
     
     return(
         <Fragment>
@@ -84,6 +114,19 @@ export default function BarberAgenda() {
                     <Calendar size={24} />
                 </div>
             </div>
+
+            <section id="search-bar" className="mt-4">
+                <AppointmentSearchBar
+                    onSearch={handleSearch}
+                    onClear={handleClearSearch}
+                    isSearching={isSearching}
+                />
+                {searchActive && (
+                    <p className="text-sm text-gray-600 mt-2">
+                        Mostrando resultados da busca
+                    </p>
+                )}
+            </section>
 
             <section id="barber-appointments" className="mt-4">
                 
@@ -119,7 +162,7 @@ export default function BarberAgenda() {
                 )}
 
                 {/* Pagination */}
-                {!loading && appointments.length > 0 && pagination && pagination.totalPages > 1 && (
+                {!loading && !searchActive && appointments.length > 0 && pagination && pagination.totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-4">
                         <button
                             onClick={handlePrevPage}

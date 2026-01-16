@@ -155,6 +155,14 @@ export const appointmentService = {
     );
 
     return response.data;
+  },
+
+  searchAppointmentsByClientName: async (barberId: number, clientName: string): Promise<AppointmentResponse[]> => {
+    const response = await api.get<AppointmentResponse[]>(
+      `/appointments/barber/${barberId}/search`,
+      { params: { clientName } }
+    );
+    return response.data;
   }
 
 }
