@@ -393,4 +393,23 @@ export class AppointmentRepository {
             }
         });
     }
+
+    /**
+     * Find appointment for a specific client at a specific datetime
+     * to prevent double-booking for the same client
+     * @param appointmentDateTime The datetime to check
+     * @param clientId The client ID
+     * @returns An appointment if exists or null
+     */
+    async findByDatetimeAndClient(appointmentDateTime: Date, clientId: number): Promise<Appointment | null> {
+        return await prismaClient.appointment.findFirst({
+            where: {
+                appointment_datetime: appointmentDateTime,
+                id_client: clientId,
+                appointment_status: {
+                    not: 'CANCELADO'
+                }
+            }
+        });
+    }
 }

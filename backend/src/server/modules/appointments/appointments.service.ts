@@ -47,6 +47,17 @@ export class AppointmentService {
         if(appointmentExists){
             throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
         }
+
+        if(data.id_client){
+            const clientAppointmentExists = await this.appointmentRepository.findByDatetimeAndClient(
+                appointmentDateTime,
+                data.id_client
+            );
+
+            if(clientAppointmentExists){
+                throw new ConflictError("Você já possui um agendamento neste horário.");
+            }
+        }
         
         const now = new Date();
         
