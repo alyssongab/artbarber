@@ -133,7 +133,7 @@ async function seed() {
         // Agendamento 1 - Cliente 1 com barbeiro (Pendente)
         const appointment1 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2026-01-15T14:30:00Z"),
+                appointment_datetime: new Date("2026-01-16T14:30:00Z"),
                 appointment_status: "PENDENTE",
                 id_barber: barber1.user_id,
                 id_client: client1.user_id,
@@ -146,7 +146,7 @@ async function seed() {
         // Agendamento 2 - Cliente 2 com barbeiro (Pendente)
         const appointment2 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2026-01-15T15:30:00Z"),
+                appointment_datetime: new Date("2026-01-16T15:30:00Z"),
                 appointment_status: "PENDENTE",
                 id_barber: barber1.user_id,
                 id_client: client2.user_id,
@@ -159,7 +159,7 @@ async function seed() {
         // Agendamento 3 - Cliente 1 com barbeiro (Concluído)
         const appointment3 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2026-01-10T10:00:00Z"),
+                appointment_datetime: new Date("2026-01-10T14:00:00Z"),
                 appointment_status: "CONCLUIDO",
                 id_barber: barber2.user_id,
                 id_client: client1.user_id,
@@ -172,7 +172,7 @@ async function seed() {
         // Agendamento 4 - Cliente 2 com barbeiro (Concluído)
         const appointment4 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2025-12-12T16:00:00Z"),
+                appointment_datetime: new Date("2025-12-12T18:00:00Z"),
                 appointment_status: "CONCLUIDO",
                 id_barber: barber2.user_id,
                 id_client: client2.user_id,
@@ -185,8 +185,8 @@ async function seed() {
         // Agendamento 5 - Agendamento presencial (sem cliente cadastrado)
         const appointment5 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2025-12-16T09:00:00Z"),
-                appointment_status: "PENDENTE",
+                appointment_datetime: new Date("2025-12-16T22:00:00Z"),
+                appointment_status: "CANCELADO",
                 id_barber: barber1.user_id,
                 id_client: null, // Agendamento presencial
                 id_service: serviceCabelo.service_id,
