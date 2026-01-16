@@ -1,13 +1,14 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import Auth from '../components/layout/AuthLayout';
 import AppRouter from '../components/routing/AppRouter';
-import { RequireBarber, RequireClient } from '../components/routing/RouterGuard';
+import { RequireBarber, RequireClient, RequireAdmin } from '../components/routing/RouterGuard';
 import AppLayout from '../components/layout/AppLayout';
 import ClientHomePage from '../pages/client/home';
 import ClientAppointmentsPage from '../pages/client/appointments';
 import BarberHomePage from '../pages/barber/home';
 import BarberAgenda from '../pages/barber/agenda';
 import BarberManualAppointmentPage from '../pages/barber/appointment';
+import AdminHomePage from '../pages/admin/home';
 
 // Router v7
 export const router = createBrowserRouter([
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
     ]
   },
 
+  // Barber 
   {
     path: '/barber',
     element: (
@@ -47,6 +49,20 @@ export const router = createBrowserRouter([
       { path: 'home', element: <BarberHomePage/> },
       { path: 'agenda', element: <BarberAgenda /> },
       { path: 'appointment', element: <BarberManualAppointmentPage /> }
+    ]
+  },
+
+  // Admin
+  {
+    path: '/admin',
+    element: (
+      <RequireAdmin>
+        <AppLayout />
+      </RequireAdmin>
+    ),
+    children: [
+      { index: true, element: <Navigate to="home" replace/> },
+      { path: 'home', element: <AdminHomePage/> }
     ]
   },
 

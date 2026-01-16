@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "../../contexts/auth.context";
 import { Navigate } from "react-router";
-import { useIsClient, useIsBarber } from "../../hooks/useAuth";
+import { useIsClient, useIsBarber, useIsAdmin } from "../../hooks/useAuth";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 
 type ChildrenProps = {
@@ -30,5 +30,14 @@ export function RequireBarber({children}: ChildrenProps){
     if(loading) return <LoadingSpinner />
     if(!user) return <Navigate to="/login" replace />
     if(!isBarber) return <Navigate to="/" replace />
+    return <>{children}</>
+}
+
+export function RequireAdmin({children}: ChildrenProps){
+    const { user, loading } = useAuth();
+    const isAdmin = useIsAdmin();
+    if(loading) return <LoadingSpinner />
+    if(!user) return <Navigate to="/login" replace />
+    if(!isAdmin) return <Navigate to="/" replace />
     return <>{children}</>
 }
