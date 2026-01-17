@@ -35,7 +35,8 @@ model User {
   birthday                  DateTime?         @db.Date
   cpf                       String?           @unique
   role                      Role              @default(CLIENT)
-  photo_url                 String?           
+  photo_url                 String?
+  thumbnail_url             String?                   
   appointmentsAsBarber      Appointment[]     @relation("BarberAppointments")
   appointmentsAsClient      Appointment[]     @relation("ClientAppointments")
 
