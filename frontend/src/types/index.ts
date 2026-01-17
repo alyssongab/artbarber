@@ -34,6 +34,14 @@ export interface RegisterBarberRequest {
   phone_number: string;
 }
 
+export interface BarberResponseDTO {
+  user_id: number,
+  full_name: string,
+  photo_url: string,
+  phone_number: string,
+  thumbnail_url: string
+}
+
 export interface AuthResponse {
     accessToken: string;
     user: User;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service, BarberMenuResponse } from '../types';
+import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service, BarberMenuResponse, BarberResponseDTO } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -100,69 +100,77 @@ export const authService = {
 
 export const appointmentService = {
 
-  getServices: async (): Promise<Service[]> => {
-      const response = await api.get<Service[]>("/services");
+    getServices: async (): Promise<Service[]> => {
+        const response = await api.get<Service[]>("/services");
+        return response.data;
+    },
+
+    getBarbers: async (): Promise<User[]> => {
+        const response = await api.get<User[]>("/users/barbers");
+        return response.data;
+    },
+
+    getAvailableHours: async (input: GetAvailabilityInput): Promise<string[]> => {
+        const response = await api.post<string[]>("/appointments/availability", input);
+        return response.data;
+    },
+
+    createAppointment: async (data: CreateAppointmentRequest): Promise<AppointmentResponse> => {
+      const response = await api.post<AppointmentResponse>("/appointments", data);
       return response.data;
-  },
+    },
 
-  getBarbers: async (): Promise<User[]> => {
-      const response = await api.get<User[]>("/users/barbers");
+    getRelatedAppointments: async(page: number, limit: number, date?: string): Promise<RelatedAppointmentsResponse> => {
+      const params = new URLSearchParams({
+        _page: String(page),
+        _limit: String(limit),
+      });
+
+      if(date) params.append('_date', date); // yyyy-mm-dd
+
+      const myAppointments = await api.get<RelatedAppointmentsResponse>(`/appointments?${params.toString()}`);
+      return myAppointments.data;
+    },
+
+    cancelAppointment: async (appointmentId: number): Promise<AppointmentResponse> => {
+      const response = await api.patch<AppointmentResponse>(
+        `/appointments/${appointmentId}`,
+        { appointment_status: 'CANCELADO' }
+      );
       return response.data;
-  },
+    },
 
-  getAvailableHours: async (input: GetAvailabilityInput): Promise<string[]> => {
-      const response = await api.post<string[]>("/appointments/availability", input);
+    updateAppointmentStatus: async (appointmentId: number, status: string): Promise<AppointmentResponse> => {
+      const response = await api.patch<AppointmentResponse>(
+        `/appointments/${appointmentId}`,
+        { appointment_status: status }
+      );
       return response.data;
-  },
+    },
 
-  createAppointment: async (data: CreateAppointmentRequest): Promise<AppointmentResponse> => {
-    const response = await api.post<AppointmentResponse>("/appointments", data);
-    return response.data;
-  },
+    getBarberRevenue: async (userId: number, selectedDate: string): Promise<BarberMenuResponse> => {
+      const response = await api.post<BarberMenuResponse>(
+        `/appointments/barber/revenue/${userId}`,
+        { selected_date: selectedDate }
+      );
 
-  getRelatedAppointments: async(page: number, limit: number, date?: string): Promise<RelatedAppointmentsResponse> => {
-    const params = new URLSearchParams({
-      _page: String(page),
-      _limit: String(limit),
-    });
+      return response.data;
+    },
 
-    if(date) params.append('_date', date); // yyyy-mm-dd
+    searchAppointmentsByClientName: async (barberId: number, clientName: string): Promise<AppointmentResponse[]> => {
+      const response = await api.get<AppointmentResponse[]>(
+        `/appointments/barber/${barberId}/search`,
+        { params: { clientName } }
+      );
+      return response.data;
+    }
 
-    const myAppointments = await api.get<RelatedAppointmentsResponse>(`/appointments?${params.toString()}`);
-    return myAppointments.data;
-  },
-
-  cancelAppointment: async (appointmentId: number): Promise<AppointmentResponse> => {
-    const response = await api.patch<AppointmentResponse>(
-      `/appointments/${appointmentId}`,
-      { appointment_status: 'CANCELADO' }
-    );
-    return response.data;
-  },
-
-  updateAppointmentStatus: async (appointmentId: number, status: string): Promise<AppointmentResponse> => {
-    const response = await api.patch<AppointmentResponse>(
-      `/appointments/${appointmentId}`,
-      { appointment_status: status }
-    );
-    return response.data;
-  },
-
-  getBarberRevenue: async (userId: number, selectedDate: string): Promise<BarberMenuResponse> => {
-    const response = await api.post<BarberMenuResponse>(
-      `/appointments/barber/revenue/${userId}`,
-      { selected_date: selectedDate }
-    );
-
-    return response.data;
-  },
-
-  searchAppointmentsByClientName: async (barberId: number, clientName: string): Promise<AppointmentResponse[]> => {
-    const response = await api.get<AppointmentResponse[]>(
-      `/appointments/barber/${barberId}/search`,
-      { params: { clientName } }
-    );
-    return response.data;
   }
 
+export const userService = {
+    
+  getAllBarbers: async(): Promise<BarberResponseDTO[]> => {
+    const response = await api.get<BarberResponseDTO[]>('/users/barbers');
+    return response.data;
+  }
 }
