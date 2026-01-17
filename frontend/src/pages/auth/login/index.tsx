@@ -23,10 +23,8 @@ function Login(){
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data);
-      // After sucessfully logged in, AppRouter will decide the destiny based on role
       navigate('/');
     } catch (error: any) {
-      // Error is already handled on context with toast
       console.error('Erro no login:', error);
       if(error.response?.status === 401){
         setError('root', {
