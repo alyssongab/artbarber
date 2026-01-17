@@ -20,6 +20,7 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { LoadingSpinner } from "../../../components/common/LoadingSpinner";
 
 export default function AdminBarbersPage() {
 
@@ -38,6 +39,7 @@ export default function AdminBarbersPage() {
     useEffect(() => { fetchBarbers() }, []);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         full_name: '',
@@ -88,6 +90,7 @@ export default function AdminBarbersPage() {
     };
 
     const handleSubmit = async () => {
+        setIsSubmitting(true);
         try {
             const submitData = new FormData();
             submitData.append('full_name', formData.full_name);
@@ -111,6 +114,8 @@ export default function AdminBarbersPage() {
             fetchBarbers();
         } catch (error) {
             console.error('Erro ao criar barbeiro:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -149,7 +154,12 @@ export default function AdminBarbersPage() {
                             Preencha os dados do novo barbeiro. Clique em salvar quando terminar.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    
+                    {isSubmitting ? (
+                        <LoadingSpinner message="Criando barbeiro..." fullScreen={false} />
+                    ) : (
+                        <>
+                            <div className="grid gap-4 py-4">
                         {/* Photo field with preview */}
                         <div className="flex flex-col items-center gap-4 py-2">
                             <div className="relative">
@@ -248,13 +258,15 @@ export default function AdminBarbersPage() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => handleCloseModal(false)}>
+                        <Button variant="outline" onClick={() => handleCloseModal(false)} disabled={isSubmitting}>
                             Cancelar
                         </Button>
-                        <Button onClick={handleSubmit}>
+                        <Button onClick={handleSubmit} disabled={isSubmitting}>
                             Salvar
                         </Button>
                     </div>
+                    </>
+                    )}
                 </DialogContent>
             </Dialog>
 
