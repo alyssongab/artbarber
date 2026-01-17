@@ -172,5 +172,14 @@ export const userService = {
   getAllBarbers: async(): Promise<BarberResponseDTO[]> => {
     const response = await api.get<BarberResponseDTO[]>('/users/barbers');
     return response.data;
+  },
+
+  createBarber: async (data: FormData): Promise<BarberResponseDTO> => {
+    const response = await api.post<BarberResponseDTO>('/users/barber', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   }
 }
