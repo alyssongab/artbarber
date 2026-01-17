@@ -24,7 +24,7 @@ export class ServicesController{
             const newService = await this.servicesService.createService(serviceData);
             return res.status(201).json(newService);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
@@ -34,18 +34,18 @@ export class ServicesController{
             const services = await this.servicesService.getServices();
             return res.status(200).json(services);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
 
-    gerService = async (req: Request, res: Response, next: NextFunction) => {
+    getService = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const serviceId = parseInt(req.params.id!);
             const service = await this.servicesService.getService(serviceId);
             return res.status(200).json(service);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
@@ -58,7 +58,7 @@ export class ServicesController{
             
             return res.status(200).json(updatedService);
         }
-        catch(error){
+        catch(error: any){
             next(error);
         }
     }
@@ -70,6 +70,16 @@ export class ServicesController{
             return res.status(204).send();
         }
         catch(error){
+            next(error);
+        }
+    }
+
+    getActiveServices = async(req: Request, res: Response, next: NextFunction) => {
+        try{
+            const activeServices = await this.servicesService.getActiveServices();
+            return res.status(200).json(activeServices);
+        }
+        catch(error: any) {
             next(error);
         }
     }

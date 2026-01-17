@@ -24,6 +24,10 @@ export class ServicesService {
         return await this.serviceRepository.findAll();
     }
 
+    async getActiveServices(): Promise<Service[]> {
+        return await this.serviceRepository.findAllActive();
+    }
+
     async getService(serviceId: number): Promise<Service | null> {
         const service = await this.serviceRepository.findById(serviceId);
         if(!service) throw new NotFoundError("Serviço não encontrado");

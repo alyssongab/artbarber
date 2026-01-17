@@ -32,6 +32,14 @@ export class ServiceRepository {
         return await prismaClient.service.findMany();
     }
 
+    async findAllActive(): Promise<Service[]> {
+        return await prismaClient.service.findMany({
+            where: {
+                service_status: 'ACTIVE'
+            }
+        })
+    }
+
     /**
      * Find unique service
      * @param serviceId 

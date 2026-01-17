@@ -11,6 +11,8 @@ servicesRouter.post('/', authenticate, authorize('ADMIN'), servicesController.cr
 
 servicesRouter.get('/', authenticate, servicesController.getServices);
 
+servicesRouter.get('/active', authenticate, servicesController.getActiveServices);
+
 servicesRouter.put('/:id', validateId, authenticate, authorize('ADMIN'), servicesController.updateService);
 
 servicesRouter.delete('/:id', validateId, authenticate, authorize('ADMIN'), servicesController.deleteService);

@@ -15,7 +15,8 @@ export const updateServiceSchema = z.strictObject({
         .optional(),
     duration: z.number("Duração inválida")
         .min(15, "Duração deve ter pelo menos 15 minutos")
-        .optional()
+        .optional(),
+    service_status: z.enum(['ACTIVE', 'INACTIVE'], "Valor inválido").optional()
 });
 
 export type UpdateServiceDTO = z.infer<typeof updateServiceSchema>;
