@@ -40,6 +40,9 @@ export default function AdminBarbersPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [barberToDelete, setBarberToDelete] = useState<BarberResponseDTO | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         full_name: '',
@@ -116,6 +119,27 @@ export default function AdminBarbersPage() {
             console.error('Erro ao criar barbeiro:', error);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleOpenDeleteModal = (barber: BarberResponseDTO) => {
+        setBarberToDelete(barber);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteBarber = async () => {
+        if (!barberToDelete) return;
+        
+        setIsDeleting(true);
+        try {
+            await userService.deleteBarber(barberToDelete.user_id);
+            setIsDeleteModalOpen(false);
+            setBarberToDelete(null);
+            fetchBarbers();
+        } catch (error) {
+            console.error('Erro ao deletar barbeiro:', error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -291,16 +315,55 @@ export default function AdminBarbersPage() {
                             </div>
                         </div>
                         <div className="flex flex-row gap-2 p-3 sm:p-4" >
-                            <button className="cursor-pointer" title="Editar">
+                            {/* <button className="cursor-pointer" title="Editar">
                                 <SquarePen color="blue"/>
-                            </button>
-                            <button className="cursor-pointer" title="Remover">
+                            </button> */}
+                            <button 
+                                className="cursor-pointer hover:opacity-70 transition-opacity" 
+                                title="Remover"
+                                onClick={() => handleOpenDeleteModal(barber)}
+                            >
                                 <Trash2 color="#D10000"/>
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* Modal de Confirmação de Deleção */}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Confirmar Deleção</DialogTitle>
+                        <DialogDescription>
+                            Tem certeza que deseja deletar o barbeiro <strong>{barberToDelete?.full_name}</strong>?
+                            Esta ação não pode ser desfeita.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {isDeleting ? (
+                        <LoadingSpinner message="Deletando barbeiro..." fullScreen={false} />
+                    ) : (
+                        <div className="flex justify-end gap-2 pt-4">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={isDeleting}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button 
+                                variant="destructive" 
+                                onClick={handleDeleteBarber}
+                                disabled={isDeleting}
+                                className="bg-red-600 hover:bg-red-700"
+                            >
+                                Deletar
+                            </Button>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

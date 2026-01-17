@@ -181,5 +181,9 @@ export const userService = {
       },
     });
     return response.data;
+  },
+
+  deleteBarber: async (barberId: number): Promise<void> => {
+    await api.delete(`/users/${barberId}`);
   }
 }
