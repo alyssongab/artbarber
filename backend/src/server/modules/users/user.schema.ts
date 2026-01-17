@@ -40,13 +40,16 @@ export const userResponseSchema = z.strictObject({
     phone_number: z.string(),
     birthday: z.date().nullable(),
     role: z.string(),
-    photo_url: z.string().nullable()
+    photo_url: z.string().nullable(),
+    thumbnail_url: z.string().nullable()
 }, "Chave desconhecida");
 
 export const barberResponseSchema = z.strictObject({
     user_id: z.int(),
     full_name: z.string(),
-    photo_url: z.string().nullable()
+    photo_url: z.string().nullable(),
+    phone_number: z.string(),
+    thumbnail_url: z.string().nullable()
 }, "Chave desconhecida");
 
 export type CreateClientDTO = z.infer<typeof createClientSchema>;

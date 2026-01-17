@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { removeUndefined } from "../../shared/utils/object.utils.ts";
 import { NotFoundError, ConflictError, BadRequestError, UnauthorizedError, ForbiddenError} from "../../shared/errors/http.errors.ts";
+import cloudinary from "../../shared/config/cloudinary.ts";
 
 type Actor = {
     user_id: number,
@@ -33,7 +34,8 @@ export class UserService {
             phone_number: user.phone_number,
             birthday: user.birthday,
             role: user.role,
-            photo_url: user.photo_url
+            photo_url: user.photo_url,
+            thumbnail_url: user.thumbnail_url
         }
     }
 
@@ -41,7 +43,9 @@ export class UserService {
         return{
             user_id: user.user_id,
             full_name: user.full_name,
-            photo_url: user.photo_url
+            photo_url: user.photo_url,
+            phone_number: user.phone_number,
+            thumbnail_url: user.thumbnail_url
         }
     }
 
@@ -69,20 +73,51 @@ export class UserService {
     /**
      * Create new barber
      * @param data 
+     * @param photoBuffer image bytes
      */
-    async createBarber(data: CreateBarberDTO, filename: string): Promise<UserResponseDTO> {
+    async createBarber(data: CreateBarberDTO, photoBuffer: Buffer): Promise<UserResponseDTO> {
         const barberExists = await this.userRepository.findByEmail(data.email);
         if(barberExists) throw new ConflictError("Usuário com esse email já existe.");
 
         const salt = 10;
         const hashedPassword = await bcrypt.hash(data.password, salt);
 
-        const photoUrl = `uploads/${filename}`;
+        // upload into cloudinary
+        const uploadResult = await new Promise<any>((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream({
+                folder: 'barbers',
+                public_id: `barber_${Date.now()}`,
+                transformation: [
+                    { width: 300, height: 300, crop: 'fill', gravity: 'face' },
+                    { fetch_format: 'auto', quality: 'auto' }
+                ],
+            }, (error, result) => {
+                if (error) {
+                    reject(new BadRequestError("Erro no upload da imagem: " + error.message));
+                } else {
+                    resolve(result);
+                }
+            });
+            uploadStream.end(photoBuffer); 
+        });
+
+        const photoUrl = uploadResult.secure_url;
+
+        // generates thumbnail
+        const thumbnailUrl = cloudinary.url(uploadResult.public_id, {
+            crop: 'auto',
+            gravity: 'auto',
+            width: 150,
+            height: 150,
+            fetch_format: 'auto',
+            quality: 'auto'
+        });
 
         const newBarber = await this.userRepository.create({
             ...data,
             password: hashedPassword,
             photo_url: photoUrl,
+            thumbnail_url: thumbnailUrl,  
             role: 'BARBER'
         });
 
@@ -165,6 +200,10 @@ export class UserService {
         return users.map(user => this.toUserResponseDTO(user));
     }
 
+    /**
+     * List all barbers
+     * @returns BarberResponseDTO[]
+     */
     async listBarbers(): Promise<BarberResponseDTO[]> {
         const barbers = await this.userRepository.findAllBarbers();
         return barbers.map(barber => this.toBarberResponseDTO(barber));

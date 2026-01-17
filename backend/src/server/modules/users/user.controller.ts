@@ -38,28 +38,22 @@ export class UserController{
      * @returns 
      */
     createBarber = async (req: Request, res: Response, next: NextFunction) => {
-        try{
-
-            // validate file (photo)
-            if(!req.file){
-                return res.status(400).json({ message: "A foto do barbeiro é obrigatória" });
+        try {
+            if (!req.file) {
+                return res.status(400).json({ message: "A foto do barbeiro é obrigatória." });
             }
 
-            // validate file format
-            const allowedMimeTypes = ["image/jpg", "image/jpeg", "image/png"];
-            if(!allowedMimeTypes.includes(req.file.mimetype)){
-                return res.status(400).json({ message: "Formato de arquivo inválido. Use JPEG, JPG ou PNG." });
-            }
+            // extract the photo
+            const { photo, ...barberData } = req.body;
+            const parsedData = createClientSchema.parse(barberData);
 
-            const barberData = createClientSchema.parse(req.body);
-            const newBarber = await this.userService.createBarber(barberData, req.file.filename);
+            const newBarber = await this.userService.createBarber(parsedData, req.file.buffer);
 
             return res.status(201).json(newBarber);
-        }
-        catch(error){
+        } catch (error) {
             next(error);
         }
-    }
+    };
 
 
     /**
