@@ -26,6 +26,11 @@ enum AppointmentStatus {
   CANCELADO
 }
 
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   user_id                   Int               @id @default(autoincrement())
   full_name                 String
@@ -43,11 +48,12 @@ model User {
   @@map("usuarios")
 }
 model Service {
-  service_id      Int       @id @default(autoincrement())
-  name            String    
-  price           Decimal   @db.Decimal(10,2)
-  duration        Int
-  appointments    Appointment[]
+  service_id          Int             @id @default(autoincrement())
+  name                String    
+  price               Decimal         @db.Decimal(10,2)
+  duration            Int
+  service_status      ServiceStatus   @default(ACTIVE)
+  appointments        Appointment[]
 
   @@map("servicos")
 }
