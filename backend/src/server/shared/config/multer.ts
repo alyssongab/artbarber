@@ -1,27 +1,16 @@
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+// memory storage to keep file in buffer
 export const upload = multer({
-    storage: multer.diskStorage({
-        destination: path.join(__dirname, "..", "uploads"),
-        filename(req, file, callback) {
-            callback(null, `${Date.now()}-${file.originalname}`);
-        },
-    }),
+    storage: multer.memoryStorage(),
     limits: {
-        fileSize: 8 * 1024 * 1024
+        fileSize: 8 * 1024 * 1024  // 8MB
     },
     fileFilter: (req, file, callback) => {
         const mimeType = ["image/jpg", "image/jpeg", "image/png"];
-
-        if(!mimeType.includes(file.mimetype)){
+        if (!mimeType.includes(file.mimetype)) {
             return callback(null, false);
         }
-        callback(null, true) ;
+        callback(null, true);
     },
 });
