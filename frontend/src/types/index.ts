@@ -84,6 +84,20 @@ export interface Service {
     name: string;
     price: number;
     duration: number;
+    service_status: 'ACTIVE' | 'INACTIVE';
+}
+
+export interface ServiceRequestDTO {
+  name: string,
+  price: number,
+  duration: number
+}
+
+export interface UpdateServiceDTO {
+  name?: string,
+  price?: number,
+  duration?: number,
+  service_status?: 'ACTIVE' | 'INACTIVE'
 }
 
 export interface ServiceResponseDTO {

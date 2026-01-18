@@ -1,5 +1,18 @@
 import axios from 'axios';
-import { User, LoginRequest, RegisterClientRequest, AuthResponse, GetAvailabilityInput, CreateAppointmentRequest, RelatedAppointmentsResponse, AppointmentResponse, Service, BarberMenuResponse, BarberResponseDTO } from '../types';
+import { User, 
+  LoginRequest, 
+  RegisterClientRequest, 
+  AuthResponse, 
+  GetAvailabilityInput, 
+  CreateAppointmentRequest, 
+  RelatedAppointmentsResponse, 
+  AppointmentResponse, 
+  Service, 
+  BarberMenuResponse, 
+  BarberResponseDTO,
+  ServiceRequestDTO, 
+  UpdateServiceDTO
+} from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -101,7 +114,7 @@ export const authService = {
 export const appointmentService = {
 
     getServices: async (): Promise<Service[]> => {
-        const response = await api.get<Service[]>("/services");
+        const response = await api.get<Service[]>("/services/active");
         return response.data;
     },
 
@@ -186,4 +199,27 @@ export const userService = {
   deleteBarber: async (barberId: number): Promise<void> => {
     await api.delete(`/users/${barberId}`);
   }
+}
+
+export const servicesService = {
+
+    getAllServices: async(): Promise<Service[]> => {
+      const response = await api.get<Service[]>("/services");
+      return response.data;
+    },
+
+    createService: async(data: ServiceRequestDTO): Promise<Service> => {
+      const response = await api.post<Service>("/services", data);
+      return response.data;
+    },
+
+    updateService: async(id: number, data: UpdateServiceDTO): Promise<Service> => {
+      const response = await api.put<Service>(`/services/${id}`, data);
+      return response.data;
+    },
+
+    deleteService: async(id: number): Promise<number> => {
+      const response = await api.delete(`/services/${id}`);
+      return response.status;
+    }
 }
