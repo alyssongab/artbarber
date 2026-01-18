@@ -99,3 +99,41 @@
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
   };
+
+  /**
+   * Convert minutes into hours
+   * @param minutes service duration in minutes
+   * @returns duration in ptbr hour-minute format or only minutes
+   */
+  export const formatDuration = (minutes: number) => {
+      if (minutes < 60) {
+          return `${minutes} min`;
+      }
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  };
+
+  export const formatServiceStatus = (status: 'ACTIVE' | 'INACTIVE') => {
+    const statusConfig = {
+      ACTIVE: {
+        label: 'Ativo',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-950',
+        borderColor: 'border-green-500',
+      },
+      INACTIVE: {
+        label: 'Inativo',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-950',
+        borderColor: 'border-red-500',
+      },
+    };
+
+    const config = statusConfig[status];
+    
+    return {
+      label: config.label,
+      className: `${config.bgColor} ${config.textColor} ${config.borderColor} max-w-[80px] text-center font-semibold border px-2 py-1 rounded-md text-sm inline-block`,
+    };
+  };
