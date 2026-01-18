@@ -4,7 +4,7 @@ import { BarberResponseDTO } from "../../../types";
 import { Link } from "react-router";
 import { 
     ArrowLeft, 
-    SquarePen, 
+    // SquarePen, 
     Trash2, 
     Plus, 
     User, 
@@ -184,7 +184,7 @@ export default function AdminBarbersPage() {
                     ) : (
                         <>
                             <div className="grid gap-4 py-4">
-                        {/* Photo field with preview */}
+                        {/* photo field with preview */}
                         <div className="flex flex-col items-center gap-4 py-2">
                             <div className="relative">
                                 <div className="w-64 h-64 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
@@ -330,7 +330,7 @@ export default function AdminBarbersPage() {
                 ))}
             </div>
 
-            {/* Modal de Confirmação de Deleção */}
+            {/* deletion confirmation modal */}
             <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
