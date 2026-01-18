@@ -7,8 +7,8 @@ export class ServicesController{
 
     private servicesService: ServicesService;
 
-    constructor(){
-        this.servicesService = new ServicesService();
+    constructor(servicesService: ServicesService){
+        this.servicesService = servicesService;
     }
 
     /**

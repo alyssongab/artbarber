@@ -9,9 +9,8 @@ import { appointmentUtils } from "../../shared/utils/appointment.utils.ts";
 export class AppointmentService {
     private appointmentRepository: AppointmentRepository;
 
-    constructor(){
-        this.appointmentRepository = new AppointmentRepository();
-
+    constructor(appointmentRepository: AppointmentRepository){
+        this.appointmentRepository = appointmentRepository;
     }
 
     /**

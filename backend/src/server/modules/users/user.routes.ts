@@ -4,11 +4,14 @@ import { upload } from '../../shared/config/multer.ts';
 import { validateId } from "../../shared/middlewares/id.validation.ts";
 import { authenticate } from "../../shared/middlewares/jwt.authentication.ts";
 import { authorize } from "../../shared/middlewares/role.authorization.ts";
+import { UserRepository } from "./user.repository.ts";
+import { UserService } from "./user.service.ts";
 
-const userController = new UserController();
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
+const userController = new UserController(userService);
+
 const usersRouter = Router();
-
-// Route ('/users')
 
 // ----- PUBLIC ROUTES (NO JWT) -----
 usersRouter.post('/client', userController.createClient);

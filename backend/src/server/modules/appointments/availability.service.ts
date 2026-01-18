@@ -8,9 +8,11 @@ export class AvailabilityService {
     private appointmentRepository: AppointmentRepository;
     private userRepository: UserRepository;
 
-    constructor(){
-        this.appointmentRepository = new AppointmentRepository();
-        this.userRepository = new UserRepository();
+    constructor(appointmentRepository: AppointmentRepository,
+                userRepository: UserRepository
+    ){
+        this.appointmentRepository = appointmentRepository;
+        this.userRepository = userRepository;
     }
 
     async getAvailableHours(input: GetAvailabilityInput): Promise<string[]> {

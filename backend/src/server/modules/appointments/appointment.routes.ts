@@ -3,8 +3,18 @@ import { AppointmentController } from "./appointment.controller.ts";
 import { validateId } from "../../shared/middlewares/id.validation.ts";
 import { authenticate } from "../../shared/middlewares/jwt.authentication.ts";
 import { authorize } from "../../shared/middlewares/role.authorization.ts";
+import { AppointmentRepository } from "./appointments.repository.ts";
+import { AppointmentService } from "./appointments.service.ts";
+import AvailabilityService from "./availability.service.ts";
+import { UserRepository } from "../users/user.repository.ts";
 
-const appointmentController = new AppointmentController();
+const userRepository = new UserRepository();
+const appointmentRepository = new AppointmentRepository();
+const appointmentService = new AppointmentService(appointmentRepository);
+const availabilityService = new AvailabilityService(appointmentRepository, userRepository);
+const appointmentController = new AppointmentController(appointmentService, availabilityService);
+
+
 const appointmentsRouter = Router();
 
 // create appointment endpoint
@@ -17,10 +27,10 @@ appointmentsRouter.get('/all', authenticate, authorize('BARBER', 'ADMIN'), appoi
 appointmentsRouter.get('/', authenticate, appointmentController.getRelatedAppointments);
 
 // get upcoming appointments for client
-appointmentsRouter.get('/upcoming', authenticate, authorize('CLIENT'), appointmentController.getUpcomingAppointments);
+// appointmentsRouter.get('/upcoming', authenticate, authorize('CLIENT'), appointmentController.getUpcomingAppointments);
 
 // get past appointments for client
-appointmentsRouter.get('/past', authenticate, authorize('CLIENT'), appointmentController.getPastAppointments);
+// appointmentsRouter.get('/past', authenticate, authorize('CLIENT'), appointmentController.getPastAppointments);
 
 // get available hours to schedule
 appointmentsRouter.post('/availability', authenticate, appointmentController.getAvailableHours);

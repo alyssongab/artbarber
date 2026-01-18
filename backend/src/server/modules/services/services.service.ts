@@ -9,9 +9,11 @@ export class ServicesService {
     private serviceRepository: ServiceRepository;
     private appointmentRepository: AppointmentRepository;
 
-    constructor(){
-        this.serviceRepository = new ServiceRepository();
-        this.appointmentRepository = new AppointmentRepository();
+    constructor(serviceRepository: ServiceRepository,
+            appointmentRepository: AppointmentRepository
+    ){
+        this.serviceRepository = serviceRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     async createService(data: InputServiceDTO): Promise<Service> {

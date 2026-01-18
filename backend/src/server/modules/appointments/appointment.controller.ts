@@ -7,9 +7,11 @@ export class AppointmentController {
     private appointmentService: AppointmentService
     private availabilityService: AvailabilityService;
 
-    constructor(){
-        this.appointmentService = new AppointmentService();
-        this.availabilityService = new AvailabilityService();
+    constructor(appointmentService: AppointmentService, 
+                availabilityService: AvailabilityService)
+    {
+        this.appointmentService = appointmentService;
+        this.availabilityService = availabilityService;
     }
 
     createAppointment = async (req: Request, res: Response, next: NextFunction) => {
