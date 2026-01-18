@@ -12,10 +12,12 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Fragment, useEffect, useState } from "react";
-import type { CreateAppointmentRequest, Service, User, AppointmentResponse } from "../../../types";
+import type { CreateAppointmentRequest, Service, AppointmentResponse, BarberResponseDTO } from "../../../types";
 import { appointmentService, authService } from "../../../services/api";
 import AppointmentSuccessDialog from "../../../components/features/appointments/AppointmentSuccessDialog";
 import AppointmentErrorDialog from "../../../components/features/appointments/AppointmentErrorDialog";
+import BarberSelectionModal from "../../../components/features/appointments/BarberSelectionModal";
+import BarberSelector from "../../../components/features/appointments/BarberSelector";
 import { filterValidTimes } from "../../../utils/filters";
 import { combineDateTimeToISO } from "../../../utils/helpers";
 
@@ -36,7 +38,7 @@ function LinkCard({ to, title, children }: { to: string; title: string; children
 function ClientHomePage() {
 
   const [services, setServices] = useState<Service[]>([]);
-  const [barbers, setBarbers] = useState<User[]>([]);
+  const [barbers, setBarbers] = useState<BarberResponseDTO[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTimes, setLoadingTimes] = useState(false);  
@@ -52,6 +54,7 @@ function ClientHomePage() {
   // Dialogs
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [showBarberModal, setShowBarberModal] = useState(false);
   const [createdAppointment, setCreatedAppointment] = useState<AppointmentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -205,11 +208,8 @@ function ClientHomePage() {
     label: `${service.name} - R$ ${service.price} (${service.duration}min)`
   }));
 
-  // Transform barbers from API into SelectField format
-  const barberItems = barbers.map(barber => ({
-    value: barber.user_id.toString(),
-    label: barber.full_name
-  }));
+  // Get selected barber object
+  const selectedBarberObj = barbers.find(b => b.user_id.toString() === selectedBarber) || null;
 
   // Generate next 7 days dynamically, skipping Sundays
   const dateItems = (() => {
@@ -302,23 +302,12 @@ function ClientHomePage() {
                 {/* Step 2 - Barber */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor="barber" className="pl-1">Barbeiro</label>
-                  <Select 
-                    value={selectedBarber} 
-                    onValueChange={setSelectedBarber}
+                  <BarberSelector
+                    selectedBarber={selectedBarberObj}
+                    onClick={() => setShowBarberModal(true)}
                     disabled={!selectedService}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={!selectedService ? "Selecione o serviço primeiro" : "Selecione o barbeiro"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Barbeiro</SelectLabel>
-                        {barberItems.map((it) => (
-                          <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    placeholder={!selectedService ? "Selecione o serviço primeiro" : "Selecione o barbeiro"}
+                  />
                 </div>
 
                 {/* Step 3 - Date */}
@@ -404,7 +393,17 @@ function ClientHomePage() {
         open={showErrorDialog}
         onClose={() => setShowErrorDialog(false)}
         message={errorMessage}
-      />   
+      />
+
+      {/* Barber Selection Modal */}
+      <BarberSelectionModal
+        isOpen={showBarberModal}
+        onClose={() => setShowBarberModal(false)}
+        barbers={barbers}
+        selectedBarberId={selectedBarber}
+        onSelectBarber={setSelectedBarber}
+        disabled={!selectedService}
+      />
 
     </Fragment>
   );

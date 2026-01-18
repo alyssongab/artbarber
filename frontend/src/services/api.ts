@@ -118,8 +118,8 @@ export const appointmentService = {
         return response.data;
     },
 
-    getBarbers: async (): Promise<User[]> => {
-        const response = await api.get<User[]>("/users/barbers");
+    getBarbers: async (): Promise<BarberResponseDTO[]> => {
+        const response = await api.get<BarberResponseDTO[]>("/users/barbers");
         return response.data;
     },
 
