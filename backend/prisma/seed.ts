@@ -1,6 +1,14 @@
 import prismaClient from "../src/server/shared/config/prisma";
 import bcrypt from "bcrypt";
 
+const TOMORROW = new Date();
+TOMORROW.setDate(TOMORROW.getDate() + 1);
+TOMORROW.setHours(14, 30, 0, 0);
+
+const AFTER_TOMORROW = new Date();
+AFTER_TOMORROW.setDate(AFTER_TOMORROW.getDate() + 2);
+AFTER_TOMORROW.setHours(15, 30, 0, 0); 
+
 /**
  * Database seeding for development
  * 
@@ -136,12 +144,22 @@ async function seed() {
         });
         console.log(`   ✓ Serviço criado: ${serviceCombo.name} - R$ ${serviceCombo.price}\n`);
 
+        const serviceLuzes = await prismaClient.service.create({
+            data: {
+                name: "Luzes",
+                price: 150,
+                duration: 120,
+                service_status: 'INACTIVE'
+            }
+        });
+        console.log(`   ✓ Serviço criado: ${serviceLuzes.name} - R$ ${serviceLuzes.price}\n`);
+
         // ==================== CREATE APPOINTMENTS ====================
         console.log("📅 Criando agendamentos...");
 
         const appointment1 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2026-01-19T14:30:00Z"),
+                appointment_datetime: TOMORROW,
                 appointment_status: "PENDENTE",
                 id_barber: barber1.user_id,
                 id_client: client1.user_id,
@@ -153,7 +171,7 @@ async function seed() {
 
         const appointment2 = await prismaClient.appointment.create({
             data: {
-                appointment_datetime: new Date("2026-01-20T15:30:00Z"),
+                appointment_datetime: AFTER_TOMORROW,
                 appointment_status: "PENDENTE",
                 id_barber: barber1.user_id,
                 id_client: client2.user_id,
