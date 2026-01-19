@@ -1,0 +1,91 @@
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16
+    container_name: artbarber-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-barber_ar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barber_123}
+      POSTGRES_DB: ${POSTGRES_DB:-barbearia_db_upgraded}
+    ports:
+      - '5430:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - artbarber-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-barber_ar} -d ${POSTGRES_DB:-barbearia_db_upgraded}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: artbarber-backend
+    restart: unless-stopped
+    ports:
+      - '${PORT_BACKEND:-3030}:${PORT_BACKEND:-3030}'
+    environment:
+      NODE_ENV: production
+      PORT_BACKEND: ${PORT_BACKEND:-3030}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-barber_ar}:${POSTGRES_PASSWORD:-barber_123}@postgres:5432/${POSTGRES_DB:-barbearia_db_upgraded}
+      JWT_SECRET: ${JWT_SECRET}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_WHATSAPP_NUMBER: ${TWILIO_WHATSAPP_NUMBER}
+      TWILIO_TEMPLATE_SID: ${TWILIO_TEMPLATE_SID}
+      NOTIFICATIONS_ENABLED: ${NOTIFICATIONS_ENABLED:-false}
+      API_URL: ${API_URL:-http://localhost:4000}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - artbarber-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: >
+      sh -c "
+        echo '🔄 Aguardando PostgreSQL estar pronto...' &&
+        sleep 5 &&
+        echo '📦 Gerando Prisma Client...' &&
+        npx prisma generate &&
+        echo '🔄 Rodando migrations...' &&
+        npx prisma migrate deploy &&
+        echo '🌱 Executando seed...' &&
+        npx prisma db seed || echo '⚠️ Seed já executado ou falhou' &&
+        echo '🚀 Iniciando servidor...' &&
+        yarn dev
+      "
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:${PORT_BACKEND:-3030}/api
+    container_name: artbarber-frontend
+    restart: unless-stopped
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+    networks:
+      - artbarber-network
+
+networks:
+  artbarber-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
