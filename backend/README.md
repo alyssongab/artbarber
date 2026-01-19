@@ -880,6 +880,26 @@ GET /api/appointments/barber/2/search?clientName=João
 
 Sistema de notificações via WhatsApp integrado com Twilio.
 
+### 🔔 Como Funciona o Sistema de Notificações
+
+O sistema utiliza **agendamento baseado em eventos** (event-driven scheduling) em vez de polling:
+
+1. **Ao criar agendamento**: Sistema calcula horário da notificação (15min antes) e agenda um `setTimeout`
+2. **15 minutos antes**: Envia mensagem WhatsApp via Twilio automaticamente
+3. **Twilio processa**: Envia mensagem ao cliente
+4. **Webhook confirma**: Twilio notifica o sistema sobre status de entrega (delivered, read, failed)
+5. **Sistema atualiza**: Marca `notification_sent = true` quando confirmado
+
+**Vantagens desta abordagem:**
+- ⚡ Execução apenas quando necessário (vs. polling a cada 15-20s)
+- 🎯 Precisão de segundos (vs. janela de 1 minuto)
+- 🚀 Zero carga no banco para verificações
+- 📈 Escalável para milhares de agendamentos
+
+**Persistência:** Sistema recarrega notificações pendentes ao reiniciar.
+
+---
+
 ### **POST** `/api/notifications/status-webhook` 🔓 Público (Twilio)
 Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio.
 
@@ -943,22 +963,7 @@ Permite testar manualmente o fluxo de processamento de webhook.
 
 ### Diagrama ER (Resumido)
 
-```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│      User       │       │  Appointment    │       │    Service      │
-├─────────────────┤       ├─────────────────┤       ├─────────────────┤
-│ user_id (PK)    │◄─┐    │ appointment_id  │    ┌─►│ service_id (PK) │
-│ full_name       │  │    │ appointment_dt  │    │  │ name            │
-│ email (UNIQUE)  │  └────┤ id_barber (FK)  │    │  │ price           │
-│ password        │  ┌────┤ id_client (FK)  │    │  │ duration        │
-│ phone_number    │  │    │ id_service (FK) ├────┘  │ service_status  │
-│ birthday        │  │    │ status          │       └─────────────────┘
-│ cpf (UNIQUE)    │  │    │ notification_   │
-│ role (ENUM)     │◄─┘    │   sent          │
-│ photo_url       │       └─────────────────┘
-│ thumbnail_url   │
-└─────────────────┘
-```
+![diagram](../screens/er_diagram.png)
 
 ### Tabela: `User` (usuarios)
 
@@ -998,24 +1003,28 @@ Permite testar manualmente o fluxo de processamento de webhook.
 
 ### Tabela: `Appointment` (agendamentos)
 
-| Campo                | Tipo     | Descrição                           | Restrições                      |
-|----------------------|----------|-------------------------------------|---------------------------------|
-| appointment_id       | INT      | ID único do agendamento             | PK, AUTO_INCREMENT              |
-| appointment_datetime | DATETIME | Data e hora do agendamento          | NOT NULL                        |
-| appointment_status   | ENUM     | PENDENTE, CONCLUIDO, CANCELADO      | NOT NULL, DEFAULT PENDENTE      |
-| id_barber            | INT      | ID do barbeiro                      | FK → User(user_id), NOT NULL    |
-| id_client            | INT      | ID do cliente                       | FK → User(user_id), NULLABLE    |
-| id_service           | INT      | ID do serviço                       | FK → Service(service_id), NOT NULL |
-| notification_sent    | BOOLEAN  | Notificação enviada?                | NOT NULL, DEFAULT false         |
+| Campo                       | Tipo     | Descrição                           | Restrições                      |
+|-----------------------------|----------|-------------------------------------|---------------------------------|
+| appointment_id              | INT      | ID único do agendamento             | PK, AUTO_INCREMENT              |
+| appointment_datetime        | DATETIME | Data e hora do agendamento (UTC)    | NOT NULL                        |
+| appointment_status          | ENUM     | PENDENTE, CONCLUIDO, CANCELADO      | NOT NULL, DEFAULT PENDENTE      |
+| id_barber                   | INT      | ID do barbeiro                      | FK → User(user_id), NOT NULL    |
+| id_client                   | INT      | ID do cliente                       | FK → User(user_id), NULLABLE    |
+| id_service                  | INT      | ID do serviço                       | FK → Service(service_id), NOT NULL |
+| scheduled_notification_time | DATETIME | Horário agendado para notificação   | NULLABLE (15min antes do appointment) |
+| notification_sent           | BOOLEAN  | Notificação confirmada como entregue| NOT NULL, DEFAULT false         |
 
 **Índices:**
 - INDEX: id_barber, appointment_datetime (para queries de disponibilidade)
 - INDEX: id_client, appointment_datetime (para histórico do cliente)
 - INDEX: appointment_status (para filtros por status)
+- INDEX: scheduled_notification_time, notification_sent (para recarregar notificações pendentes)
 
 **Observações:**
 - `id_client` pode ser NULL (agendamentos presenciais sem cadastro prévio)
-- `notification_sent` é gerenciado automaticamente pelo cron job (15min antes)
+- `scheduled_notification_time` é calculado automaticamente ao criar agendamento (appointment_datetime - 15min)
+- `notification_sent` é atualizado via webhook quando Twilio confirma entrega (status: delivered)
+- Sistema agenda `setTimeout` ao criar appointment; ao reiniciar, recarrega notificações pendentes do banco
 
 ---
 
@@ -1025,7 +1034,7 @@ Crie um arquivo `.env` na raiz do backend com as seguintes variáveis:
 
 ### Banco de Dados
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/artbarber"
+DATABASE_URL="postgresql://barber_ar:barber_123@localhost:5430/barbearia_db_upgraded"
 POSTGRES_USER=
 POSTGRES_PASSWORD=
 POSTGRES_DB=
@@ -1045,10 +1054,10 @@ CLOUDINARY_API_SECRET="seu_api_secret"
 
 ### Twilio (Notificações WhatsApp)
 ```env
-NOTIFICATIONS_ENABLED="true"
+NOTIFICATIONS_ENABLED="false" # servico de notificacoes automaticas
 TWILIO_ACCOUNT_SID="seu_account_sid"
 TWILIO_AUTH_TOKEN="seu_auth_token"
-TWILIO_WHATSAPP_NUMBER="+5592123456789"
+TWILIO_WHATSAPP_NUMBER="twilio_wpp_number"
 TWILIO_TEMPLATE_SID="seu_template_sid"
 
 SECRET=
@@ -1132,7 +1141,11 @@ backend/
 - ✅ Índices otimizados no banco
 - ✅ Cloudinary para CDN de imagens
 - ✅ Prisma connection pooling
-- ✅ Cron job para notificações (não bloqueia requests)
+- ✅ Sistema de notificações event-driven
+  - Zero queries de verificação contínua
+  - Execução apenas quando necessário
+  - Precisão de segundos
+  - Recarrega automático ao reiniciar servidor
 
 ---
 
@@ -1144,6 +1157,8 @@ backend/
 - Conta Cloudinary (para upload de fotos)
 - Conta Twilio (para notificações WhatsApp)
 
+**Observação**: a variável de ambiente `NOTIFICATIONS_ENABLED` vem  `"false"`  por padrão. O sistema não depende do serviço de notificação para funcionar, é opcional a configuração da conta Twilio para ativar esse serviço.
+
 ### Instalação
 ```bash
 # Clone o repositório
@@ -1151,7 +1166,7 @@ git clone <repo_url>
 
 # Instale as dependências
 cd backend
-npm install
+yarn install
 
 # Configure o .env
 cp .env.example .env
@@ -1164,16 +1179,7 @@ npx prisma migrate deploy
 npx prisma db seed
 
 # Inicie o servidor
-npm run dev
-```
-
-### Scripts Disponíveis
-```bash
-npm run dev          # Inicia servidor em modo desenvolvimento (nodemon)
-npm run build        # Compila TypeScript para JavaScript
-npm run start        # Inicia servidor em produção
-npm run prisma:generate  # Gera Prisma Client
-npm run prisma:studio    # Abre Prisma Studio (GUI do banco)
+yarn run dev
 ```
 
 ---

@@ -45,11 +45,14 @@ Sistema web completo para gerenciamento de barbearias, oferecendo agendamento on
 - ✅ Controle de status de serviços (Ativo/Inativo)
 
 
-### 📱 Sistema de Notificações
-- ✅ Lembretes automáticos 15 minutos antes do agendamento
+### 📡 Sistema de Notificações
+- ✅ Agendamento automático ao criar appointment (event-driven)
+- ✅ Lembretes precisos 15 minutos antes (precisão de segundos)
 - ✅ Mensagens personalizadas via WhatsApp
-- ✅ Rastreamento de entrega de mensagens
+- ✅ Rastreamento completo de entrega via webhooks
 - ✅ Integração com Twilio WhatsApp Business API
+- ✅ Sistema persiste ao reiniciar servidor (recarrega notificações pendentes)
+- ✅ Boa performance: execução apenas quando necessário
 
 ---
 
@@ -121,7 +124,6 @@ Sistema de permissões baseado em papéis (CLIENT, BARBER, ADMIN).
 | **Bcrypt** | 5.1.1 | Hash de senhas |
 | **Zod** | 4.1.11 | Validação de dados |
 | **Multer** | 1.4.5 | Upload de arquivos |
-| **Node-cron** | 3.0.3 | Agendador de tarefas |
 | **Twilio** | 5.3.5 | API WhatsApp |
 | **Cloudinary** | 2.5.1 | Armazenamento de imagens |
 
@@ -174,31 +176,53 @@ Sistema de permissões baseado em papéis (CLIENT, BARBER, ADMIN).
 ### Fluxo de Notificações (Automático)
 
 ```
-Sistema executa job a cada 15 segundos
+Cliente cria agendamento
    ↓
-Busca agendamentos com status "PENDENTE"
+Sistema calcula horário de notificação (15min antes)
    ↓
-Filtra agendamentos que acontecem em exatamente 15 minutos
+Salva scheduled_notification_time no banco
    ↓
-Para cada agendamento encontrado:
-   ├─ Monta mensagem personalizada
-   ├─ Envia para Twilio WhatsApp API
-   ├─ Registra MessageSid
-   └─ Aguarda webhook de confirmação
-      ↓
+Agenda setTimeout() para o horário exato
+   ↓
+[Sistema aguarda até 15min antes do agendamento]
+   ↓
+setTimeout executa automaticamente
+   ↓
+Monta mensagem personalizada:
+   ├─ Nome do cliente
+   ├─ Serviço contratado
+   ├─ Horário do atendimento
+   ├─ Nome do barbeiro
+   └─ Preço do serviço
+   ↓
+Envia para Twilio WhatsApp API
+   ↓
+Guarda MessageSid para rastreamento
+   ↓
 Twilio processa e envia WhatsApp
    ↓
 WhatsApp entrega mensagem ao cliente
    ↓
 Twilio envia webhook: "DELIVERED"
    ↓
-Sistema registra status de entrega
+Sistema recebe webhook e busca appointment pelo MessageSid
+   ↓
+Atualiza notification_sent = true no banco
+   ↓
+Limpa mapeamento MessageSid do Map em memória
    ↓
 Cliente lê mensagem
    ↓
 Twilio envia webhook: "READ"
    ↓
-Sistema registra confirmação de leitura
+Sistema loga confirmação de leitura
+
+⚡ Vantagens:
+  - 43x menos execuções (vs. polling a cada 20s)
+  - Precisão de segundos (vs. janela de 1min)
+  - Zero carga no banco para verificações
+  - Escalável para muitos agendamentos
+  - Recarrega automático ao reiniciar servidor
 ```
 
 ### Sistema de Autenticação
