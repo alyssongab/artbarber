@@ -128,8 +128,9 @@ Sistema de permissões baseado em papéis (CLIENT, BARBER, ADMIN).
 ### Infraestrutura & DevOps
 | Tecnologia | Propósito |
 |------------|-----------|
-| **Docker** | Containerização do PostgreSQL |
+| **Docker** | Containerização da aplicação |
 | **Docker Compose** | Orquestração de containers |
+| **Nginx** | Servidor web para frontend |
 | **Git** | Controle de versão |
 | **ESLint** | Linting de código |
 | **Prettier** | Formatação de código |
@@ -235,44 +236,103 @@ Processa requisição ou retorna 401/403
 ## 📦 Instalação e Configuração
 
 ### Pré-requisitos
-- Node.js 20 ou superior
-- Docker e Docker Compose
-- Conta Twilio (opcional, para notificações)
+- Docker e Docker Compose instalados
+- Conta Twilio (opcional, para notificações WhatsApp)
 - Conta Cloudinary (opcional, para upload de fotos)
 
-### Instalação Rápida
+### 🚀 Instalação Rápida com Docker
+
+Esta é a forma mais simples de rodar o projeto completo, pois o docker compose vai:
+- Configurar o banco de dados PostgreSQL
+- Construir e iniciar o backend
+- Construir e iniciar o frontend
+- Executar migrations e seed automaticamente
 
 ```bash
 # 1. Clone o repositório
 git clone https://github.com/alyssongab/artbarber.git
 cd artbarber
 
-# 2. Instale dependências do backend
-cd backend
-npm install
-
-# 3. Configure variáveis de ambiente
+# 2. Configure as variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas credenciais
+# Edite o .env com suas credenciais (DATABASE_URL já está configurado)
 
-# 4. Inicie o banco de dados
-docker-compose up -d
+# 3. Inicie todos os serviços com um único comando
+docker compose up --build
 
-# 5. Execute migrations
-npx prisma migrate dev
+# Aguarde a inicialização completa (migrations + seed automáticos)
+```
+
+O sistema vai estar rodando:
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:3030/api
+- **PostgreSQL**: localhost:5430
+
+#### Credenciais de Acesso (após seed)
+```
+Admin:      admin@barbearia.com / 123456
+Barbeiro 1: carlos@barbearia.com / 123456
+Barbeiro 2: lucas@barbearia.com / 123456
+Cliente 1:  joao@cliente.com / 123456
+Cliente 2:  maria@cliente.com / 123456
+```
+
+#### Comandos Úteis do Docker
+
+```bash
+# Parar os containers
+docker compose down
+
+# Reiniciar apenas um serviço
+docker compose restart backend
+
+# Ver logs em tempo real
+docker compose logs -f
+
+# Ver logs de um serviço específico
+docker compose logs -f backend
+
+# Rebuild após mudanças no código
+docker compose up --build
+
+# Limpar volumes 
+docker compose down -v
+```
+
+---
+
+### 🛠️ Instalação Manual (Desenvolvimento Local)
+
+Se preferir rodar sem Docker:
+
+```bash
+# 1. Clonar o repo
+git clone https://github.com/alyssongab/artbarber.git
+cd artbarber
+
+# 2. Inicie o PostgreSQL com Docker
+docker run -d \
+  --name artbarber-postgres \
+  -e POSTGRES_USER=barber_ar \
+  -e POSTGRES_PASSWORD=barber_123 \
+  -e POSTGRES_DB=barbearia_db_upgraded \
+  -p 5430:5432 \
+  postgres:16
+
+# 3. Configure e inicie o backend
+cd backend
+yarn install
+cp .env.example .env
+# Edite o .env com: DATABASE_URL="postgresql://barber_ar:barber_123@localhost:5430/barbearia_db_upgraded"
+npx prisma migrate deploy
 npx prisma db seed
+yarn dev
 
-# 6. Inicie o backend
-npm run dev
-
-# 7. Em outro terminal, instale dependências do frontend
+# 4. Em outro terminal, configure e inicie o frontend
 cd ../frontend
 npm install
-
-# 8. Configure variáveis de ambiente do frontend
 cp .env.example .env
-
-# 9. Inicie o frontend
+# Edite o .env com: VITE_API_URL=http://localhost:3030/api
 npm run dev
 ```
 
@@ -280,24 +340,8 @@ npm run dev
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3030/api
-- **Documentação técnica**: Ver `/backend/README.md` e `/frontend/README.md`
+- **Documentação técnica**: Ver [backend/README.md](backend/README.md) e [frontend/README.md](frontend/README.md)
 
----
-
-## 🎯 Roadmap
-
-### ✅ Concluído (v1.0)
-- [x] Sistema completo de autenticação
-- [x] CRUD de usuários (Cliente, Barbeiro, Admin)
-- [x] Sistema de agendamentos
-- [x] Validação de conflitos de horário
-- [x] Cálculo de disponibilidade em tempo real
-- [x] Notificações WhatsApp automáticas
-- [x] Interface completa para 3 perfis
-- [x] Upload de fotos de barbeiros
-- [x] Dashboard com estatísticas
-- [x] Busca de agendamentos
-- [x] Filtros por data e status
 
 ---
 
