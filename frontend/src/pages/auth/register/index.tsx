@@ -107,6 +107,7 @@ function Register(){
             {...register("full_name")}
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             placeholder="Seu nome completo"
+            autoComplete="off"
           />
           {errors.full_name && (
             <p className="mt-1 text-sm text-red-500">{String(errors.full_name.message)}</p>
@@ -125,6 +126,7 @@ function Register(){
             {...register("phone_number")}
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             placeholder="(92) 99999-9999"
+            autoComplete="off"
           />
           {errors.phone_number && (
             <p className="mt-1 text-sm text-red-500">{String(errors.phone_number.message)}</p>
@@ -144,6 +146,7 @@ function Register(){
                 type="text"
                 maxLength={10}
                 placeholder="01/01/2000"
+                autoComplete="off"
                 {...birthdayReg}
                 onChange={(e) => {
                   const masked = maskDateToDDMMYYYY(e.target.value);
@@ -169,6 +172,7 @@ function Register(){
             {...register("email")}
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             placeholder="seu@email.com"
+            autoComplete="off"
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-500">{String(errors.email.message)}</p>
@@ -187,6 +191,7 @@ function Register(){
               {...register("password")}
               className="w-full px-3 py-2 pr-10 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               placeholder="••••••••"
+              autoComplete="off"
             />
             <button
               type="button"

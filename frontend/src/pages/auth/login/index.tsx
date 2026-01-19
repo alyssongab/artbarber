@@ -55,6 +55,7 @@ function Login(){
             {...register("email")}
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             placeholder="seu@email.com"
+            autoComplete="off"
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
@@ -73,6 +74,7 @@ function Login(){
               {...register("password")}
               className="w-full px-3 py-2 pr-10 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               placeholder="••••••••"
+              autoComplete="off"
             />
             <button
               type="button"
