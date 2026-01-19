@@ -262,6 +262,8 @@ Processa requisição ou retorna 401/403
 ### Pré-requisitos
 - Docker e Docker Compose instalados
 - Conta Twilio (opcional, para notificações WhatsApp)
+  - **Importante**: Contas trial da Twilio exigem configuração do WhatsApp Sandbox
+  - Veja instruções detalhadas de configuração abaixo
 - Conta Cloudinary (opcional, para upload de fotos)
 
 ### 🚀 Instalação Rápida com Docker
@@ -300,6 +302,113 @@ Barbeiro 2: lucas@barbearia.com / 123456
 Cliente 1:  joao@cliente.com / 123456
 Cliente 2:  maria@cliente.com / 123456
 ```
+
+---
+
+### 📱 Configuração do Twilio WhatsApp (Opcional)
+
+Para ativar o sistema de notificações automáticas via WhatsApp, siga estes passos:
+
+#### 1. Criar Conta Twilio
+
+1. Acesse [www.twilio.com](https://www.twilio.com) e crie uma conta gratuita
+2. Após o cadastro, você receberá **créditos trial** (USD $15,00)
+3. Anote suas credenciais no [Console da Twilio](https://console.twilio.com):
+   - **Account SID**
+   - **Auth Token**
+
+#### 2. Configurar WhatsApp Sandbox
+
+⚠️ **Importante**: Contas trial só podem enviar mensagens através do **WhatsApp Sandbox**.
+
+**Passo a passo:**
+
+1. No console da Twilio, acesse: **Messaging** → **Try it out** → **Send a WhatsApp message**
+2. Você verá um número sandbox (ex: `+14155137896`) e um **código de ativação** (ex: `join happy-cat`)
+3. **Ative seu WhatsApp**:
+   - Abra o WhatsApp no seu celular
+   - Envie uma mensagem para o número sandbox da Twilio
+   - Digite exatamente o código mostrado (ex: `join happy-cat`)
+   - Aguarde a confirmação: *"You are all set! The sandbox can now send/receive messages from this number."*
+
+4. **Configure o Template de Mensagem**:
+   - Acesse **Messaging** → **Content Editor** → **Create Template**
+   - Use este template (substitua as variáveis):
+     ```
+     Olá {{1}}! 👋
+     
+     Lembrete: Seu atendimento está agendado para hoje às {{2}}.
+     
+     📋 Serviço: {{3}}
+     💰 Valor: R$ {{4}}
+     ✂️ Barbeiro: {{5}}
+     
+     Nos vemos em breve! 💈
+     ```
+   - Anote o **Content SID** gerado (ex: `HX...`)
+
+#### 3. Configurar Variáveis de Ambiente
+
+Edite o arquivo `.env` do backend:
+
+```env
+# Ativar sistema de notificações
+NOTIFICATIONS_ENABLED="true"
+
+# Credenciais da Twilio
+TWILIO_ACCOUNT_SID="seu_account_sid_aqui"
+TWILIO_AUTH_TOKEN="seu_auth_token_aqui"
+TWILIO_WHATSAPP_NUMBER="whatsapp:+14155137896"  # Número do sandbox
+TWILIO_TEMPLATE_SID="HX..."  # Content SID do template criado
+
+# URL pública para webhooks (use ngrok em desenvolvimento)
+API_URL="https://seu-dominio.com/api"  # ou URL do ngrok
+```
+
+#### 4. Configurar Webhook (para confirmação de entrega)
+
+**Desenvolvimento Local (com ngrok):**
+
+```bash
+
+# Exponha seu backend
+ngrok http 3030
+
+# Copie a URL gerada (ex: https://abc123.ngrok.io)
+# Configure no .env:
+API_URL="https://abc123.ngrok.io/api"
+```
+
+**Configurar na Twilio:**
+1. Acesse **Messaging** → **Settings** → **WhatsApp Sandbox Settings**
+2. Em **Status Callback URL**, adicione:
+   ```
+   https://seu-dominio.com/api/notifications/status-webhook
+   ```
+3. Marque todos os eventos: `Queued`, `Sent`, `Delivered`, `Read`, `Failed`
+4. Salve as configurações
+
+#### 5. Testar o Sistema
+
+```bash
+# Reinicie o backend para aplicar as novas configurações
+docker compose restart backend
+
+# Crie um agendamento para daqui a 16 minutos
+# O sistema enviará automaticamente a notificação 15 minutos antes
+```
+
+**Observações sobre Trial:**
+- ✅ Créditos trial: USD $15,00 (suficiente para ~1000 mensagens)
+- ⚠️ Só envia para números conectados ao sandbox
+- ⚠️ Mensagens incluem prefixo *"[Trial Account]"*
+- 🔓 Para usar em produção: faça upgrade para conta paga e solicite aprovação do template no WhatsApp Business API
+
+**Limitações removidas com conta paga:**
+- Sem prefixo *"[Trial Account]"*
+- Envio para qualquer número (sem sandbox)
+- Templates personalizados aprovados
+- Maior volume de mensagens
 
 #### Comandos Úteis do Docker
 

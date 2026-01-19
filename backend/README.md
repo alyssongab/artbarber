@@ -1065,6 +1065,138 @@ SID=
 API_URL="ngrok_tunnel"
 ```
 
+#### 📱 Como Configurar o Twilio WhatsApp
+
+O sistema de notificações é **opcional**. Para ativá-lo:
+
+##### 1. Criar Conta Twilio (Trial)
+
+1. Crie uma conta gratuita em [www.twilio.com](https://www.twilio.com)
+2. Você receberá **USD $15,00 em créditos trial** (suficiente para ~1000 mensagens)
+3. No [Console](https://console.twilio.com), anote:
+   - **Account SID**: Identificador da sua conta
+   - **Auth Token**: Token de autenticação
+
+##### 2. Ativar WhatsApp Sandbox
+
+⚠️ **Importante**: Contas trial só funcionam através do **Sandbox do WhatsApp**.
+
+**Como ativar:**
+
+1. Acesse: **Messaging** → **Try it out** → **Send a WhatsApp message**
+2. Você verá:
+   - Um **número sandbox** (ex: `+14155137896`)
+   - Um **código de ativação** (ex: `join happy-cat`)
+3. **No seu WhatsApp**:
+   - Envie mensagem para o número sandbox
+   - Digite o código exato (ex: `join happy-cat`)
+   - Aguarde confirmação: *"You are all set!"*
+
+##### 3. Criar Template de Mensagem
+
+1. Acesse: **Messaging** → **Content Editor** → **Create Template**
+2. Configure o template:
+   - **Name**: `appointment_reminder`
+   - **Language**: Portuguese (Brazil)
+   - **Content**:
+     ```
+     Olá {{1}}! 👋
+     
+     Lembrete: Seu atendimento está agendado para hoje às {{2}}.
+     
+     📋 Serviço: {{3}}
+     💰 Valor: R$ {{4}}
+     ✂️ Barbeiro: {{5}}
+     
+     Nos vemos em breve! 💈
+     ```
+3. Envie para aprovação e anote o **Content SID** (ex: `HXa1b2c3...`)
+
+##### 4. Configurar Variáveis de Ambiente
+
+Edite o `.env`:
+
+```env
+# Ativar notificações
+NOTIFICATIONS_ENABLED="true"
+
+# Credenciais Twilio
+TWILIO_ACCOUNT_SID="AC..."           # Account SID do console
+TWILIO_AUTH_TOKEN="..."               # Auth Token do console
+TWILIO_WHATSAPP_NUMBER="whatsapp:+14155137896"  # Seu Número do sandbox
+TWILIO_TEMPLATE_SID="HX..."          # Content SID do template
+
+# URL pública para webhooks (obrigatório para confirmação de entrega)
+API_URL="https://abc123.ngrok.io/api"  # Use ngrok em desenvolvimento
+```
+
+##### 5. Configurar Webhook para Status de Entrega
+
+Para rastrear se as mensagens foram entregues:
+
+**Desenvolvimento Local (com ngrok):**
+
+```bash
+
+# Expor backend na porta 3030
+ngrok http 3030
+
+# Copie a URL (ex: https://abc123.ngrok.io)
+# Configure no .env:
+API_URL="https://abc123.ngrok.io/api"
+```
+
+**Configurar na Twilio:**
+
+1. Acesse: **Messaging** → **Settings** → **WhatsApp Sandbox Settings**
+2. Em **Status Callback URL**, adicione:
+   ```
+   https://abc123.ngrok.io/api/notifications/status-webhook
+   ```
+3. Selecione os eventos:
+   - ✅ `Queued`
+   - ✅ `Sent`
+   - ✅ `Delivered`
+   - ✅ `Read`
+   - ✅ `Failed`
+4. Salve
+
+##### 6. Testar
+
+```bash
+# Reiniciar backend
+yarn run dev
+
+# Verificar se está ativo
+curl http://localhost:3030/api/notifications/test
+
+# Criar um agendamento para daqui a 16 minutos
+# Sistema enviará notificação automaticamente em 15min
+```
+
+**Logs esperados:**
+```
+[NotificationService] Notificação agendada para appointment #123 em 2026-01-20 14:15:00
+[NotificationService] Enviando lembrete para appointment #123
+[Twilio] Message queued: SM...
+[Webhook] Status atualizado: delivered (appointment #123)
+```
+
+##### Limitações do Trial
+
+- ⚠️ Mensagens só para números no sandbox (use `join [seu codigo]` no WhatsApp)
+- ⚠️ Prefixo *"[Trial Account]"* em todas as mensagens
+- ⚠️ USD $15,00 em créditos (~1000 mensagens)
+- ✅ Ideal para desenvolvimento e testes
+
+##### Upgrade para Produção
+
+1. Adicione créditos à conta Twilio
+2. Solicite aprovação do template no **WhatsApp Business API**
+3. Configure número dedicado (não sandbox)
+4. Remova restrições de destinatários
+5. Sem prefixo *"[Trial Account]"*
+
 ### Servidor
 ```env
 PORT_BACKEND="3030"
