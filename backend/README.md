@@ -1,8 +1,9 @@
 # Documentação da API - Artbarber
 
-> **Versão:** 1.0.0  
+> **Versão:** 2.0.0  
 > **Base URL:** `http://localhost:3030/api`  
-> **Autenticação:** JWT Bearer Token (exceto endpoints públicos)
+> **Autenticação:** JWT Bearer Token (exceto endpoints públicos)  
+> **Tecnologias:** Node.js, Express, TypeScript, Prisma ORM, PostgreSQL, Cloudinary, Twilio
 
 ---
 
@@ -14,7 +15,8 @@
 4. [Endpoints - Appointments](#endpoints---appointments)
 5. [Endpoints - Notifications](#endpoints---notifications)
 6. [Banco de Dados](#banco-de-dados)
-7. [Códigos de Status HTTP](#códigos-de-status-http)
+7. [Variáveis de Ambiente](#variáveis-de-ambiente)
+8. [Códigos de Status HTTP](#códigos-de-status-http)
 
 ---
 
@@ -27,9 +29,14 @@ Authorization: Bearer <seu_token_jwt>
 ```
 
 ### Roles (Cargos) disponíveis:
-- **CLIENT**: Cliente da barbearia
-- **BARBER**: Barbeiro
-- **ADMIN**: Administrador do sistema
+- **CLIENT**: Cliente da barbearia (pode agendar e cancelar seus próprios agendamentos)
+- **BARBER**: Barbeiro (pode gerenciar agendamentos de seus clientes e visualizar estatísticas)
+- **ADMIN**: Administrador (acesso total ao sistema)
+
+### Renovação de Token
+- Tokens expiram após **7 dias**
+- Use o endpoint `/api/users/refresh-token` para renovar tokens válidos
+- Recomenda-se renovar ao abrir a aplicação e periodicamente (ex: a cada 1 hora)
 
 ---
 
@@ -43,11 +50,11 @@ Cria uma nova conta de cliente.
 **Body (JSON):**
 ```json
 {
-  "full_name": "string",      // Obrigatório - Nome completo
+  "full_name": "string",      // Obrigatório - Nome completo (mínimo 1 caractere)
   "email": "string",           // Obrigatório - Email válido
   "password": "string",        // Obrigatório - Mínimo 6 caracteres
   "phone_number": "string",    // Obrigatório - Exatamente 11 dígitos (ex: 92912345678)
-  "birthday": "string"         // Opcional - Formato ISO date (YYYY-MM-DD) ou null
+  "birthday": "2000-01-15"     // Opcional - Formato ISO date (YYYY-MM-DD) ou null
 }
 ```
 
@@ -58,11 +65,16 @@ Cria uma nova conta de cliente.
   "full_name": "João Silva",
   "email": "joao@email.com",
   "phone_number": "92912345678",
-  "birthday": "1990-01-15",
+  "birthday": "2000-01-15T00:00:00.000Z",
   "role": "CLIENT",
-  "photo_url": null
+  "photo_url": null,
+  "thumbnail_url": null
 }
 ```
+
+**Erros comuns:**
+- `400` - Email já cadastrado
+- `400` - Validação falhou (campos obrigatórios ou formato inválido)
 
 ---
 
@@ -88,17 +100,21 @@ Autentica um usuário e retorna token JWT.
     "full_name": "João Silva",
     "email": "joao@email.com",
     "phone_number": "92912345678",
-    "birthday": "1990-01-15",
+    "birthday": "2000-01-15T00:00:00.000Z",
     "role": "CLIENT",
-    "photo_url": null
+    "photo_url": null,
+    "thumbnail_url": null
   }
 }
 ```
 
+**Erros comuns:**
+- `401` - Email ou senha inválidos
+
 ---
 
 ### **POST** `/api/users/barber` 🔒 ADMIN
-Cria uma conta de barbeiro (com upload de foto obrigatória).
+Cria uma conta de barbeiro com upload de foto via Cloudinary.
 
 **Permissão:** ADMIN
 
@@ -122,9 +138,23 @@ photo: file              // Obrigatório - Arquivo de imagem (JPEG, JPG ou PNG)
   "phone_number": "92987654321",
   "birthday": null,
   "role": "BARBER",
-  "photo_url": "uploads/barber-photo-123456.jpg"
+  "photo_url": "https://res.cloudinary.com/.../barber_photo.jpg",
+  "thumbnail_url": "https://res.cloudinary.com/.../barber_thumbnail.jpg"
 }
 ```
+
+**Observações:**
+- A foto é enviada para o Cloudinary automaticamente
+- Duas versões são geradas:
+  - `photo_url`: Imagem em tamanho original (máx 300x300px)
+  - `thumbnail_url`: Miniatura (150x150px) para listagens
+- O arquivo é processado em buffer (memoryStorage do Multer)
+
+**Erros comuns:**
+- `400` - Foto não enviada ou formato inválido
+- `400` - Email já cadastrado
+- `401` - Token ausente ou inválido
+- `403` - Usuário não é ADMIN
 
 ---
 
@@ -139,10 +169,16 @@ Lista todos os barbeiros cadastrados no sistema.
   {
     "user_id": 2,
     "full_name": "Carlos Barbeiro",
-    "photo_url": "uploads/barber-photo-123456.jpg"
+    "photo_url": "https://res.cloudinary.com/.../barber_photo.jpg",
+    "phone_number": "92987654321",
+    "thumbnail_url": "https://res.cloudinary.com/.../barber_thumbnail.jpg"
   }
 ]
 ```
+
+**Observações:**
+- Retorna apenas usuários com `role = "BARBER"`
+- DTO otimizado (não expõe email, senha, etc.)
 
 ---
 
@@ -159,9 +195,10 @@ Lista todos os usuários do sistema.
     "full_name": "João Silva",
     "email": "joao@email.com",
     "phone_number": "92912345678",
-    "birthday": "1990-01-15",
+    "birthday": "2000-01-15T00:00:00.000Z",
     "role": "CLIENT",
-    "photo_url": null
+    "photo_url": null,
+    "thumbnail_url": null
   },
   {
     "user_id": 2,
@@ -170,7 +207,8 @@ Lista todos os usuários do sistema.
     "phone_number": "92987654321",
     "birthday": null,
     "role": "BARBER",
-    "photo_url": "/uploads/barber-photo-123456.jpg"
+    "photo_url": "https://res.cloudinary.com/.../barber_photo.jpg",
+    "thumbnail_url": "https://res.cloudinary.com/.../barber_thumbnail.jpg"
   }
 ]
 ```
@@ -182,6 +220,10 @@ Busca um usuário específico por ID.
 
 **Permissão:** Qualquer usuário autenticado
 
+**Observações**
+- Admin consegue ver qualquer usuário
+- Clientes e Barbeiros conseguem consultar apenas seus próprios IDs.
+
 **Parâmetros de rota:**
 - `id` (número): ID do usuário
 
@@ -192,11 +234,15 @@ Busca um usuário específico por ID.
   "full_name": "João Silva",
   "email": "joao@email.com",
   "phone_number": "92912345678",
-  "birthday": "1990-01-15",
+  "birthday": "2000-01-15T00:00:00.000Z",
   "role": "CLIENT",
-  "photo_url": null
+  "photo_url": null,
+  "thumbnail_url": null
 }
 ```
+
+**Erros comuns:**
+- `404` - Usuário não encontrado
 
 ---
 
@@ -214,7 +260,7 @@ Atualiza dados de um usuário.
   "full_name": "string",      // Opcional - Nome completo (mínimo 1 caractere)
   "password": "string",        // Opcional - Nova senha (mínimo 6 caracteres)
   "phone_number": "string",    // Opcional - Exatamente 11 dígitos
-  "birthday": "string"         // Opcional - Formato ISO date ou null
+  "birthday": "2000-01-15"     // Opcional - Formato ISO date ou null
 }
 ```
 
@@ -225,11 +271,21 @@ Atualiza dados de um usuário.
   "full_name": "João Silva Santos",
   "email": "joao@email.com",
   "phone_number": "92912345678",
-  "birthday": "1990-01-15",
+  "birthday": "2000-01-15T00:00:00.000Z",
   "role": "CLIENT",
-  "photo_url": null
+  "photo_url": null,
+  "thumbnail_url": null
 }
 ```
+
+**Observações:**
+- A senha é automaticamente hasheada com bcrypt
+- Email não pode ser alterado (não está no schema de update)
+- Usuários só podem atualizar seus próprios dados (validação via `req.user.user_id`)
+
+**Erros comuns:**
+- `403` - Tentativa de atualizar dados de outro usuário
+- `404` - Usuário não encontrado
 
 ---
 
@@ -244,10 +300,14 @@ Remove um usuário do sistema.
 **Resposta de sucesso (204):**
 Sem conteúdo (No Content)
 
+**Erros comuns:**
+- `404` - Usuário não encontrado
+- `409` - Usuário possui agendamentos vinculados (constraint de FK)
+
 ---
 
 ### **POST** `/api/users/refresh-token` 🔒 Autenticado
-Renova o token JWT de um usuário autenticado, gerando um novo token com data de expiração atualizada.
+Renova o token JWT de um usuário autenticado.
 
 **Permissão:** Qualquer usuário autenticado (token ainda válido)
 
@@ -267,18 +327,21 @@ Authorization: Bearer <seu_token_jwt_válido>
     "full_name": "João Silva",
     "email": "joao@email.com",
     "phone_number": "92912345678",
-    "birthday": "1990-01-15",
+    "birthday": "2000-01-15T00:00:00.000Z",
     "role": "CLIENT",
-    "photo_url": null
+    "photo_url": null,
+    "thumbnail_url": null
   }
 }
 ```
 
 **Observações:**
-- O token antigo deve estar **válido** (não expirado) para realizar o refresh.
-- Se o token estiver expirado, será retornado erro 401 e o usuário deve fazer login novamente.
-- Tokens têm validade de 7 dias (configurável via `JWT_EXPIRES_IN`).
-- Recomenda-se chamar este endpoint ao abrir a aplicação e periodicamente (ex: a cada 1 hora) para manter o usuário autenticado.
+- O token antigo deve estar **válido** (não expirado)
+- Gera um novo token com data de expiração atualizada (+ 7 dias)
+- Recomenda-se chamar ao abrir a aplicação e periodicamente (ex: a cada 1 hora)
+
+**Erros comuns:**
+- `401` - Token expirado (usuário deve fazer login novamente)
 
 ---
 
@@ -313,14 +376,19 @@ Cria um novo serviço.
   "service_id": 1,
   "name": "Corte de cabelo",
   "price": "50.00",
-  "duration": 45
+  "duration": 45,
+  "service_status": "ACTIVE"
 }
 ```
+
+**Observações:**
+- `service_status` é automaticamente definido como `"ACTIVE"` na criação
+- O preço é armazenado como DECIMAL(10,2) no banco
 
 ---
 
 ### **GET** `/api/services` 🔒 Autenticado
-Lista todos os serviços disponíveis.
+Lista todos os serviços cadastrados (incluindo inativos).
 
 **Permissão:** Qualquer usuário autenticado
 
@@ -331,16 +399,41 @@ Lista todos os serviços disponíveis.
     "service_id": 1,
     "name": "Corte de cabelo",
     "price": "50.00",
-    "duration": 45
+    "duration": 45,
+    "service_status": "ACTIVE"
   },
   {
     "service_id": 2,
     "name": "Barba completa",
     "price": "35.00",
-    "duration": 30
+    "duration": 30,
+    "service_status": "INACTIVE"
   }
 ]
 ```
+
+---
+
+### **GET** `/api/services/active` 🔒 Autenticado
+Lista apenas serviços ativos.
+
+**Permissão:** Qualquer usuário autenticado
+
+**Resposta de sucesso (200):**
+```json
+[
+  {
+    "service_id": 1,
+    "name": "Corte de cabelo",
+    "price": "50.00",
+    "duration": 45,
+    "service_status": "ACTIVE"
+  }
+]
+```
+
+**Observações:**
+- Filtra apenas serviços com `service_status = "ACTIVE"`
 
 ---
 
@@ -355,9 +448,18 @@ Atualiza um serviço existente.
 **Body (JSON):** Todos os campos são opcionais
 ```json
 {
-  "name": "string",       // Opcional - Nome do serviço (mínimo 1 caractere)
-  "price": number,        // Opcional - Preço (mínimo 10)
-  "duration": number      // Opcional - Duração em minutos (mínimo 15)
+  "name": "string",              // Opcional - Nome (mínimo 1 caractere)
+  "price": number,               // Opcional - Preço (mínimo 10)
+  "duration": number,            // Opcional - Duração (mínimo 15 minutos)
+  "service_status": "ACTIVE"     // Opcional - "ACTIVE" ou "INACTIVE"
+}
+```
+
+**Exemplo:**
+```json
+{
+  "price": 60,
+  "service_status": "INACTIVE"
 }
 ```
 
@@ -365,16 +467,23 @@ Atualiza um serviço existente.
 ```json
 {
   "service_id": 1,
-  "name": "Corte de cabelo premium",
+  "name": "Corte de cabelo",
   "price": "60.00",
-  "duration": 60
+  "duration": 45,
+  "service_status": "INACTIVE"
 }
 ```
+
+**Observações:**
+- `service_status` permite desativar serviços sem deletar (soft delete)
+
+**Erros comuns:**
+- `404` - Serviço não encontrado
 
 ---
 
 ### **DELETE** `/api/services/:id` 🔒 ADMIN
-Remove um serviço (apenas se não houver agendamentos associados).
+Remove um serviço do sistema.
 
 **Permissão:** ADMIN
 
@@ -384,12 +493,15 @@ Remove um serviço (apenas se não houver agendamentos associados).
 **Resposta de sucesso (204):**
 Sem conteúdo (No Content)
 
-**Erro comum (409):**
+**Erro comum (409 - Conflict):**
 ```json
 {
   "message": "Não é possível deletar o serviço, pois existem agendamentos associados."
 }
 ```
+
+**Observações:**
+- Não é possível deletar serviços com agendamentos vinculados (constraint de FK)
 
 ---
 
@@ -403,35 +515,35 @@ Cria um novo agendamento.
 **Body (JSON):**
 ```json
 {
-  "appointment_date": "string",  // Obrigatório - Data no formato ISO (YYYY-MM-DD)
-  "appointment_time": "string",  // Obrigatório - Hora no formato ISO (HH:MM:SS)
-  "id_client": number,           // Opcional - ID do cliente (null se agendamento presencial)
-  "id_barber": number,           // Obrigatório - ID do barbeiro
-  "id_service": number           // Obrigatório - ID do serviço
+  "appointment_datetime": "string",  // Obrigatório - ISO datetime (YYYY-MM-DDTHH:mm:ss.sssZ)
+  "id_client": number,               // Opcional/Null - ID do cliente
+  "id_barber": number,               // Obrigatório - ID do barbeiro
+  "id_service": number               // Obrigatório - ID do serviço
 }
 ```
 
 **Exemplo:**
 ```json
 {
-  "appointment_date": "2025-12-15",
-  "appointment_time": "14:30:00",
+  "appointment_datetime": "2026-01-20T14:30:00.000Z",
   "id_client": 1,
   "id_barber": 2,
   "id_service": 1
 }
 ```
 
-**Observações:**
-- **CLIENTs** automaticamente têm seu próprio ID atribuído ao `id_client`, não podem agendar para outros.
-- **BARBERs** podem criar agendamentos para qualquer cliente ou deixar `id_client` como `null` para agendamentos presenciais.
+**Regras de Negócio:**
+- CLIENTs: Automaticamente têm seu próprio ID atribuído a `id_client` (não podem agendar para outros)
+- BARBERs: Podem criar agendamentos para qualquer cliente ou deixar `id_client = null` (agendamentos presenciais)
+- Validação de conflito: impede agendamentos no mesmo horário para o mesmo barbeiro
 
 **Resposta de sucesso (201):**
 ```json
 {
   "appointment_id": 1,
-  "appointment_date": "2025-12-15",
-  "appointment_time": "14:30:00",
+  "appointment_datetime": "2026-01-20T14:30:00.000Z",
+  "appointment_status": "PENDENTE",
+  "notification_sent": false,
   "barber": {
     "full_name": "Carlos Barbeiro",
     "phone_number": "92987654321"
@@ -444,30 +556,25 @@ Cria um novo agendamento.
     "name": "Corte de cabelo",
     "price": "50.00",
     "duration": 45
-  },
-  "appointment_status": "PENDENTE",
-  "notification_sent": false
+  }
 }
 ```
 
-**Erro comum (409):**
-```json
-{
-  "message": "Este horário já está ocupado para o barbeiro selecionado."
-}
-```
+**Erros comuns:**
+- `409` - Horário já ocupado para o barbeiro selecionado
+- `404` - Barbeiro, cliente ou serviço não encontrado
 
 ---
 
 ### **POST** `/api/appointments/availability` 🔒 Autenticado
-Retorna os horários disponíveis para um barbeiro em uma data específica, considerando o horário de funcionamento da barbearia e os agendamentos já existentes.
+Retorna os horários disponíveis para um barbeiro em uma data específica.
 
 **Permissão:** Qualquer usuário autenticado
 
 **Body (JSON):**
 ```json
 {
-  "appointment_date": "string",  // Obrigatório - Data no formato ISO (YYYY-MM-DD)
+  "appointment_date": "string",  // Obrigatório - Data ISO (YYYY-MM-DD)
   "id_barber": number             // Obrigatório - ID do barbeiro
 }
 ```
@@ -475,7 +582,7 @@ Retorna os horários disponíveis para um barbeiro em uma data específica, cons
 **Exemplo:**
 ```json
 {
-  "appointment_date": "2025-12-15",
+  "appointment_date": "2026-01-20",
   "id_barber": 2
 }
 ```
@@ -485,32 +592,38 @@ Retorna os horários disponíveis para um barbeiro em uma data específica, cons
 [
   "09:00",
   "09:30",
-  "10:00"
+  "10:00",
+  "10:30",
+  "11:00"
 ]
 ```
 
 **Observações:**
-- Apenas horários dentro da janela de funcionamento configurada são retornados.
-- Horários já ocupados pelo barbeiro na data informada são automaticamente excluídos da lista.
+- Considera horário de funcionamento configurado (business-hours.ts)
+- Exclui horários já ocupados pelo barbeiro
+- Exclui horários passados (se data for hoje)
+- Intervalos de 30 minutos
 
 ---
 
 ### **GET** `/api/appointments` 🔒 Autenticado
-Lista agendamentos relacionados ao usuário autenticado com suporte a paginação server-side.
+Lista agendamentos relacionados ao usuário autenticado com paginação server-side.
 
 **Permissão:** Qualquer usuário autenticado
 
-**Comportamento:**
+**Comportamento por Role:**
 - **CLIENT**: Retorna apenas seus próprios agendamentos
 - **BARBER**: Retorna agendamentos onde ele é o barbeiro
+- **ADMIN**: Comportamento específico (verificar implementação)
 
 **Query Parameters (opcionais):**
 - `_page` (número): Número da página (padrão: 1)
-- `_limit` (número): Quantidade de itens por página (padrão: 10)
+- `_limit` (número): Itens por página (padrão: 10)
+- `_date` (string): Filtro por data ISO (YYYY-MM-DD)
 
 **Exemplo de requisição:**
 ```
-GET /api/appointments?_page=2&_limit=5
+GET /api/appointments?_page=2&_limit=5&_date=2026-01-20
 ```
 
 **Resposta de sucesso (200):**
@@ -519,8 +632,9 @@ GET /api/appointments?_page=2&_limit=5
   "data": [
     {
       "appointment_id": 1,
-      "appointment_date": "2025-12-15",
-      "appointment_time": "14:30:00",
+      "appointment_datetime": "2026-01-20T14:30:00.000Z",
+      "appointment_status": "PENDENTE",
+      "notification_sent": false,
       "barber": {
         "full_name": "Carlos Barbeiro",
         "phone_number": "92987654321"
@@ -533,9 +647,7 @@ GET /api/appointments?_page=2&_limit=5
         "name": "Corte de cabelo",
         "price": "50.00",
         "duration": 45
-      },
-      "appointment_status": "PENDENTE",
-      "notification_sent": false
+      }
     }
   ],
   "pagination": {
@@ -548,13 +660,13 @@ GET /api/appointments?_page=2&_limit=5
 ```
 
 **Observações:**
-- A resposta inclui metadados de paginação (`pagination`) para facilitar a navegação.
-- Valores inválidos para `_page` ou `_limit` são tratados com valores padrão seguros.
+- Paginação server-side para otimização de performance
+- Valores inválidos de `_page` ou `_limit` são tratados com defaults seguros
 
 ---
 
 ### **GET** `/api/appointments/all` 🔒 BARBER ou ADMIN
-Lista todos os agendamentos do sistema.
+Lista todos os agendamentos do sistema (sem paginação).
 
 **Permissão:** BARBER ou ADMIN
 
@@ -563,8 +675,9 @@ Lista todos os agendamentos do sistema.
 [
   {
     "appointment_id": 1,
-    "appointment_date": "2025-12-15",
-    "appointment_time": "14:30:00",
+    "appointment_datetime": "2026-01-20T14:30:00.000Z",
+    "appointment_status": "PENDENTE",
+    "notification_sent": false,
     "barber": {
       "full_name": "Carlos Barbeiro",
       "phone_number": "92987654321"
@@ -577,92 +690,14 @@ Lista todos os agendamentos do sistema.
       "name": "Corte de cabelo",
       "price": "50.00",
       "duration": 45
-    },
-    "appointment_status": "PENDENTE",
-    "notification_sent": false
+    }
   }
 ]
 ```
-
----
-
-### **GET** `/api/appointments/upcoming` 🔒 CLIENT
-Lista agendamentos futuros do cliente autenticado (a partir do momento atual).
-
-**Permissão:** CLIENT
-
-**Resposta de sucesso (200):**
-```json
-[
-  {
-    "appointment_id": 5,
-    "appointment_date": "2025-12-30",
-    "appointment_time": "10:00:00",
-    "barber": {
-      "full_name": "Carlos Barbeiro",
-      "phone_number": "92987654321"
-    },
-    "client": {
-      "full_name": "João Silva",
-      "phone_number": "92912345678"
-    },
-    "service": {
-      "name": "Corte de cabelo",
-      "price": "50.00",
-      "duration": 45
-    },
-    "appointment_status": "PENDENTE",
-    "notification_sent": false
-  }
-]
-```
-
-**Observações:**
-- Retorna apenas agendamentos com data/hora **futura** em relação ao momento da requisição.
-- Ordenados por data e hora crescente (próximos primeiro).
-
----
-
-### **GET** `/api/appointments/past` 🔒 CLIENT
-Lista agendamentos passados do cliente autenticado (anteriores ao momento atual).
-
-**Permissão:** CLIENT
-
-**Resposta de sucesso (200):**
-```json
-[
-  {
-    "appointment_id": 2,
-    "appointment_date": "2025-12-10",
-    "appointment_time": "14:00:00",
-    "barber": {
-      "full_name": "Carlos Barbeiro",
-      "phone_number": "92987654321"
-    },
-    "client": {
-      "full_name": "João Silva",
-      "phone_number": "92912345678"
-    },
-    "service": {
-      "name": "Barba completa",
-      "price": "35.00",
-      "duration": 30
-    },
-    "appointment_status": "CONCLUIDO",
-    "notification_sent": true
-  }
-]
-```
-
-**Observações:**
-- Retorna apenas agendamentos com data/hora **passada** em relação ao momento da requisição.
-- Ordenados por data e hora decrescente (mais recentes primeiro).
-- Útil para exibir histórico de agendamentos do cliente.
-
 ---
 
 ### **PATCH** `/api/appointments/:id` 🔒 CLIENT ou BARBER
-Atualiza o status de um agendamento com regras de autorização baseadas no role do usuário.
+Atualiza o status de um agendamento.
 
 **Permissão:** CLIENT ou BARBER (com restrições específicas)
 
@@ -672,27 +707,28 @@ Atualiza o status de um agendamento com regras de autorização baseadas no role
 **Body (JSON):**
 ```json
 {
-  "appointment_status": "string"  // Obrigatório - Valores: "PENDENTE" | "CONCLUIDO" | "CANCELADO"
+  "appointment_status": "string"  // "PENDENTE" | "CONCLUIDO" | "CANCELADO"
 }
 ```
 
-**Regras de autorização:**
+**Regras de Autorização:**
 
 **CLIENT:**
-- Pode alterar **apenas seus próprios agendamentos** (verifica `id_client`).
-- Pode **apenas cancelar** (status → `CANCELADO`).
-- Não pode alterar para `PENDENTE` ou `CONCLUIDO`.
+- Pode alterar **apenas seus próprios agendamentos** (verifica `id_client`)
+- Pode **apenas cancelar** (status → `"CANCELADO"`)
+- Não pode alterar para `"PENDENTE"` ou `"CONCLUIDO"`
 
 **BARBER:**
-- Pode alterar **apenas agendamentos associados a ele** (verifica `id_barber`).
-- Pode alterar para **qualquer status** (`PENDENTE`, `CONCLUIDO`, `CANCELADO`).
+- Pode alterar **apenas agendamentos associados a ele** (verifica `id_barber`)
+- Pode alterar para **qualquer status**
 
 **Resposta de sucesso (200):**
 ```json
 {
   "appointment_id": 1,
-  "appointment_date": "2025-12-15",
-  "appointment_time": "14:30:00",
+  "appointment_datetime": "2026-01-20T14:30:00.000Z",
+  "appointment_status": "CONCLUIDO",
+  "notification_sent": false,
   "barber": {
     "full_name": "Carlos Barbeiro",
     "phone_number": "92987654321"
@@ -705,21 +741,20 @@ Atualiza o status de um agendamento com regras de autorização baseadas no role
     "name": "Corte de cabelo",
     "price": "50.00",
     "duration": 45
-  },
-  "appointment_status": "CONCLUIDO",
-  "notification_sent": false
+  }
 }
 ```
 
 **Erros comuns:**
-- `403` se CLIENT tentar alterar agendamento de outro cliente.
-- `403` se CLIENT tentar alterar para status diferente de `CANCELADO`.
-- `403` se BARBER tentar alterar agendamento de outro barbeiro.
+- `403` - CLIENT tentando alterar agendamento de outro cliente
+- `403` - CLIENT tentando alterar para status diferente de `"CANCELADO"`
+- `403` - BARBER tentando alterar agendamento de outro barbeiro
+- `404` - Agendamento não encontrado
 
 ---
 
 ### **DELETE** `/api/appointments/:id` 🔒 BARBER
-Remove um agendamento (apenas se não estiver com status PENDENTE).
+Remove um agendamento do sistema.
 
 **Permissão:** BARBER
 
@@ -729,21 +764,124 @@ Remove um agendamento (apenas se não estiver com status PENDENTE).
 **Resposta de sucesso (204):**
 Sem conteúdo (No Content)
 
-**Erro comum (409):**
+**Erro comum (409 - Conflict):**
 ```json
 {
-  "message": "Você não pode deletar um agendamento com status 'Pendente'."
+  "message": "Você não pode deletar um agendamento com status 'PENDENTE'."
 }
+```
+
+**Observações:**
+- Não permite deletar agendamentos com status `"PENDENTE"`
+- Recomenda-se usar `PATCH` para cancelar ao invés de deletar
+
+---
+
+### **POST** `/api/appointments/total/:id` 🔒 BARBER
+Retorna estatísticas de agendamentos de um barbeiro específico.
+
+**Permissão:** BARBER
+
+**Parâmetros de rota:**
+- `id` (número): ID do barbeiro
+
+**Body (JSON):**
+```json
+{
+  "date": "string"  // Opcional - Data ISO (YYYY-MM-DD)
+}
+```
+
+**Resposta de sucesso (200):**
+```json
+{
+  "totalAppointments": 25,
+  "completedAppointments": 20,
+  "canceledAppointments": 3,
+  "pendingAppointments": 2
+}
+```
+
+---
+
+### **POST** `/api/appointments/barber/revenue/:id` 🔒 BARBER ou ADMIN
+Calcula a receita de um barbeiro em uma data específica.
+
+**Permissão:** BARBER ou ADMIN
+
+**Parâmetros de rota:**
+- `id` (número): ID do barbeiro
+
+**Body (JSON):**
+```json
+{
+  "date": "string"  // Obrigatório - Data ISO (YYYY-MM-DD)
+}
+```
+
+**Resposta de sucesso (200):**
+```json
+{
+  "date": "2026-01-20",
+  "totalRevenue": "450.00",
+  "totalAppointments": 9,
+  "completedAppointments": 8
+}
+```
+**Observações**:
+- São considerados apenas agendamentos marcados como 'CONCLUIDO'
+
+---
+
+### **GET** `/api/appointments/barber/:barberId/search` 🔒 BARBER ou ADMIN
+Busca agendamentos de um barbeiro por nome do cliente.
+
+**Permissão:** BARBER ou ADMIN
+
+**Parâmetros de rota:**
+- `barberId` (número): ID do barbeiro
+
+**Query Parameters:**
+- `clientName` (string): Nome do cliente (busca parcial)
+
+**Exemplo de requisição:**
+```
+GET /api/appointments/barber/2/search?clientName=João
+```
+
+**Resposta de sucesso (200):**
+```json
+[
+  {
+    "appointment_id": 1,
+    "appointment_datetime": "2026-01-20T14:30:00.000Z",
+    "appointment_status": "PENDENTE",
+    "notification_sent": false,
+    "barber": {
+      "full_name": "Carlos Barbeiro",
+      "phone_number": "92987654321"
+    },
+    "client": {
+      "full_name": "João Silva",
+      "phone_number": "92912345678"
+    },
+    "service": {
+      "name": "Corte de cabelo",
+      "price": "50.00",
+      "duration": 45
+    }
+  }
+]
 ```
 
 ---
 
 ## 📢 Endpoints - Notifications
 
-Endpoints responsáveis pela integração com o serviço de notificações via WhatsApp (Twilio). Em geral, não são consumidos diretamente pelo frontend, mas por webhooks/configuração externa.
+Sistema de notificações via WhatsApp integrado com Twilio.
 
-### **POST** `/api/notifications/status-webhook` 🔓 Público (Twilio → API)
-Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio (fila, enviado, entregue, lido, falha, etc).
+### **POST** `/api/notifications/status-webhook` 🔓 Público (Twilio)
+Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio.
 
 **Permissão:** Nenhuma (usado pelo Twilio)
 
@@ -751,7 +889,7 @@ Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio (
 ```json
 {
   "MessageSid": "string",       // ID único da mensagem no Twilio
-  "MessageStatus": "string",    // Status atual (queued, sent, delivered, read, failed, ...)
+  "MessageStatus": "string",    // Status: queued, sent, delivered, read, failed
   "From": "string",             // Número de origem (WhatsApp)
   "To": "string",               // Número de destino (WhatsApp)
   "ErrorCode": "string|null",   // Código de erro (se houver)
@@ -760,17 +898,18 @@ Webhook que recebe atualizações de status das mensagens enviadas pelo Twilio (
 ```
 
 **Resposta de sucesso (200):**
-- Sem corpo relevante (apenas confirmação para o Twilio).
-
-**Erros comuns:**
-- `400` se o corpo não contiver os campos mínimos necessários (`MessageSid` e `MessageStatus`).
+```json
+{
+  "message": "Webhook recebido com sucesso"
+}
+```
 
 ---
 
 ### **GET** `/api/notifications/test` 🔓 Público (diagnóstico)
-Endpoint de diagnóstico para verificar se o serviço de notificações está em execução e como o webhook está configurado.
+Endpoint de diagnóstico para verificar se o serviço de notificações está em execução.
 
-**Permissão:** Nenhuma (uso interno/diagnóstico)
+**Permissão:** Nenhuma (diagnóstico)
 
 **Resposta de sucesso (200):**
 ```json
@@ -782,16 +921,14 @@ Endpoint de diagnóstico para verificar se o serviço de notificações está em
 }
 ```
 
-> Obs.: Os valores reais de `webhookUrl`, `enabled` e `apiUrl` dependem das variáveis de ambiente da aplicação.
-
 ---
 
 ### **POST** `/api/notifications/test-webhook` 🔓 Público (diagnóstico)
-Permite testar manualmente o fluxo de processamento de webhook no serviço de notificações, gerando logs internos e marcando um status simulado.
+Permite testar manualmente o fluxo de processamento de webhook.
 
-**Permissão:** Nenhuma (uso interno/diagnóstico)
+**Permissão:** Nenhuma (diagnóstico)
 
-**Body (JSON):** Pode ser qualquer payload; o endpoint é usado apenas para teste e log.
+**Body (JSON):** Qualquer payload (usado para teste)
 
 **Resposta de sucesso (200):**
 ```json
@@ -804,67 +941,126 @@ Permite testar manualmente o fluxo de processamento de webhook no serviço de no
 
 ## 🗄️ Banco de Dados
 
-### Tabela: `User`
+### Diagrama ER (Resumido)
 
-Armazena informações de todos os usuários (clientes, barbeiros e administradores).
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│      User       │       │  Appointment    │       │    Service      │
+├─────────────────┤       ├─────────────────┤       ├─────────────────┤
+│ user_id (PK)    │◄─┐    │ appointment_id  │    ┌─►│ service_id (PK) │
+│ full_name       │  │    │ appointment_dt  │    │  │ name            │
+│ email (UNIQUE)  │  └────┤ id_barber (FK)  │    │  │ price           │
+│ password        │  ┌────┤ id_client (FK)  │    │  │ duration        │
+│ phone_number    │  │    │ id_service (FK) ├────┘  │ service_status  │
+│ birthday        │  │    │ status          │       └─────────────────┘
+│ cpf (UNIQUE)    │  │    │ notification_   │
+│ role (ENUM)     │◄─┘    │   sent          │
+│ photo_url       │       └─────────────────┘
+│ thumbnail_url   │
+└─────────────────┘
+```
 
-| Campo               | Tipo         | Descrição                                    | Restrições                |
-|---------------------|--------------|----------------------------------------------|---------------------------|
-| `user_id`           | INT          | ID único do usuário                          | PK, AUTO_INCREMENT        |
-| `full_name`         | VARCHAR      | Nome completo do usuário                     | NOT NULL                  |
-| `email`             | VARCHAR      | Email do usuário                             | UNIQUE, NOT NULL          |
-| `password`          | VARCHAR      | Hash da senha (bcrypt)                       | NOT NULL                  |
-| `phone_number`      | VARCHAR      | Número de telefone (11 dígitos)              | NOT NULL                  |
-| `birthday`          | DATE         | Data de nascimento                           | NULLABLE                  |
-| `cpf`               | VARCHAR      | CPF do usuário                               | UNIQUE, NULLABLE          |
-| `role`              | ENUM         | Cargo: CLIENT, BARBER, ADMIN                 | NOT NULL, DEFAULT CLIENT  |
-| `photo_url`         | VARCHAR      | URL/caminho da foto do perfil                | NULLABLE                  |
+### Tabela: `User` (usuarios)
 
-**Relacionamentos:**
-- Um `User` com role `BARBER` pode ter muitos `Appointment` (como barbeiro)
-- Um `User` com role `CLIENT` pode ter muitos `Appointment` (como cliente)
+| Campo          | Tipo    | Descrição                           | Restrições                |
+|----------------|---------|-------------------------------------|---------------------------|
+| user_id        | INT     | ID único do usuário                 | PK, AUTO_INCREMENT        |
+| full_name      | VARCHAR | Nome completo                       | NOT NULL                  |
+| email          | VARCHAR | Email                               | UNIQUE, NOT NULL          |
+| password       | VARCHAR | Hash da senha (bcrypt)              | NOT NULL                  |
+| phone_number   | VARCHAR | Número de telefone (11 dígitos)     | NOT NULL                  |
+| birthday       | DATE    | Data de nascimento                  | NULLABLE                  |
+| cpf            | VARCHAR | CPF do usuário                      | UNIQUE, NULLABLE          |
+| role           | ENUM    | CLIENT, BARBER, ADMIN               | NOT NULL, DEFAULT CLIENT  |
+| photo_url      | VARCHAR | URL da foto (Cloudinary)            | NULLABLE                  |
+| thumbnail_url  | VARCHAR | URL da miniatura (Cloudinary)       | NULLABLE                  |
+
+**Índices:**
+- UNIQUE: email, cpf
+- INDEX: role (para queries de listagem de barbeiros)
 
 ---
 
-### Tabela: `Service`
+### Tabela: `Service` (servicos)
 
-Armazena os serviços oferecidos pela barbearia.
+| Campo          | Tipo         | Descrição                    | Restrições                |
+|----------------|--------------|------------------------------|---------------------------|
+| service_id     | INT          | ID único do serviço          | PK, AUTO_INCREMENT        |
+| name           | VARCHAR      | Nome do serviço              | NOT NULL                  |
+| price          | DECIMAL(10,2)| Preço do serviço             | NOT NULL                  |
+| duration       | INT          | Duração em minutos           | NOT NULL                  |
+| service_status | ENUM         | ACTIVE, INACTIVE             | NOT NULL, DEFAULT ACTIVE  |
 
-| Campo         | Tipo         | Descrição                           | Restrições                |
-|---------------|--------------|-------------------------------------|---------------------------|
-| `service_id`  | INT          | ID único do serviço                 | PK, AUTO_INCREMENT        |
-| `name`        | VARCHAR      | Nome do serviço                     | NOT NULL                  |
-| `price`       | DECIMAL      | Preço do serviço                    | NOT NULL                  |
-| `duration`    | INT          | Duração do serviço em minutos       | NOT NULL                  |
-
-**Relacionamentos:**
-- Um `Service` pode ter muitos `Appointment`
+**Índices:**
+- INDEX: service_status (para queries de serviços ativos)
 
 ---
 
-### Tabela: `Appointment`
+### Tabela: `Appointment` (agendamentos)
 
-Armazena os agendamentos realizados.
+| Campo                | Tipo     | Descrição                           | Restrições                      |
+|----------------------|----------|-------------------------------------|---------------------------------|
+| appointment_id       | INT      | ID único do agendamento             | PK, AUTO_INCREMENT              |
+| appointment_datetime | DATETIME | Data e hora do agendamento          | NOT NULL                        |
+| appointment_status   | ENUM     | PENDENTE, CONCLUIDO, CANCELADO      | NOT NULL, DEFAULT PENDENTE      |
+| id_barber            | INT      | ID do barbeiro                      | FK → User(user_id), NOT NULL    |
+| id_client            | INT      | ID do cliente                       | FK → User(user_id), NULLABLE    |
+| id_service           | INT      | ID do serviço                       | FK → Service(service_id), NOT NULL |
+| notification_sent    | BOOLEAN  | Notificação enviada?                | NOT NULL, DEFAULT false         |
 
-| Campo                | Tipo         | Descrição                                 | Restrições                      |
-|----------------------|--------------|-------------------------------------------|---------------------------------|
-| `appointment_id`     | INT          | ID único do agendamento                   | PK, AUTO_INCREMENT              |
-| `appointment_date`   | DATE         | Data do agendamento                       | NOT NULL                        |
-| `appointment_time`   | TIME         | Horário do agendamento                    | NOT NULL                        |
-| `appointment_status` | ENUM         | Status: PENDENTE, CONCLUIDO, CANCELADO    | NOT NULL, DEFAULT PENDENTE      |
-| `id_barber`          | INT          | ID do barbeiro                            | FK → User(user_id), NOT NULL    |
-| `id_client`          | INT          | ID do cliente                             | FK → User(user_id), NULLABLE    |
-| `id_service`         | INT          | ID do serviço                             | FK → Service(service_id), NOT NULL |
-| `notification_sent`  | BOOLEAN      | Se notificação WhatsApp foi enviada       | NOT NULL, DEFAULT false         |
+**Índices:**
+- INDEX: id_barber, appointment_datetime (para queries de disponibilidade)
+- INDEX: id_client, appointment_datetime (para histórico do cliente)
+- INDEX: appointment_status (para filtros por status)
 
-**Relacionamentos:**
-- `id_barber` → FK para `User.user_id` (relação BarberAppointments)
-- `id_client` → FK para `User.user_id` (relação ClientAppointments) - pode ser NULL para agendamentos presenciais
-- `id_service` → FK para `Service.service_id`
+**Observações:**
+- `id_client` pode ser NULL (agendamentos presenciais sem cadastro prévio)
+- `notification_sent` é gerenciado automaticamente pelo cron job (15min antes)
 
-**Observações importantes:**
-- `id_client` pode ser `NULL` quando o agendamento é feito presencialmente sem cadastro prévio do cliente
-- `notification_sent` é usado pelo sistema de notificações automáticas via WhatsApp
+---
+
+## 🔧 Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do backend com as seguintes variáveis:
+
+### Banco de Dados
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/artbarber"
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+```
+
+### Autenticação JWT
+```env
+JWT_SECRET="seu_secret"
+```
+
+### Cloudinary (Upload de Imagens)
+```env
+CLOUDINARY_CLOUD_NAME="seu_cloud_name"
+CLOUDINARY_API_KEY="sua_api_key"
+CLOUDINARY_API_SECRET="seu_api_secret"
+```
+
+### Twilio (Notificações WhatsApp)
+```env
+NOTIFICATIONS_ENABLED="true"
+TWILIO_ACCOUNT_SID="seu_account_sid"
+TWILIO_AUTH_TOKEN="seu_auth_token"
+TWILIO_WHATSAPP_NUMBER="+5592123456789"
+TWILIO_TEMPLATE_SID="seu_template_sid"
+
+SECRET=
+SID=
+API_URL="ngrok_tunnel"
+```
+
+### Servidor
+```env
+PORT_BACKEND="3030"
+NODE_ENV="development"
+```
 
 ---
 
@@ -874,45 +1070,121 @@ Armazena os agendamentos realizados.
 |--------|----------------------------------------------------------|
 | 200    | OK - Requisição bem-sucedida                             |
 | 201    | Created - Recurso criado com sucesso                     |
-| 204    | No Content - Requisição bem-sucedida sem corpo de resposta |
+| 204    | No Content - Requisição ok sem resposta                  |
 | 400    | Bad Request - Dados inválidos ou ausentes                |
 | 401    | Unauthorized - Token ausente ou inválido                 |
 | 403    | Forbidden - Usuário sem permissão para acessar           |
 | 404    | Not Found - Recurso não encontrado                       |
-| 409    | Conflict - Conflito (ex: horário já agendado)            |
+| 409    | Conflict - Conflito                                      |
 | 500    | Internal Server Error - Erro interno do servidor         |
 
 ---
 
-## 📝 Notas Importantes
+## 📝 Arquitetura e Padrões
 
-### Autenticação JWT
-- O token JWT expira após **7 dias** (configurável via variável de ambiente `JWT_EXPIRES_IN`).
-- Inclua o token no header `Authorization: Bearer <token>` em todas as requisições protegidas.
-- O token é retornado nos endpoints `/api/users/login` e `/api/users/refresh-token`.
-- **Renovação automática**: Recomenda-se usar o endpoint `/api/users/refresh-token` ao abrir a aplicação e periodicamente (ex: a cada 1 hora) para manter o usuário autenticado sem precisar fazer login novamente.
-- Se o token expirar (após 7 dias sem renovação), o usuário deve fazer login novamente.
+### Estrutura de Pastas
+```
+backend/
+├── prisma/
+│   ├── schema.prisma          # Schema do banco de dados
+│   └── migrations/            # Histórico de migrações
+├── src/
+│   ├── generated/prisma/      # Prisma Client gerado
+│   ├── server/
+│   │   ├── modules/
+│   │   │   ├── users/
+│   │   │   │   ├── user.controller.ts
+│   │   │   │   ├── user.service.ts
+│   │   │   │   ├── user.repository.ts
+│   │   │   │   ├── user.routes.ts
+│   │   │   │   └── user.schema.ts
+│   │   │   ├── services/
+│   │   │   ├── appointments/
+│   │   │   └── notification/
+│   │   └── shared/
+│   │       ├── config/          # Cloudinary, Multer, Prisma, etc.
+│   │       ├── errors/          # Classes de erro HTTP
+│   │       ├── middlewares/     # Auth, Authorize, Validate
+│   │       └── utils/           # Funções utilitárias
+│   └── index.ts
+└── package.json
+```
 
-### Validações
-- Todos os endpoints validam os dados de entrada usando Zod schemas
-- Campos obrigatórios devem ser fornecidos, caso contrário retornarão erro 400
-- IDs inválidos retornam erro 400
+### Padrões Implementados
 
-### Sistema de Notificações
-- O campo `notification_sent` é gerenciado automaticamente pelo sistema
-- Notificações via WhatsApp são enviadas 15 minutos antes do horário agendado
-- Configurado via variáveis de ambiente (Twilio)
+1. **Repository Pattern**: Separação de lógica de acesso a dados
+2. **Service Layer**: Lógica de negócio isolada
+3. **DTO Pattern**: Validação com Zod schemas
+4. **Middleware Chain**: Autenticação → Autorização → Validação
+5. **Error Handling**: Classes customizadas (NotFoundError, ConflictError, etc.)
 
-#### Variáveis de ambiente usadas nas notificações
+### Segurança
 
-- `NOTIFICATIONS_ENABLED`: `true` ou `false` – habilita ou desabilita o agendador (cron) que dispara as notificações.
-- `TWILIO_ACCOUNT_SID`: SID da conta Twilio usada para envio das mensagens.
-- `TWILIO_AUTH_TOKEN`: Token de autenticação da conta Twilio.
-- `TWILIO_WHATSAPP_NUMBER`: Número WhatsApp configurado no Twilio (formato `+55...`).
-- `TWILIO_TEMPLATE_SID`: ID do template de mensagem aprovado no Twilio.
-- `API_URL`: URL base pública da API (usada para montar o `status-webhook` enviado ao Twilio, por exemplo `http://localhost:3030/api`).
+- ✅ Bcrypt para hash de senhas (salt rounds: 10)
+- ✅ JWT para autenticação stateless
+- ✅ CORS configurado
+- ✅ Validação de input com Zod
+- ✅ SQL Injection protection (Prisma ORM)
+
+### Performance
+
+- ✅ Paginação server-side
+- ✅ Índices otimizados no banco
+- ✅ Cloudinary para CDN de imagens
+- ✅ Prisma connection pooling
+- ✅ Cron job para notificações (não bloqueia requests)
 
 ---
 
-**Última atualização:** 28 de dezembro de 2025  
-**Contato:** Equipe de desenvolvimento
+## 🚀 Como Executar
+
+### Pré-requisitos
+- Node.js v18+
+- PostgreSQL
+- Conta Cloudinary (para upload de fotos)
+- Conta Twilio (para notificações WhatsApp)
+
+### Instalação
+```bash
+# Clone o repositório
+git clone <repo_url>
+
+# Instale as dependências
+cd backend
+npm install
+
+# Configure o .env
+cp .env.example .env
+# Edite o .env com suas credenciais
+
+# Execute as migrações
+npx prisma migrate deploy
+
+# (Opcional) Popule o banco com dados de teste
+npx prisma db seed
+
+# Inicie o servidor
+npm run dev
+```
+
+### Scripts Disponíveis
+```bash
+npm run dev          # Inicia servidor em modo desenvolvimento (nodemon)
+npm run build        # Compila TypeScript para JavaScript
+npm run start        # Inicia servidor em produção
+npm run prisma:generate  # Gera Prisma Client
+npm run prisma:studio    # Abre Prisma Studio (GUI do banco)
+```
+
+---
+
+## 📞 Contato e Suporte
+
+- **Última Atualização:** Janeiro de 2026
+- **Versão da API:** 1.0.0
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença Apache. Consulte o arquivo LICENSE para mais detalhes.
