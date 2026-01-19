@@ -95,7 +95,6 @@ export default function AdminServicesPage() {
                 duration: parseInt(formData.duration)
             });
             
-            console.log('Criar serviço:', formData);
             setIsModalOpen(false);
             setFormData({
                 name: '',
