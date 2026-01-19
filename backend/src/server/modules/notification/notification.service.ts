@@ -1,191 +1,174 @@
 import twilio from 'twilio';
-import { CronJob } from 'cron';
 import { AppointmentRepository } from '../appointments/appointments.repository.ts';
 import { UserRepository } from '../users/user.repository.ts';
 import { ServiceRepository } from '../services/services.repository.ts';
 import type { Appointment, Service, User } from '../../../generated/prisma/client.ts';
+import { AppointmentWithRelations } from '../appointments/appointment.types.ts';
+
+const TIMEZONE = 'America/Manaus';
 
 export class NotificationService {
-
   private twilioClient: twilio.Twilio;
   private twilioWhatsappNumber: string;
   private appointmentRepository: AppointmentRepository;
   private serviceRepository: ServiceRepository;
   private userRepository: UserRepository;
-  private messageSidMap: Map<string, { appointmentId: number, clientName: string }> = new Map();
+  
+  // store scheduled timeouts
+  private scheduledTimeouts: Map<number, NodeJS.Timeout> = new Map();
+  // messageSid -> appointmentId
+  private messageToAppointment: Map<string, number> = new Map();
 
   constructor() {
     this.appointmentRepository = new AppointmentRepository();
     this.serviceRepository = new ServiceRepository();
     this.userRepository = new UserRepository();
 
-    // twilio config
-    const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-    const authToken = process.env.TWILIO_AUTH_TOKEN!;
+    // Twilio config
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
     this.twilioWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER!;
 
+    if (!accountSid || !authToken || !this.twilioWhatsappNumber) {
+      throw new Error('Credenciais Twilio não configuradas');
+    }
+
     this.twilioClient = twilio(accountSid, authToken);
-    this.setupCronJob();
+  
+    this.loadPendingNotifications();
   }
 
   /**
-   * Cron job to automatic execution
-   * Runs every 20 sec
+   * load all pending notifs when server starts
    */
-  private setupCronJob() {
-    if(process.env.NOTIFICATIONS_ENABLED === 'true') {
-      const job = CronJob.from({
-        // runs every 20sec
-        cronTime: '*/20 * * * * *',
-        onTick: async () => await this.checkUpcomingAppointments()
-      });
+  private async loadPendingNotifications() {
+    if (process.env.NOTIFICATIONS_ENABLED !== 'true') {
+      console.log('⚠️ Notifications disabled');
+      return;
+    }
 
-      job.start();
-      console.log("========== Notification service started (every 20s) ==========");
+    try {
+      const now = new Date();
+      const futureAppointments = await this.appointmentRepository.findPendingNotifications(now);
+
+      console.log(`📅 Carregando ${futureAppointments.length} notificações pendentes`);
+
+      for (const appointment of futureAppointments) {
+        if (appointment.scheduled_notification_time) {
+          this.scheduleNotification(
+            appointment.appointment_id,
+            appointment.scheduled_notification_time
+          );
+        }
+      }
+
+      console.log(`✅ ${this.scheduledTimeouts.size} notificações agendadas`);
+    } catch (error) {
+      console.error('❌ Erro ao carregar notificações pendentes:', error);
     }
   }
 
   /**
-   * Check appointments to be notified
-   * Process:
-   * 1. Find all appointments for the current day
-   * 2. Filter those in the gap of 15min (+- 15s)
-   * 3. Send notification to the filtered clients
+   * schedule a notification to a specific time
    * 
-   * Runs automatically through cron job every 15 seconds
-   * @throws {Error} if fails either to find appointments or send notifications
+   * @param appointmentId 
+   * @param scheduledTime time to be sent (15 min before appointment)
    */
-  private async checkUpcomingAppointments(){
-      try {
-          const now = new Date();
+  public scheduleNotification(appointmentId: number, scheduledTime: Date) {
+    const now = new Date();
+    const delay = scheduledTime.getTime() - now.getTime();
 
-          const startOfDay = new Date(now);
-          startOfDay.setHours(0, 0, 0, 0);
+    // if time to notify is past, it sends immediately
+    if (delay <= 0) {
+      console.log(`⚡ Notificação atrasada (${appointmentId}), enviando imediatamente`);
+      this.sendNotificationById(appointmentId);
+      return;
+    }
 
-          const endOfDay = new Date(now);
-          endOfDay.setHours(23, 59, 59, 999);
+    // cancel previous appointment if exists
+    if (this.scheduledTimeouts.has(appointmentId)) {
+      clearTimeout(this.scheduledTimeouts.get(appointmentId)!);
+    }
 
-          console.log(`📅 Buscando agendamentos do dia: ${startOfDay.toLocaleDateString('pt-BR')}`);
+    // new timeout
+    const timeout = setTimeout(async () => {
+      await this.sendNotificationById(appointmentId);
+      this.scheduledTimeouts.delete(appointmentId);
+    }, delay);
 
-          const allTodayAppointments = await this.appointmentRepository.findByDateRange(startOfDay, endOfDay);
+    this.scheduledTimeouts.set(appointmentId, timeout);
 
-          console.log(`📋 Total de agendamentos do dia (não notificados): ${allTodayAppointments.length}`);
-
-          const appointmentsToNotify = this.filterAppointmentsForNotification(allTodayAppointments, now);
-
-          console.log(`📨 Agendamentos a serem notificados (dentro de 15min): ${appointmentsToNotify.length}`);
-          console.log("-".repeat(50))
-
-
-          for (const appointment of appointmentsToNotify) {
-              await this.sendAppointmentReminder(appointment);
-          }
-
-      } catch (error) {
-          console.error('❌ Erro ao verificar agendamentos:', error);
-      }
+    console.log(`⏰ Notificação agendada: Appointment ${appointmentId} em ${scheduledTime.toLocaleString('pt-BR', { timeZone: TIMEZONE })}`);
   }
 
   /**
-   * Fiter appointments that are inside the notification window
-   * Rule: notify appointments that will be in exactly 15min (+- 15 sec tolerancy)
-   * 
-   * @param appointments Appointments of the day
-   * @param currentTime Current time to calculate
-   * @returns Appointments array that need to be notified
+   * cancel a scheduled notif.
    */
-  private filterAppointmentsForNotification(appointments: Appointment[], currentTime: Date): Appointment[] {
-    return appointments.filter(appointment => {
-      const appointmentDateTime = this.combineDateTime(appointment.appointment_date, appointment.appointment_time);
-
-      // calculate the difference in minutes
-      const timeDifference = appointmentDateTime.getTime() - currentTime.getTime();
-      const minutesDifference = timeDifference / (60 * 1000) // convert into minutes
-
-      // Log for debugging
-      console.log(`📋 Agendamento ID ${appointment.appointment_id}:`);
-      console.log(`   Data/Hora: ${appointmentDateTime.toLocaleString('pt-BR')}`);
-      console.log(`   Diferença: ${minutesDifference.toFixed(2)} minutos`);
-
-      const isInNotificationWindow = minutesDifference >= 14.5 && minutesDifference <= 15.5;
-
-      if (isInNotificationWindow) {
-        console.log(`✅ Agendamento ${appointment.appointment_id} está na janela de notificação`);
-      } else {
-        console.log(`⏭️ Agendamento ${appointment.appointment_id} fora da janela (${minutesDifference.toFixed(2)}min)`);
-      }
-
-      return isInNotificationWindow;  
-    });
+  public cancelScheduledNotification(appointmentId: number) {
+    const timeout = this.scheduledTimeouts.get(appointmentId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.scheduledTimeouts.delete(appointmentId);
+      console.log(`🚫 Notificação cancelada: Appointment ${appointmentId}`);
+    }
   }
 
   /**
-   * Combines date and time into a unique DateTime
-   * 
-   * Prisma stores:
-   * - appointment_date: date (YYYY-MM-DD)
-   * - appointment_time: time (HH:MM:SS)
-   * 
-   * @param appointmentDate Appointment date
-   * @param appointmentTime Appointment time
-   * @returns Full Appointment DateTime
+   * find appointment and send notif.
    */
-  private combineDateTime(appointmentDate: Date, appointmentTime: Date): Date {
-
-    // Extract only the date and time as strings
-    const dateStr = appointmentDate.toISOString().split('T')[0];
-    const timeStr = appointmentTime.toISOString().split('T')[1]!.substring(0, 8); 
-    
-    // Combine strings and generates a new one
-    const combinedStr = `${dateStr}T${timeStr}Z`;
-    const combined = new Date(combinedStr);
-    
-    // console.log(`   combinedStr: ${combinedStr}`);
-    // console.log(`   combined result: ${combined.toISOString()}`);
-    // console.log(`   combined local: ${combined.toLocaleString('pt-BR')}`);
-
-    return combined;
-  }
-
-  /**
-   * Sends a appointment reminder via Whatsapp
-   * 
-   * Process:
-   * 1. Find client, service and barber
-   * 2. Validates if data is complete
-   * 3. Calculate exact time difference
-   * 4. Prepare template variables
-   * 5. Send via Twilio Whatsapp API
-   * 6. Registers MessageSid for tracking
-   * 7. Marks notification as sent
-   * 
-   * @param appointment Appointment to receive notification
-   * @throws {Error} If there is missing data or fails in sending process
-   */
-  private async sendAppointmentReminder(appointment: Appointment) {
-    try{
-      const client = await this.userRepository.findById(appointment.id_client!);
-      const service = await this.serviceRepository.findById(appointment.id_service);
-      const barber = await this.userRepository.findById(appointment.id_barber);
+  private async sendNotificationById(appointmentId: number) {
+    try {
+      const appointment = await this.appointmentRepository.findById(appointmentId);
       
-      if(!client?.phone_number || !service || !barber) {
-        console.log("Dados incompletos para enviar notificação");
+      if (!appointment) {
+        console.log(`⚠️ Appointment ${appointmentId} não encontrado`);
         return;
       }
 
-      const now = new Date();
-      const appointmentDateTime = this.combineDateTime(appointment.appointment_date, appointment.appointment_time);
-      const exactDifference = Math.round((appointmentDateTime.getTime() - now.getTime()) / (60 * 1000));
+      // validatoins
+      if (appointment.notification_sent) {
+        console.log(`⚠️ Notificação já enviada para appointment ${appointmentId}`);
+        return;
+      }
+
+      if (appointment.appointment_status !== 'PENDENTE') {
+        console.log(`⚠️ Appointment ${appointmentId} não está pendente`);
+        return;
+      }
+
+      if (!appointment.client || !appointment.service || !appointment.barber) {
+        console.log(`⚠️ Appointment ${appointmentId} sem dados completos`);
+        return;
+      }
+
+      await this.sendAppointmentReminder(appointment);
+
+    } catch (error) {
+      console.error(`❌ Erro ao enviar notificação ${appointmentId}:`, error);
+    }
+  }
+
+  /**
+   * send notification via whatsapp
+   * automatic retry if fails
+   */
+  private async sendAppointmentReminder(appointment: AppointmentWithRelations, retryCount = 0): Promise<void> {
+    const MAX_RETRIES = 3;
+
+    try {
+      const { client, service, barber } = appointment;
+
+      if (!client?.phone_number) {
+        console.log(`⚠️ Cliente sem telefone`);
+        await this.appointmentRepository.updateNotificationStatus(appointment.appointment_id, true);
+        return;
+      }
 
       const phoneNumber = this.formatPhoneNumber(client.phone_number);
       const webhookUrl = `${process.env.API_URL}/notifications/status-webhook`;
-
-      console.log(`📤 ENVIANDO NOTIFICAÇÃO:`);
-      console.log(`   Cliente: ${client.full_name} (${client.phone_number})`);
-      console.log(`   Agendamento: ${appointmentDateTime.toLocaleString('pt-BR')}`);
-      console.log(`   Diferença exata: ${exactDifference} minutos`);
-
       const templateVariables = this.prepareTemplateVariables(appointment, client, service, barber);
+
+      console.log(`📤 Enviando notificação: ${client.full_name} - Appointment ${appointment.appointment_id}`);
 
       const messageResponse = await this.twilioClient.messages.create({
         from: `whatsapp:${this.twilioWhatsappNumber}`,
@@ -195,164 +178,116 @@ export class NotificationService {
         statusCallback: webhookUrl
       });
 
-      this.messageSidMap.set(messageResponse.sid, {
-        appointmentId: appointment.appointment_id,
-        clientName: client.full_name
-      });
+      this.messageToAppointment.set(messageResponse.sid, appointment.appointment_id);
+      console.log(`📤 Mensagem criada: ${messageResponse.sid} - Status: ${messageResponse.status}`);
 
-      await this.appointmentRepository.updateNotificationStatus(appointment.appointment_id, true);
 
-      console.log(`✅ Mensagem enviada com ${exactDifference}min de antecedência! MessageSid: ${messageResponse.sid}`);
-
-    }
-    catch(error: any){
-      console.log(`❌ Erro code: ${error.code}`);
-      
-      // If sandbox error, it does not try to send again and mark is as sent
+    } catch (error: any) {
+      // Sandbox error - no retry
       if (error.code === 63015) {
-        console.log(`⚠️ SANDBOX: Número não autorizado - marcando como enviado`);
+        console.log(`⚠️ SANDBOX: Número não autorizado`);
         await this.appointmentRepository.updateNotificationStatus(appointment.appointment_id, true);
+        return;
       }
-      
-      console.error("❌ Erro ao enviar lembrete:", error);
+
+      // exponential backoff
+      if (retryCount < MAX_RETRIES) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.log(`⚠️ Retry ${retryCount + 1}/${MAX_RETRIES} em ${delay}ms`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.sendAppointmentReminder(appointment, retryCount + 1);
+      }
+
+      console.error(`❌ Falha após ${MAX_RETRIES} tentativas:`, error);
     }
   }
 
-  /**
-   * Prepare variables to whatsapp template
-   * 
-   * Converts appointment data into numbered variables
-   * that will be replaced in the approved template by whatsapp
-   * 
-   * @param appointment 
-   * @param client 
-   * @param service 
-   * @param barber 
-   * @returns Object with numbered variables to the template
-   */
-  private prepareTemplateVariables(appointment: Appointment, client: User, service: Service, barber: User){
+  private prepareTemplateVariables(appointment: Appointment, client: User, service: Service, barber: User) {
+    const appointmentDateTime = appointment.appointment_datetime;
 
-    const date = new Date(appointment.appointment_date).toLocaleDateString('pt-BR', {
-      timeZone: 'UTC'
+    const date = appointmentDateTime.toLocaleDateString('pt-BR', {
+      timeZone: TIMEZONE
     });
 
-    const time = new Date(appointment.appointment_time).toLocaleTimeString('pt-BR', {
+    const time = appointmentDateTime.toLocaleTimeString('pt-BR', {
+      timeZone: TIMEZONE,
       hour: '2-digit',
       minute: '2-digit'
     });
-    
-    // console.log(`date: ${date}`);
-    // console.log(`time: ${time}`);
 
     return {
-      1: "ArtBarber",           // Barbershop's name
-      2: client.full_name,     // Client name
-      3: date,                  // Appointment date
-      4: time,                  // Appointment time
-      5: service.name,          // Service name
-      6: barber.full_name,     // Barber name
-      7: service.price.toFixed(2)  // Service price
+      1: "ArtBarber",
+      2: client.full_name,
+      3: date,
+      4: time,
+      5: service.name,
+      6: barber.full_name,
+      7: service.price.toFixed(2)
     };
   }
 
-  /**
-   * Process Twilio status message webhook
-   * 
-   * Receives status updates and shows detailed logs about delivery state
-   * Centralizes ALL webhook logging
-   * 
-   * @param messageSid - Twilio's message unique ID
-   * @param messageStatus - Current status (sent, delivered, read, failed, etc)
-   * @param errorCode - Error code if any
-   * @param errorMessage - Error message if any
-   */
-  public handleStatusWebhook(messageSid: string, messageStatus: string, errorCode?: string, errorMessage?: string) {
-    const timestamp = new Date().toLocaleString('pt-BR');
-    const statusEmoji = this.getStatusEmoji(messageStatus);
-    
-    console.log(`📡 [${timestamp}] Webhook Twilio recebido:`);
-    console.log(`   MessageSid: ${messageSid}`);
-    console.log(`   Status: ${messageStatus.toUpperCase()}`);
-    
-    if (errorCode) {
-      console.log(`   ❌ Error Code: ${errorCode}`);
-      console.log(`   ❌ Error Message: ${errorMessage || 'N/A'}`);
-    }
-
-    const messageInfo = this.messageSidMap.get(messageSid);
-    
-    if (messageInfo) {
-      console.log(`${statusEmoji} Status Update para agendamento:`);
-      console.log(`   Cliente: ${messageInfo.clientName}`);
-      console.log(`   Agendamento ID: ${messageInfo.appointmentId}`);
-      console.log(`   Descrição: ${this.getStatusDescription(messageStatus)}`);
+  public async handleStatusWebhook(
+    messageSid: string, 
+    messageStatus: string, 
+    errorCode?: string, 
+    errorMessage?: string
+  ): Promise<boolean> {
+    try {
+      const timestamp = new Date().toLocaleString('pt-BR', { timeZone: TIMEZONE });
       
-      if (['delivered', 'failed', 'undelivered', 'read'].includes(messageStatus)) {
-        console.log(`🗑️ Removendo ${messageSid} do tracking (status final)`);
-        this.messageSidMap.delete(messageSid);
+      const appointmentId = this.messageToAppointment.get(messageSid);
+
+      if(!appointmentId){
+        console.log(`⚠️ [${timestamp}] Webhook: ${messageSid} - ${messageStatus} (sem appointment associado)`);
+        return true; // ignore twilio response looping
       }
-    } else {
-      console.log(`⚠️ MessageSid não encontrado no tracking - pode ser de envio anterior`);
+
+      console.log(`📡 [${timestamp}] Webhook: ${messageSid} - ${messageStatus} (Appointment ${appointmentId})`);
+      
+      if (errorCode) {
+        console.log(`   ❌ Error: ${errorCode} - ${errorMessage}`);
+      }
+
+      // update status based on twilio response
+      if (messageStatus === 'delivered') {
+        await this.appointmentRepository.updateNotificationStatus(appointmentId, true);
+        console.log(`   ✅ Notificação CONFIRMADA para appointment ${appointmentId}`);
+        this.messageToAppointment.delete(messageSid);
+      }
+
+      if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+        console.log(`   ❌ Notificação FALHOU para appointment ${appointmentId}`);
+        this.messageToAppointment.delete(messageSid);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao processar webhook:', error);
+      return false;
     }
-    
-    console.log('─'.repeat(50));
   }
-
+  
   /**
-   * Maps Twilio status to visual emojis on logs
-   * 
-   * @param status Message status (queued, sent, delivered, etc)
-   * @returns Status corresponding emoji
-   */
-  private getStatusEmoji(status: string): string {
-    const statusEmojis: { [key: string]: string } = {
-      'queued': '⏳',
-      'sent': '📤',
-      'delivered': '✅',
-      'read': '👁️',
-      'failed': '❌',
-      'undelivered': '❌'
-    };
-    return statusEmojis[status] || '📋';
-  }
-
-  /**
-   * Converts Twilioo techincal status into
-   * friendly descriptions to the logs 
-   * 
-   * @param status Technical status message
-   * @returns Portuguese description of the status
-   */
-  private getStatusDescription(status: string): string {
-    const descriptions: { [key: string]: string } = {
-      'queued': 'Mensagem na fila para envio',
-      'sent': 'Mensagem enviada para o WhatsApp',
-      'delivered': 'Mensagem entregue ao destinatário',
-      'read': 'Mensagem lida pelo destinatário',
-      'failed': 'Falha no envio da mensagem',
-      'undelivered': 'Mensagem não entregue'
-    };
-    return descriptions[status] || 'Status desconhecido';
-  }
-
-
-  /**
-   * Converts brazilian phone number (from database) into
-   * international format accepted by Twilio
-   * @param phoneNumber Phone number in format "92912345678" (11 digits)
-   * @returns Formatted number "+559212345678" (without the extra 9)
+   * Remove the 9 prefix (brazilian format)
+   * @param phoneNumber number in br format (912345678)
+   * @returns twilio format (12345678)
    */
   private formatPhoneNumber(phoneNumber: string): string {
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     
-    // 11 digits in the format "92912345678"
-    // Removes the extra '9': "92912345678" -> "9212345678"
-    const areaCode = cleanNumber.substring(0, 2);    // "92"
-    const number = cleanNumber.substring(3);         // "12345678" (skips 9)
+    if (cleanNumber.length < 10 || cleanNumber.length > 11) {
+      throw new Error(`Telefone inválido: ${phoneNumber}`);
+    }
     
-    return `+55${areaCode}${number}`;               // "+559212345678"
+    if (cleanNumber.length === 11) {
+      const areaCode = cleanNumber.substring(0, 2);
+      const number = cleanNumber.substring(3);
+      return `+55${areaCode}${number}`;
+    }
+    
+    return `+55${cleanNumber}`;
   }
-  
 }
 
 export let notificationServiceInstance: NotificationService;

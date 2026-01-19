@@ -51,7 +51,7 @@ notificationRouter.post('/status-webhook', (req: Request, res: Response) => {
 notificationRouter.get('/test', (req: Request, res: Response) => {
   res.json({
     message: 'Notification service is running',
-    webhookUrl: `${process.env.API_URL}/api/notifications/status-webhook`,
+    webhookUrl: `${process.env.API_URL}/notifications/status-webhook`,
     enabled: process.env.NOTIFICATIONS_ENABLED === 'true',
     apiUrl: process.env.API_URL
   });

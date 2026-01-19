@@ -412,4 +412,24 @@ export class AppointmentRepository {
             }
         });
     }
+
+    /**
+     * Find appointments with pending notifications
+     * Used when server restarts to reschedule notifications
+     * @param now current date
+     * @returns appointments to notify
+     */
+    async findPendingNotifications(now: Date): Promise<AppointmentWithRelations[]> {
+        return await prismaClient.appointment.findMany({
+            where: {
+            scheduled_notification_time: {
+                gte: now // Futuras
+            },
+            notification_sent: false,
+            appointment_status: 'PENDENTE',
+            id_client: { not: null }
+            },
+            include: INCLUDE_RELATIONS
+        });
+    }
 }

@@ -5,6 +5,7 @@ import type { User } from "../../../generated/prisma/client.ts";
 import type { AppointmentWithRelations, AppointmentResponseDTO, UserPublicDTO } from "./appointment.types.ts";
 import type { AppointmentInputDTO, AppointmentStatusEnum } from "./appointment.schema.ts";
 import { appointmentUtils } from "../../shared/utils/appointment.utils.ts";
+import { notificationServiceInstance } from "../notification/notification.service.ts";
 
 export class AppointmentService {
     private appointmentRepository: AppointmentRepository;
@@ -16,13 +17,14 @@ export class AppointmentService {
     /**
      * Create a new appointment
      * Checks availability of barber at date and time given 
+     * Schedules notification 15 minutes before appointment (if client exists)
      * @param data Appointment data
      * @param userRole Current user's role
      * @param userId Current user's ID
      * @returns Created appointment
      */
     async createAppointment(data: AppointmentInputDTO, userRole: string, userId: number) {
-        // O appointment_datetime já vem como uma string ISO 8601 (UTC por padrão no Zod)
+
         const appointmentDateTime = new Date(data.appointment_datetime);
         
         // Role based verification
@@ -47,6 +49,7 @@ export class AppointmentService {
             throw new ConflictError("Este horário já está ocupado para este barbeiro na data selecionada.");
         }
 
+        // if client made their own appointment
         if(data.id_client){
             const clientAppointmentExists = await this.appointmentRepository.findByDatetimeAndClient(
                 appointmentDateTime,
@@ -80,9 +83,28 @@ export class AppointmentService {
 
         if(data.id_client){
             createData.client = { connect: { user_id: data.id_client } };
+        
+            // calculate notification time (15min before appointment)
+            const notificationTime = new Date(appointmentDateTime.getTime() - (15 * 60 * 1000));
+            createData.scheduled_notification_time = notificationTime;
         }
 
         const newAppointment = await this.appointmentRepository.create(createData);
+        
+        // schedule notif. if theres id_client and notifications are enabled
+        if (newAppointment.id_client && newAppointment.scheduled_notification_time) {
+            try {
+                notificationServiceInstance?.scheduleNotification(
+                    newAppointment.appointment_id,
+                    newAppointment.scheduled_notification_time
+                );
+                console.log(`⏰ Notificação agendada para appointment ${newAppointment.appointment_id}`);
+            } catch (error) {
+                // Não falha o agendamento se a notificação falhar
+                console.error(`⚠️ Erro ao agendar notificação para appointment ${newAppointment.appointment_id}:`, error);
+            }
+        }
+        
         return appointmentUtils.toAppointmentResponseDTO(newAppointment);
     }
 
@@ -220,6 +242,12 @@ export class AppointmentService {
         }
 
         const updated = await this.appointmentRepository.updateStatus(appointmentId, newStatus.appointment_status);
+        
+        // cancel notification if appointment is canceled
+        if (newStatus.appointment_status === 'CANCELADO') {
+            notificationServiceInstance.cancelScheduledNotification(appointmentId);
+        }
+
         return appointmentUtils.toAppointmentResponseDTO(updated);
     }
 
