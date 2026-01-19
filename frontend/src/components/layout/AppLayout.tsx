@@ -9,7 +9,7 @@ function AppLayout(){
     const { logout, user } = useAuth()
     const name = user?.full_name;
     const firstName = getFirstName(name);
-    const BARBERSHOP_NAME = import.meta.env.VITE_BARBERSHOP;
+    const BARBERSHOP_NAME = import.meta.env.VITE_APP_NAME;
 
     return (
         <div className="min-h-screen bg-[#F1F1F1] p-5">

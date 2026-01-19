@@ -14,7 +14,7 @@ export default function AppointmentSearchBar({
   onSearch,
   onClear,
   isSearching,
-  placeholder = "Buscar por nome do cliente..."
+  placeholder = "Buscar por cliente"
 }: AppointmentSearchBarProps) {
   const [searchTerm, setSearchTerm] = useState('');
 

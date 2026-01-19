@@ -8,7 +8,7 @@ function Auth(){
     const location = useLocation();
     const navigate = useNavigate();
     const currentTab = location.pathname.includes('register') ? 'register' : 'login';
-    const BARBERSHOP_NAME = import.meta.env.VITE_BARBERSHOP;
+    const BARBERSHOP_NAME = import.meta.env.VITE_APP_NAME;
 
     return(
         <div className="min-h-screen bg-[#F1F1F1]">
