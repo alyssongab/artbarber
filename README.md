@@ -1,20 +1,23 @@
 # 💈 ArtBarber - Sistema de Gestão para Barbearias
 
-Sistema web completo para gerenciamento de barbearias, oferecendo agendamento online, controle de serviços, gestão de profissionais e notificações automáticas via WhatsApp.
+<div align="center">
 
----
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6.4-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+![License](https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+![PRs](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge)
+
+</div>
 
 ## 📖 Sobre o Projeto
 
-**ArtBarber** é uma solução moderna e completa para digitalizar a gestão de barbearias, facilitando o agendamento de serviços, a organização da agenda dos profissionais e a comunicação com os clientes. O sistema oferece três perfis distintos de acesso (Cliente, Barbeiro e Administrador), cada um com funcionalidades específicas para suas necessidades.
-
-### 🎯 Principais Objetivos
-
-- **Facilitar** o agendamento de serviços para clientes
-- **Otimizar** a gestão de agenda dos barbeiros
-- **Automatizar** lembretes e notificações
-- **Centralizar** informações de serviços e profissionais
-- **Reduzir** faltas e cancelamentos de última hora
+Artbarber é uma solução completa para digitalizar a gestão de barbearias, facilitando o agendamento de serviços, a organização da agenda dos profissionais e a comunicação com os clientes. O sistema oferece três perfis distintos de acesso (Cliente, Barbeiro e Administrador), cada um com funcionalidades específicas para suas necessidades.
 
 ---
 
@@ -27,7 +30,7 @@ Sistema web completo para gerenciamento de barbearias, oferecendo agendamento on
 - ✅ Histórico completo de agendamentos
 - ✅ Cancelamento de agendamentos futuros
 - ✅ Notificações automáticas via WhatsApp
-- ✅ Interface responsiva (mobile-first)
+
 
 ### ✂️ Para Barbeiros
 - ✅ Dashboard com estatísticas do dia
@@ -60,7 +63,7 @@ Sistema web completo para gerenciamento de barbearias, oferecendo agendamento on
 
 ### Visão Geral
 
-O **ArtBarber** foi desenvolvido seguindo uma arquitetura **cliente-servidor**  com separação clara entre frontend e backend, separando a aplicação em diferentes camadas.
+O **ArtBarber** foi desenvolvido seguindo uma arquitetura **cliente-servidor**  com separação entre frontend e backend, separando a aplicação em diferentes camadas.
 
 ![architecture](screens/arquitetura-artbarber.png)
 
@@ -362,7 +365,7 @@ npm run dev
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença Apache 2.0. Consulte o arquivo `LICENSE` para mais detalhes.
 
 ---
 
