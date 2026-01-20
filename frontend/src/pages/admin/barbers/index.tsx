@@ -237,6 +237,7 @@ export default function AdminBarbersPage() {
                                 value={formData.full_name}
                                 onChange={handleInputChange}
                                 placeholder="Barbeiro fulano"
+                                autoComplete="off"
                                 className="col-span-3"
                             />
                         </div>
@@ -252,6 +253,7 @@ export default function AdminBarbersPage() {
                                 onChange={handleInputChange}
                                 placeholder="barbeiro@barber.com"
                                 className="col-span-3"
+                                autoComplete="off"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -265,6 +267,7 @@ export default function AdminBarbersPage() {
                                 onChange={handleInputChange}
                                 placeholder="(11) 99999-9999"
                                 className="col-span-3"
+                                autoComplete="off"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -278,6 +281,7 @@ export default function AdminBarbersPage() {
                                 onChange={handleInputChange}
                                 placeholder="••••••••"
                                 className="col-span-3"
+                                autoComplete="off"
                             />
                         </div>
                     </div>

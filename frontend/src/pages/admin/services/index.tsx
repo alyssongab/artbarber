@@ -260,6 +260,7 @@ export default function AdminServicesPage() {
                                         onChange={handleInputChange}
                                         placeholder="Corte de cabelo"
                                         className="col-span-3"
+                                        autoComplete="off"
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -276,6 +277,7 @@ export default function AdminServicesPage() {
                                         onChange={handleInputChange}
                                         placeholder="50.00"
                                         className="col-span-3"
+                                        autoComplete="off"
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -291,6 +293,7 @@ export default function AdminServicesPage() {
                                         onChange={handleInputChange}
                                         placeholder="30"
                                         className="col-span-3"
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -390,6 +393,7 @@ export default function AdminServicesPage() {
                                         id="edit-name"
                                         type="text"
                                         placeholder="Ex: Corte de cabelo"
+                                        autoComplete="off"
                                         value={editFormData.name}
                                         onChange={handleEditInputChange}
                                         name="name"
