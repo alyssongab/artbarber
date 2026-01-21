@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Set API URL as build argument
-ARG VITE_API_URL=http://localhost:3030/api
+ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build application
@@ -29,11 +29,11 @@ FROM nginx:alpine AS production
 # Copy built files to nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx config (opcional, se precisar customizar)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Expose port
+# Expose port 
 EXPOSE 80
 
-# Start nginx
+# Start nginx 
 CMD ["nginx", "-g", "daemon off;"]
