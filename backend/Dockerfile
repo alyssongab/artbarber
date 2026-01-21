@@ -8,6 +8,7 @@ WORKDIR /app
 # Copy package files
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 # Install dependencies
 RUN yarn install --frozen-lockfile
@@ -16,7 +17,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # Set dummy DATABASE_URL for Prisma generation (required during build)
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Generate Prisma Client
 RUN npx prisma generate
@@ -34,12 +35,13 @@ WORKDIR /app
 # Copy package files
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 # Install dependencies (all, because we need dev dependencies like ts-node)
 RUN yarn install --frozen-lockfile
 
 # Set dummy DATABASE_URL for Prisma generation
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Generate Prisma Client in production stage
 RUN npx prisma generate
@@ -51,7 +53,7 @@ COPY --from=builder /app/src ./src
 COPY prisma ./prisma
 
 # Expose port
-EXPOSE 3030
+EXPOSE $PORT
 
 # Run migrations, seed, and start server
-CMD sh -c "npx prisma migrate deploy && (npx prisma db seed || echo '⚠️ Seed já executado ou falhou') && yarn dev"
+CMD sh -c "npx prisma migrate deploy && npx prisma db seed || true && yarn dev"
