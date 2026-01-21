@@ -53,5 +53,5 @@ COPY prisma ./prisma
 # Expose port
 EXPOSE 3030
 
-# Start server (migrations will be run by docker-compose command)
-CMD ["yarn", "dev"]
+# Run migrations, seed, and start server
+CMD sh -c "npx prisma migrate deploy && (npx prisma db seed || echo '⚠️ Seed já executado ou falhou') && yarn dev"
